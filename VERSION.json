@@ -1,0 +1,66 @@
+{
+  "version": "1.0.0",
+  "codename": "core-features",
+  "releaseDate": "2025-11-03",
+  "description": "Novel-Writer 核心功能完整版本",
+  "features": {
+    "completed": [
+      "文集管理系统",
+      "项目管理功能", 
+      "数据持久化层",
+      "前端React应用",
+      "Markdown编辑器",
+      "AI助手开关",
+      "后端API服务",
+      "设置管理系统"
+    ],
+    "inProgress": [
+      "Grok AI集成测试"
+    ],
+    "planned": [
+      "媒体文件处理",
+      "备份恢复机制",
+      "章节管理优化",
+      "协作功能"
+    ]
+  },
+  "techStack": {
+    "frontend": {
+      "framework": "React 18.3.1",
+      "buildTool": "Vite 5.4.21", 
+      "language": "TypeScript 5.6.2",
+      "styling": "Tailwind CSS 3.4.13",
+      "editor": "Monaco Editor 4.6.0",
+      "routing": "React Router DOM 6.28.0"
+    },
+    "backend": {
+      "framework": "Express.js 4.18.2",
+      "language": "TypeScript 5.6.3", 
+      "database": "LowDB 7.0.1",
+      "ai": "Grok API (xAI)"
+    }
+  },
+  "endpoints": {
+    "development": {
+      "frontend": "http://localhost:3000",
+      "backend": "http://localhost:5000"
+    }
+  },
+  "milestones": [
+    {
+      "version": "1.0.0", 
+      "date": "2025-11-03",
+      "description": "核心功能完整实现",
+      "completionRate": "85%"
+    }
+  ],
+  "nextVersion": {
+    "version": "1.1.0",
+    "plannedFeatures": [
+      "AI功能完善",
+      "媒体文件处理",
+      "备份恢复"
+    ],
+    "estimatedDate": "2025-11-10"
+  }
+}

@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: novel-writer-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./frontend/dist:/app/dist
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # 后端服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: novel-writer-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - DATA_PATH=/app/data
+      - BACKUP_PATH=/app/data/backups
+      - MEDIA_PATH=/app/data/media
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  # Caddy Web服务器
+  caddy:
+    image: caddy:2-alpine
+    container_name: novel-writer-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deployment/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./deployment/caddy/data:/data
+      - ./deployment/caddy/config:/config
+    environment:
+      - DOMAIN=${DOMAIN}
+      - EMAIL=${HTTPS_EMAIL}
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+    external: false
+  caddy_config:
+    external: false
+
+networks:
+  default:
+    name: novel-writer-network
