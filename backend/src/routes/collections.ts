@@ -1,6 +1,6 @@
 import express from 'express'
-import { db } from '../services/database'
-import { Collection } from '../types/index'
+import { db } from '../services/database.js'
+import { Collection } from '../types/index.js'
 
 interface ApiResponse<T = any> {
   success: boolean

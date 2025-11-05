@@ -4,7 +4,7 @@ import { join } from 'path'
 import { existsSync } from 'fs'
 import { mkdir } from 'fs/promises'
 import { v4 as uuidv4 } from 'uuid'
-import { Collection, Project, Chapter } from '../types/index'
+import { Collection, Project, Chapter } from '../types/index.js'
 
 interface DatabaseData {
   collections: Collection[]

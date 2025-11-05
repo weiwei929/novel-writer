@@ -1,5 +1,5 @@
 import express from 'express'
-import { db } from '../services/database'
+import { db } from '../services/database.js'
 
 interface ApiResponse<T = any> {
   success: boolean

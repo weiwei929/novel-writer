@@ -4,7 +4,7 @@
  */
 
 import express from 'express'
-import { handleLogin, handleLogout, getAuthStatus } from '../middleware/auth'
+import { handleLogin, handleLogout, getAuthStatus } from '../middleware/auth.js'
 
 const router = express.Router()
 

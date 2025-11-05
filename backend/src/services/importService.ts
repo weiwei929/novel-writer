@@ -5,9 +5,9 @@
 
 import fs from 'fs'
 import path from 'path'
-import { db } from './database'
+import { db } from './database.js'
 import mammoth from 'mammoth'
-import { Collection, Project, Chapter } from '../types/database'
+import { Collection, Project, Chapter } from '../types/database.js'
 
 // 导入数据的接口定义
 export interface CreateCollectionData {

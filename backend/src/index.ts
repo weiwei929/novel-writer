@@ -8,17 +8,17 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 // 导入独立路由
-import collectionsRouter from './routes/collections'
-import projectsRouter from './routes/projects'
-import chaptersRouter from './routes/chapters'
-import statsRouter from './routes/stats'
-import apiRouter from './routes/api'
-import authRouter from './routes/auth'
-import fileRouter from './routes/fileRoutes'
+import collectionsRouter from './routes/collections.js'
+import projectsRouter from './routes/projects.js'
+import chaptersRouter from './routes/chapters.js'
+import statsRouter from './routes/stats.js'
+import apiRouter from './routes/api.js'
+import authRouter from './routes/auth.js'
+import fileRouter from './routes/fileRoutes.js'
 
 // 导入中间件
-import { errorHandler, notFoundHandler, requestLogger } from './middleware/errorHandler'
-import { authenticateApp } from './middleware/auth'
+import { errorHandler, notFoundHandler, requestLogger } from './middleware/errorHandler.js'
+import { authenticateApp } from './middleware/auth.js'
 
 const app = express()
 const PORT = parseInt(process.env.PORT || '5000', 10)
@@ -129,19 +129,29 @@ app.use(errorHandler)
 // 启动服务器
 async function startServer() {
   try {
+    console.log('📌 Starting server initialization...')
+    
+    console.log('📌 Initializing data structure...')
     initializeDataStructure()
+    console.log('✅ Data structure initialized')
     
     // 导入并初始化数据库
-    const { db } = await import('./services/database')
+    console.log('📌 Importing database service...')
+    const { db } = await import('./services/database.js')
+    console.log('✅ Database service imported')
+    
+    console.log('📌 Initializing database...')
     await db.init()
     console.log('💾 Database initialized')
     
+    console.log('📌 Starting HTTP server...')
     const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Novel-Writer Backend Server running on port ${PORT}`)
       console.log(`📁 Environment: ${process.env.NODE_ENV || 'development'}`)
       console.log(`💾 Data path: ${process.env.DATA_PATH || './data'}`)
       console.log(`🔗 Health check: http://localhost:5000/health`)
       console.log(`🔍 Server address: ${JSON.stringify(server.address())}`)
+      console.log('✅ Server fully initialized and listening')
     })
     
     server.on('error', (error: any) => {

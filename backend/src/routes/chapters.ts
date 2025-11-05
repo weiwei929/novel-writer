@@ -1,7 +1,7 @@
 import express from 'express'
-import { db } from '../services/database'
-import { Chapter } from '../types/index'
-import { ApiResponse, ApiErrorCode, createSuccessResponse, createErrorResponse, ErrorCodeToHttpStatus } from '../types/api'
+import { db } from '../services/database.js'
+import { Chapter } from '../types/index.js'
+import { ApiResponse, ApiErrorCode, createSuccessResponse, createErrorResponse, ErrorCodeToHttpStatus } from '../types/api.js'
 
 const router = express.Router()
 

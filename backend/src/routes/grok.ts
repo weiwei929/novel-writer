@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express'
-import { grokService } from '../services/grok'
+import { grokService } from '../services/grok.js'
 
 const router = Router()
 

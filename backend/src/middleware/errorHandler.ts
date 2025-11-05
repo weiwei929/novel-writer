@@ -1,7 +1,7 @@
 // 错误处理中间件
 
 import { Request, Response, NextFunction } from 'express'
-import { ApiErrorCode, createErrorResponse, ErrorCodeToHttpStatus } from '../types/api'
+import { ApiErrorCode, createErrorResponse, ErrorCodeToHttpStatus } from '../types/api.js'
 
 /**
  * 自定义API错误类

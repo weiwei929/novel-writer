@@ -8,8 +8,8 @@ import path from 'path'
 import archiver from 'archiver'
 import { Document, Paragraph, TextRun, HeadingLevel, Packer } from 'docx'
 import puppeteer from 'puppeteer'
-import { db } from './database'
-import { Project, Chapter, Collection } from '../types/database'
+import { db } from './database.js'
+import { Project, Chapter, Collection } from '../types/database.js'
 
 export interface ExportOptions {
   format: 'word' | 'pdf' | 'txt' | 'markdown' | 'json' | 'zip'
