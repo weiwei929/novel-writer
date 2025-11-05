@@ -60,16 +60,16 @@ export function handleApiResponse<T>(response: any): T {
 /**
  * 统一处理API错误
  */
-export function handleApiError(error: any): never {
+export function handleApiError(error: any): Promise<never> {
   console.error('API Error:', error)
   
   if (error instanceof ApiError) {
-    throw error
+    return Promise.reject(error)
   }
   
   // 处理网络错误
-  if (error.code === 'NETWORK_ERROR' || !error.response) {
-    throw new ApiError('NETWORK_ERROR', '网络连接失败，请检查网络设置')
+  if (error.code === 'NETWORK_ERROR' || error.code === 'ECONNABORTED' || !error.response) {
+    return Promise.reject(new ApiError('NETWORK_ERROR', '网络连接失败，请检查网络设置'))
   }
   
   // 处理HTTP错误
@@ -78,11 +78,11 @@ export function handleApiError(error: any): never {
     
     // 如果后端返回的是ApiResponse格式
     if (data && typeof data === 'object' && 'error' in data) {
-      throw new ApiError(
+      return Promise.reject(new ApiError(
         data.error.code || 'HTTP_ERROR',
         data.error.message || `HTTP ${status} 错误`,
         data.error.details
-      )
+      ))
     }
     
     // 处理标准HTTP错误
@@ -98,14 +98,14 @@ export function handleApiError(error: any): never {
     }
     
     const message = httpErrors[status] || `HTTP ${status} 错误`
-    throw new ApiError(`HTTP_${status}`, message, { status, data })
+    return Promise.reject(new ApiError(`HTTP_${status}`, message, { status, data }))
   }
   
   // 处理其他错误
-  throw new ApiError(
+  return Promise.reject(new ApiError(
     'UNKNOWN_ERROR',
     error.message || '未知错误发生'
-  )
+  ))
 }
 
 /**

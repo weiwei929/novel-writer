@@ -28,7 +28,7 @@ api.interceptors.response.use(
     }
   },
   (error) => {
-    handleApiError(error)
+    return handleApiError(error)
   }
 )
 
