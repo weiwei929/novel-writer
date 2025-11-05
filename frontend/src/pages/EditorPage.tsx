@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import MarkdownEditor from '../components/editor/MarkdownEditor'
-import { projectsApi, Project } from '../services/api'
+import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
 import { ArrowLeft, BookOpen } from 'lucide-react'
 
 const EditorPage: React.FC = () => {
   const { projectId, chapterId } = useParams<{ projectId?: string; chapterId?: string }>()
   const navigate = useNavigate()
   const [project, setProject] = useState<Project | null>(null)
+  const [chapter, setChapter] = useState<Chapter | null>(null)
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (projectId) {
@@ -25,15 +27,26 @@ const EditorPage: React.FC = () => {
 
     try {
       setLoading(true)
+      setError(null)
+      
+      // 加载项目信息
       const projectData = await projectsApi.getById(projectId)
       setProject(projectData)
       
-      // TODO: 加载章节内容
+      // 如果指定了章节ID，加载章节内容
       if (chapterId) {
-        // 这里应该加载具体章节内容
-        setContent('# 章节标题\n\n开始你的创作...')
+        try {
+          const chapterData = await chaptersApi.getById(chapterId)
+          setChapter(chapterData)
+          setContent(chapterData.content || '')
+        } catch (chapterErr) {
+          console.error('Error loading chapter:', chapterErr)
+          setError('加载章节失败')
+        }
       } else {
-        setContent('# 新的创作\n\n开始你的创作...')
+        // 如果没有指定章节，显示项目信息或创建新章节提示
+        setChapter(null)
+        setContent(`# ${projectData.title}\n\n*项目描述：${projectData.description || '暂无描述'}*\n\n---\n\n## 开始创作\n\n选择一个章节开始编辑，或者创建新章节。`)
       }
     } catch (err) {
       setError('加载项目失败')
@@ -44,9 +57,24 @@ const EditorPage: React.FC = () => {
   }
 
   const handleSave = async (content: string) => {
-    // TODO: 实现保存逻辑
-    console.log('保存内容:', content)
-    // 这里应该调用 API 保存章节内容
+    if (!chapterId || !chapter) {
+      console.warn('无章节信息，跳过保存')
+      return
+    }
+
+    try {
+      setSaving(true)
+      await chaptersApi.update(chapterId, { content })
+      console.log('章节内容已保存')
+      
+      // 更新本地章节数据
+      setChapter({ ...chapter, content })
+    } catch (err) {
+      console.error('保存章节失败:', err)
+      setError('保存失败，请重试')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleContentChange = (content: string) => {
@@ -101,11 +129,13 @@ const EditorPage: React.FC = () => {
               <BookOpen size={20} className="text-gray-400" />
               <div>
                 <h1 className="font-semibold">
-                  {project ? project.title : '写作编辑器'}
+                  {chapter ? chapter.title : (project ? project.title : '写作编辑器')}
                 </h1>
                 {project && (
                   <p className="text-sm text-gray-500">
                     {project.author} · {project.status}
+                    {chapter && ` · 第${chapter.order}章`}
+                    {saving && ' · 保存中...'}
                   </p>
                 )}
               </div>

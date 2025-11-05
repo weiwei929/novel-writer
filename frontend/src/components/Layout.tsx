@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Home, FolderOpen, FileText, Edit, BarChart3, Settings } from 'lucide-react'
+import { Home, FolderOpen, FileText, Edit, BarChart3, Settings, TestTube, Upload } from 'lucide-react'
 
 interface LayoutProps {
   children: ReactNode
@@ -14,7 +14,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/collections', label: '文集管理', icon: FolderOpen },
     { path: '/projects', label: '项目管理', icon: FileText },
     { path: '/editor', label: '写作编辑器', icon: Edit },
+    { path: '/files', label: '文件管理', icon: Upload },
     { path: '/settings', label: '设置', icon: Settings },
+    { path: '/api-test', label: 'API测试', icon: TestTube },
   ]
 
   return (

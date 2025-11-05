@@ -47,5 +47,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/yourusername/novel-writer.git"
+  },
+  "dependencies": {
+    "axios": "^1.13.1"
   }
 }

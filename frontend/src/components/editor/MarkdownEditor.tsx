@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
-import Editor from '@monaco-editor/react'
-import { Save, Eye, EyeOff, Maximize2, Minimize2, FileText } from 'lucide-react'
+import { Save, Eye, EyeOff, Maximize2, Minimize2, FileText, Palette } from 'lucide-react'
+import EnhancedMonacoEditor from './EnhancedMonacoEditor'
 import AIAssistant from './AIAssistant'
 
 interface MarkdownEditorProps {
@@ -21,22 +21,22 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const [content, setContent] = useState(initialContent)
   const [showPreview, setShowPreview] = useState(true)
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [wordCount, setWordCount] = useState(0)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [editorTheme, setEditorTheme] = useState<string>('novel-light')
   
   const autoSaveTimer = useRef<NodeJS.Timeout>()
-  const editorRef = useRef<any>(null)
 
-  // 计算字数
+  // 更新内容
   useEffect(() => {
-    const words = content.replace(/[^\u4e00-\u9fa5\w]/g, ' ').split(/\s+/).filter(word => word.length > 0)
-    setWordCount(words.length)
-  }, [content])
+    if (initialContent !== content) {
+      setContent(initialContent)
+    }
+  }, [initialContent])
 
   // 自动保存
   useEffect(() => {
-    if (!autoSave || !onSave) return
+    if (!autoSave || !onSave || content === initialContent) return
 
     if (autoSaveTimer.current) {
       clearTimeout(autoSaveTimer.current)
@@ -51,20 +51,21 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         clearTimeout(autoSaveTimer.current)
       }
     }
-  }, [content, autoSave, autoSaveDelay])
+  }, [content, autoSave, autoSaveDelay, onSave, initialContent])
 
-  const handleEditorChange = (value: string | undefined) => {
-    const newContent = value || ''
+  const handleEditorChange = (newContent: string) => {
     setContent(newContent)
     onContentChange?.(newContent)
   }
 
-  const handleSave = async () => {
+  const handleSave = async (saveContent?: string) => {
     if (!onSave) return
 
+    const contentToSave = saveContent || content
+    
     setIsSaving(true)
     try {
-      await onSave(content)
+      await onSave(contentToSave)
       setLastSaved(new Date())
     } catch (error) {
       console.error('保存失败:', error)
@@ -73,86 +74,45 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     }
   }
 
-  const handleEditorMount = (editor: any) => {
-    editorRef.current = editor
-    
-    // 添加快捷键
-    editor.addCommand(editor.KeyMod.CtrlCmd | editor.KeyCode.KeyS, () => {
-      handleSave()
-    })
+  const handleSuggestionAccept = (suggestion: string) => {
+    const newContent = content + '\n\n' + suggestion
+    setContent(newContent)
+    onContentChange?.(newContent)
   }
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen)
   }
 
-  const insertMarkdown = (before: string, after: string = '') => {
-    if (!editorRef.current) return
-
-    const editor = editorRef.current
-    const selection = editor.getSelection()
-    const selectedText = editor.getModel()?.getValueInRange(selection) || ''
-    
-    const newText = before + selectedText + after
-    editor.executeEdits('', [{
-      range: selection,
-      text: newText
-    }])
-
-    // 设置新的选择区域
-    const newSelection = {
-      startLineNumber: selection.startLineNumber,
-      startColumn: selection.startColumn + before.length,
-      endLineNumber: selection.endLineNumber,
-      endColumn: selection.endColumn + before.length
-    }
-    editor.setSelection(newSelection)
-    editor.focus()
+  const toggleTheme = () => {
+    const themes = ['novel-light', 'novel-dark', 'novel-sepia']
+    const currentIndex = themes.indexOf(editorTheme)
+    const nextIndex = (currentIndex + 1) % themes.length
+    setEditorTheme(themes[nextIndex])
   }
 
-  const renderPreview = (markdown: string) => {
-    // 简单的 Markdown 转换（实际项目中建议使用 marked 或 markdown-it）
-    let html = markdown
-      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-      .replace(/^\* (.*$)/gim, '<li>$1</li>')
+  // 渲染Markdown预览
+  const renderPreview = (text: string) => {
+    // 简单的Markdown渲染，后续可以替换为更强大的库
+    let html = text
+      // 标题
+      .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+      .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+      .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+      // 粗体和斜体
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`(.*?)`/g, '<code>$1</code>')
+      // 段落
+      .replace(/\n\n/g, '</p><p>')
+      // 换行
       .replace(/\n/g, '<br>')
 
-    // 包装 li 标签
-    html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
-
-    return { __html: html }
+    return { __html: `<p>${html}</p>` }
   }
 
-  const handleSuggestionAccept = (suggestion: string) => {
-    if (!editorRef.current) return
-
-    const editor = editorRef.current
-    const position = editor.getPosition()
-    
-    // 在当前光标位置插入建议内容
-    editor.executeEdits('', [{
-      range: {
-        startLineNumber: position.lineNumber,
-        startColumn: position.column,
-        endLineNumber: position.lineNumber,
-        endColumn: position.column
-      },
-      text: '\n\n' + suggestion
-    }])
-
-    // 移动光标到插入内容的末尾
-    const lines = suggestion.split('\n')
-    const newPosition = {
-      lineNumber: position.lineNumber + lines.length + 1,
-      column: lines[lines.length - 1].length + 1
-    }
-    editor.setPosition(newPosition)
-    editor.focus()
+  const insertMarkdown = (before: string, after: string = '') => {
+    // 这个功能将由Monaco编辑器内部处理
+    console.log('插入Markdown:', before, after)
   }
 
   const containerClasses = isFullscreen 
@@ -199,35 +159,40 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               className="px-3 py-1 text-sm border rounded hover:bg-gray-100"
               title="列表"
             >
-              •
+              列表
             </button>
+
+            <div className="h-4 w-px bg-gray-300"></div>
+
             <button
-              onClick={() => insertMarkdown('`', '`')}
-              className="px-3 py-1 text-sm border rounded hover:bg-gray-100 font-mono"
-              title="代码"
+              onClick={toggleTheme}
+              className="flex items-center space-x-1 px-3 py-1 text-sm border rounded hover:bg-gray-100"
+              title="切换主题"
             >
-              &lt;/&gt;
+              <Palette size={16} />
+              <span>主题</span>
             </button>
           </div>
 
-          <div className="flex items-center space-x-3">
-            {/* 状态信息 */}
-            <div className="flex items-center space-x-4 text-sm text-gray-600">
-              <span className="flex items-center space-x-1">
-                <FileText size={16} />
-                <span>{wordCount} 字</span>
-              </span>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <FileText size={16} />
               {lastSaved && (
                 <span>
-                  上次保存: {lastSaved.toLocaleTimeString()}
+                  {isSaving ? '保存中...' : `已保存 ${lastSaved.toLocaleTimeString()}`}
                 </span>
-              )}
-              {isSaving && (
-                <span className="text-blue-600">保存中...</span>
               )}
             </div>
 
-            {/* 控制按钮 */}
+            <button
+              onClick={() => handleSave()}
+              disabled={isSaving}
+              className="flex items-center space-x-1 px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+            >
+              <Save size={16} />
+              <span>{isSaving ? '保存中' : '保存'}</span>
+            </button>
+
             <button
               onClick={() => setShowPreview(!showPreview)}
               className="flex items-center space-x-1 px-3 py-1 text-sm border rounded hover:bg-gray-100"
@@ -235,15 +200,6 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             >
               {showPreview ? <EyeOff size={16} /> : <Eye size={16} />}
               <span>{showPreview ? '隐藏预览' : '显示预览'}</span>
-            </button>
-
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex items-center space-x-1 px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
-            >
-              <Save size={16} />
-              <span>保存</span>
             </button>
 
             <button
@@ -261,29 +217,14 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       <div className="flex flex-1 overflow-hidden">
         {/* 编辑器 */}
         <div className={showPreview ? 'w-1/2 border-r' : 'w-full'}>
-          <Editor
-            height="100%"
-            defaultLanguage="markdown"
+          <EnhancedMonacoEditor
             value={content}
             onChange={handleEditorChange}
-            onMount={handleEditorMount}
-            theme="vs-light"
-            options={{
-              fontSize: 14,
-              lineHeight: 1.6,
-              wordWrap: 'on',
-              minimap: { enabled: false },
-              scrollBeyondLastLine: false,
-              automaticLayout: true,
-              tabSize: 2,
-              insertSpaces: true,
-              renderWhitespace: 'selection',
-              folding: true,
-              lineNumbers: 'on',
-              glyphMargin: false,
-              lineDecorationsWidth: 0,
-              lineNumbersMinChars: 3,
-            }}
+            onSave={handleSave}
+            theme={editorTheme}
+            autoSave={autoSave}
+            autoSaveDelay={autoSaveDelay}
+            showWordCount={!showPreview}
           />
         </div>
 

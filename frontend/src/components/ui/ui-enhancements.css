@@ -1,0 +1,154 @@
+/* 通知动画 */
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+/* 自定义类 */
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.slide-in-from-right {
+  animation: slideInFromRight 0.3s ease-out;
+}
+
+.animate-progress {
+  animation: progress linear;
+}
+
+/* 响应式设计改进 */
+@media (max-width: 768px) {
+  /* 移动端样式调整 */
+  .notification-container {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    right: 1rem;
+    z-index: 50;
+  }
+  
+  .notification-item {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  /* 移动端表格响应式 */
+  .table-responsive {
+    overflow-x: auto;
+  }
+  
+  /* 移动端按钮改进 */
+  .btn-mobile {
+    min-height: 44px; /* 触摸友好的最小高度 */
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* 加载状态样式 */
+.loading-overlay {
+  backdrop-filter: blur(2px);
+}
+
+/* 错误状态样式 */
+.error-display {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border: 1px solid #f87171;
+}
+
+/* 成功状态样式 */  
+.success-display {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border: 1px solid #4ade80;
+}
+
+/* 改进的焦点样式 */
+.focus-ring:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* 自定义滚动条 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* 暗色主题支持 */
+@media (prefers-color-scheme: dark) {
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #1e293b;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #475569;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+  }
+}
+
+/* 过渡动画改进 */
+.smooth-transition {
+  transition: all 0.2s ease-in-out;
+}
+
+/* 交互式元素悬停效果 */
+.interactive:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 卡片阴影层次 */
+.card-shadow {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.card-shadow:hover {
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+}
+
+/* 骨架屏动画 */
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: skeleton-loading 1.2s ease-in-out infinite;
+}

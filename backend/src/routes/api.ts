@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express'
-import { db } from '../services/database.js'
-import { ApiResponse, Collection, Project, Chapter } from '../types/index.js'
+import { db } from '../services/database'
+import { ApiResponse, Collection, Project, Chapter } from '../types/index'
 
 const router = Router()
 

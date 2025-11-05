@@ -2,15 +2,26 @@ import express from 'express'
 import cors from 'cors'
 import fs from 'fs'
 import path from 'path'
+import dotenv from 'dotenv'
+
+// 加载环境变量
+dotenv.config()
 
 // 导入独立路由
-import collectionsRouter from './routes/collections.js'
-import projectsRouter from './routes/projects.js'
-import statsRouter from './routes/stats.js'
-import apiRouter from './routes/api.js'
+import collectionsRouter from './routes/collections'
+import projectsRouter from './routes/projects'
+import chaptersRouter from './routes/chapters'
+import statsRouter from './routes/stats'
+import apiRouter from './routes/api'
+import authRouter from './routes/auth'
+import fileRouter from './routes/fileRoutes'
+
+// 导入中间件
+import { errorHandler, notFoundHandler, requestLogger } from './middleware/errorHandler'
+import { authenticateApp } from './middleware/auth'
 
 const app = express()
-const PORT = process.env.PORT || 5000
+const PORT = parseInt(process.env.PORT || '5000', 10)
 
 // 基础中间件
 app.use(cors({
@@ -21,7 +32,32 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
-// 基础路由
+// 请求日志中间件 - 恢复到原位置
+if (process.env.NODE_ENV !== 'test') {
+  app.use(requestLogger)
+}
+
+// 所有路由定义
+app.get('/', (req: express.Request, res: express.Response) => {
+  console.log('🏠 Root path handler executed:', { url: req.url, path: req.path, query: req.query })
+  res.status(200).json({ 
+    message: 'Novel Writer Backend API',
+    version: '1.0.0',
+    status: 'running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    endpoints: {
+      health: '/health',
+      api: '/api/v1',
+      collections: '/api/v1/collections',
+      projects: '/api/v1/projects',
+      chapters: '/api/v1/chapters',
+      stats: '/api/v1/stats'
+    }
+  })
+})
+
+// 健康检查端点
 app.get('/health', (req: express.Request, res: express.Response) => {
   res.json({ 
     status: 'ok', 
@@ -40,21 +76,20 @@ app.get('/api/v1/health', (req: express.Request, res: express.Response) => {
   })
 })
 
-// 健康检查
-app.get('/health', (req: express.Request, res: express.Response) => {
-  res.json({ 
-    status: 'ok', 
-    timestamp: new Date().toISOString(),
-    version: '1.0.0',
-    environment: process.env.NODE_ENV || 'development'
-  })
-})
+// 认证路由 (公开访问)
+app.use('/auth', authRouter)
 
-// API路由
+// 应用认证中间件 (保护所有 API 路由)
+app.use('/api', authenticateApp)
+
+// API 路由 - 更具体的路由在前面
 app.use('/api/v1/collections', collectionsRouter)
-app.use('/api/v1/projects', projectsRouter)
+app.use('/api/v1/projects', projectsRouter)  
+app.use('/api/v1/chapters', chaptersRouter)
 app.use('/api/v1/stats', statsRouter)
-app.use('/api', apiRouter)
+app.use('/api/v1/files', fileRouter)
+// 只有在路径是 '/api/' 或 '/api/v1' 开头时才使用 apiRouter
+app.use('/api/v1', apiRouter)
 
 // 初始化数据结构
 function initializeDataStructure() {
@@ -85,41 +120,51 @@ function initializeDataStructure() {
   }
 }
 
-// 错误处理
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Unhandled error:', err)
-  res.status(500).json({
-    success: false,
-    error: {
-      code: 'INTERNAL_ERROR',
-      message: process.env.NODE_ENV === 'production' ? '内部服务器错误' : err.message
-    }
-  })
-})
+// 404处理 - 必须在所有路由之后
+app.use('*', notFoundHandler)
 
-// 404处理
-app.use('*', (req: express.Request, res: express.Response) => {
-  res.status(404).json({
-    success: false,
-    error: { code: 'NOT_FOUND', message: '接口不存在' }
-  })
-})
+// 全局错误处理 - 必须在最后
+app.use(errorHandler)
 
 // 启动服务器
 async function startServer() {
   try {
     initializeDataStructure()
     
-    app.listen(PORT, () => {
+    // 导入并初始化数据库
+    const { db } = await import('./services/database')
+    await db.init()
+    console.log('💾 Database initialized')
+    
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Novel-Writer Backend Server running on port ${PORT}`)
       console.log(`📁 Environment: ${process.env.NODE_ENV || 'development'}`)
       console.log(`💾 Data path: ${process.env.DATA_PATH || './data'}`)
-      console.log(`🔗 Health check: http://localhost:${PORT}/health`)
+      console.log(`🔗 Health check: http://localhost:5000/health`)
+      console.log(`🔍 Server address: ${JSON.stringify(server.address())}`)
+    })
+    
+    server.on('error', (error: any) => {
+      console.error('❌ Server error:', error)
+      if (error.code === 'EADDRINUSE') {
+        console.error(`❌ Port ${PORT} is already in use`)
+      }
     })
   } catch (error) {
     console.error('❌ Failed to start server:', error)
     process.exit(1)
   }
 }
+
+// 添加进程错误处理
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error)
+  process.exit(1)
+})
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason)
+  process.exit(1)
+})
 
 startServer()

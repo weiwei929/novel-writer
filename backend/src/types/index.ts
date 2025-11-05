@@ -42,6 +42,7 @@ export interface Project {
   createdAt: string
   updatedAt: string
   publishedAt?: string
+  completedAt?: string
   
   // 内容设定
   settings?: {

@@ -1,15 +1,7 @@
 import express from 'express'
-import { db } from '../services/database.js'
-import { Project } from '../types/index.js'
-
-interface ApiResponse<T = any> {
-  success: boolean
-  data?: T
-  error?: {
-    code: string
-    message: string
-  }
-}
+import { db } from '../services/database'
+import { Project, Chapter } from '../types/index'
+import { ApiResponse, ApiErrorCode, createSuccessResponse, createErrorResponse, ErrorCodeToHttpStatus } from '../types/api'
 
 const router = express.Router()
 
@@ -22,21 +14,17 @@ router.get('/', async (req: express.Request, res: express.Response) => {
     const { collectionId } = req.query
     const projects = await db.getProjects(collectionId as string)
     
-    const response: ApiResponse<Project[]> = {
-      success: true,
-      data: projects
-    }
+    const response = createSuccessResponse(projects, {
+      collectionId: collectionId || 'all'
+    })
     
     res.json(response)
   } catch (error) {
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: 'DATABASE_ERROR',
-        message: error instanceof Error ? error.message : 'Failed to fetch projects'
-      }
-    }
-    res.status(500).json(response)
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to fetch projects'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
   }
 })
 
@@ -333,6 +321,228 @@ router.get('/search', async (req: express.Request, res: express.Response) => {
       }
     }
     res.status(500).json(response)
+  }
+})
+
+/**
+ * 完成项目
+ * PUT /api/v1/projects/:id/complete
+ */
+router.put('/:id/complete', async (req: express.Request, res: express.Response) => {
+  try {
+    const { id } = req.params
+    const project = await db.getProjectById(id)
+    
+    if (!project) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Project not found'
+        }
+      }
+      return res.status(404).json(response)
+    }
+    
+    // 更新项目状态为已完成
+    const updatedProject = await db.updateProject(id, {
+      status: 'completed',
+      completedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    })
+    
+    if (!updatedProject) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: 'DATABASE_ERROR',
+          message: 'Failed to update project'
+        }
+      }
+      return res.status(500).json(response)
+    }
+    
+    const response: ApiResponse<Project> = {
+      success: true,
+      data: updatedProject
+    }
+    
+    res.json(response)
+  } catch (error) {
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: error instanceof Error ? error.message : 'Failed to complete project'
+      }
+    }
+    res.status(500).json(response)
+  }
+})
+
+/**
+ * 归档项目到文集
+ * PUT /api/v1/projects/:id/archive
+ */
+router.put('/:id/archive', async (req: express.Request, res: express.Response) => {
+  try {
+    const { id } = req.params
+    const { collectionId } = req.body
+    
+    if (!collectionId) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Collection ID is required'
+        }
+      }
+      return res.status(400).json(response)
+    }
+    
+    const project = await db.getProjectById(id)
+    if (!project) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Project not found'
+        }
+      }
+      return res.status(404).json(response)
+    }
+    
+    // 验证文集是否存在
+    const collection = await db.getCollectionById(collectionId)
+    if (!collection) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Collection not found'
+        }
+      }
+      return res.status(404).json(response)
+    }
+    
+    // 更新项目状态为已归档，并关联到文集
+    const updatedProject = await db.updateProject(id, {
+      status: 'archived',
+      collectionId,
+      updatedAt: new Date().toISOString()
+    })
+    
+    if (!updatedProject) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: 'DATABASE_ERROR',
+          message: 'Failed to update project'
+        }
+      }
+      return res.status(500).json(response)
+    }
+    
+    const response: ApiResponse<Project> = {
+      success: true,
+      data: updatedProject
+    }
+    
+    res.json(response)
+  } catch (error) {
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: error instanceof Error ? error.message : 'Failed to archive project'
+      }
+    }
+    res.status(500).json(response)
+  }
+})
+
+// ============ 章节相关端点 (RESTful) ============
+
+/**
+ * 获取项目的所有章节 (RESTful)
+ * GET /api/v1/projects/:id/chapters
+ */
+router.get('/:id/chapters', async (req: express.Request, res: express.Response) => {
+  try {
+    const { id: projectId } = req.params
+    
+    // 验证项目是否存在
+    const project = await db.getProjectById(projectId)
+    if (!project) {
+      const response = createErrorResponse(
+        ApiErrorCode.NOT_FOUND,
+        'Project not found'
+      )
+      return res.status(ErrorCodeToHttpStatus[ApiErrorCode.NOT_FOUND]).json(response)
+    }
+    
+    const chapters = await db.getChapters(projectId)
+    
+    const response = createSuccessResponse(chapters, {
+      projectId,
+      projectTitle: project.title
+    })
+    
+    res.json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to fetch chapters'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+/**
+ * 为项目创建新章节 (RESTful)
+ * POST /api/v1/projects/:id/chapters
+ */
+router.post('/:id/chapters', async (req: express.Request, res: express.Response) => {
+  try {
+    const { id: projectId } = req.params
+    const chapterData = req.body
+    
+    // 验证项目是否存在
+    const project = await db.getProjectById(projectId)
+    if (!project) {
+      const response = createErrorResponse(
+        ApiErrorCode.NOT_FOUND,
+        'Project not found'
+      )
+      return res.status(ErrorCodeToHttpStatus[ApiErrorCode.NOT_FOUND]).json(response)
+    }
+    
+    // 验证必需字段
+    if (!chapterData.title) {
+      const response = createErrorResponse(
+        ApiErrorCode.VALIDATION_ERROR,
+        'Chapter title is required'
+      )
+      return res.status(ErrorCodeToHttpStatus[ApiErrorCode.VALIDATION_ERROR]).json(response)
+    }
+    
+    // 设置项目ID
+    chapterData.projectId = projectId
+    
+    const newChapter = await db.createChapter(chapterData)
+    
+    const response = createSuccessResponse(newChapter, {
+      projectId,
+      projectTitle: project.title
+    })
+    
+    res.status(201).json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to create chapter'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
   }
 })
 

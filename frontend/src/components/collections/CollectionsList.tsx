@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react'
 import { collectionsApi, Collection, CreateCollectionData } from '../../services/api'
 import { Plus, Edit, Trash2, FolderOpen, Tag } from 'lucide-react'
+import { useNotifications, useLoading } from '../../contexts/UIContext'
+import { LoadingState } from '../ui/LoadingComponents'
+import ErrorBoundary from '../ui/ErrorBoundary'
 
 const CollectionsList: React.FC = () => {
   const [collections, setCollections] = useState<Collection[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  
+  const { success, error: showError } = useNotifications()
+  const { withLoading } = useLoading()
 
   // 加载文集数据
   useEffect(() => {
@@ -16,91 +22,109 @@ const CollectionsList: React.FC = () => {
   const loadCollections = async () => {
     try {
       setLoading(true)
+      setError(null)
       const data = await collectionsApi.getAll()
       setCollections(data)
     } catch (err) {
-      setError('加载文集失败')
+      const errorMessage = '加载文集失败，请重试'
+      setError(errorMessage)
+      showError('加载失败', errorMessage)
       console.error('Error loading collections:', err)
     } finally {
       setLoading(false)
     }
   }
 
+  const refreshCollections = async () => {
+    await loadCollections()
+  }
+
   const handleDelete = async (id: string) => {
     if (!confirm('确定要删除这个文集吗？')) return
     
     try {
-      await collectionsApi.delete(id)
+      await withLoading(
+        () => collectionsApi.delete(id),
+        '正在删除文集...'
+      )
       setCollections(collections.filter(c => c.id !== id))
+      success('删除成功', '文集已成功删除')
     } catch (err) {
-      setError('删除文集失败')
+      const errorMessage = '删除文集失败，请重试'
+      showError('删除失败', errorMessage)
       console.error('Error deleting collection:', err)
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-lg">加载中...</div>
-      </div>
-    )
-  }
+  // 使用新的LoadingState组件来处理加载、错误和空状态
+  const renderCollectionGrid = () => {
+    if (collections.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <FolderOpen className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">暂无文集</h3>
+          <p className="text-gray-500 mb-4">创建您的第一个文集来组织小说项目</p>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            创建文集
+          </button>
+        </div>
+      )
+    }
 
-  if (error) {
     return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-        {error}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {collections.map(collection => (
+          <CollectionCard
+            key={collection.id}
+            collection={collection}
+            onDelete={() => handleDelete(collection.id)}
+            onUpdate={() => refreshCollections()}
+          />
+        ))}
       </div>
     )
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">文集管理</h1>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-blue-600"
-        >
-          <Plus size={20} />
-          创建文集
-        </button>
-      </div>
-
-      {collections.length === 0 ? (
-        <div className="text-center py-12">
-          <FolderOpen size={64} className="mx-auto text-gray-400 mb-4" />
-          <p className="text-gray-500 text-lg mb-4">还没有文集</p>
+    <ErrorBoundary>
+      <div>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">文集管理</h1>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-600"
+            className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-blue-600"
           >
-            创建第一个文集
+            <Plus size={20} />
+            创建文集
           </button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {collections.map((collection) => (
-            <CollectionCard
-              key={collection.id}
-              collection={collection}
-              onDelete={handleDelete}
-              onUpdate={loadCollections}
-            />
-          ))}
-        </div>
-      )}
 
-      {showCreateModal && (
-        <CreateCollectionModal
-          onClose={() => setShowCreateModal(false)}
-          onSuccess={() => {
-            setShowCreateModal(false)
-            loadCollections()
-          }}
-        />
-      )}
-    </div>
+        <LoadingState
+          loading={loading}
+          error={error}
+          empty={!loading && !error && collections.length === 0}
+          emptyMessage="还没有文集，创建第一个文集来组织您的小说项目"
+          onRetry={loadCollections}
+          minHeight="h-64"
+        >
+          {renderCollectionGrid()}
+        </LoadingState>
+
+        {showCreateModal && (
+          <CreateCollectionModal
+            onClose={() => setShowCreateModal(false)}
+            onSuccess={() => {
+              setShowCreateModal(false)
+              loadCollections()
+            }}
+          />
+        )}
+      </div>
+    </ErrorBoundary>
   )
 }
 
@@ -110,18 +134,23 @@ interface CollectionCardProps {
   onUpdate: () => void
 }
 
-const CollectionCard: React.FC<CollectionCardProps> = ({ collection, onDelete }) => {
+const CollectionCard: React.FC<CollectionCardProps> = ({ collection, onDelete, onUpdate }) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-xl font-semibold">{collection.name}</h3>
         <div className="flex gap-2">
-          <button className="text-blue-500 hover:text-blue-700">
+          <button 
+            onClick={onUpdate}
+            className="text-blue-500 hover:text-blue-700"
+            title="编辑文集"
+          >
             <Edit size={18} />
           </button>
           <button 
             onClick={() => onDelete(collection.id)}
             className="text-red-500 hover:text-red-700"
+            title="删除文集"
           >
             <Trash2 size={18} />
           </button>
