@@ -5,6 +5,98 @@ import { ApiResponse, ApiErrorCode, createSuccessResponse, createErrorResponse, 
 
 const router = express.Router()
 
+// ===== 项目元数据端点 =====
+router.put('/:id/metadata/:field', async (req: express.Request, res: express.Response) => {
+  try {
+    const { id, field } = req.params
+    const { content } = req.body || {}
+
+    const item = await db.updateProjectMetadataField(id, field, content || '')
+    const response = createSuccessResponse(item, { projectId: id, field })
+    res.json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to update project metadata'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+router.get('/:id/metadata/:field', async (req: express.Request, res: express.Response) => {
+  try {
+    const { id, field } = req.params
+    const item = await db.getProjectMetadataField(id, field)
+    const response = createSuccessResponse(item, { projectId: id, field })
+    res.json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to fetch project metadata'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+router.get('/:id/metadata/:field/versions', async (req: express.Request, res: express.Response) => {
+  try {
+    const { id, field } = req.params
+    const versions = await db.getProjectMetadataVersions(id, field)
+    const response = createSuccessResponse(versions, { projectId: id, field })
+    res.json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to fetch metadata versions'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+// ===== 章节规划（Project级结构化数据） =====
+router.put('/:id/chapter-planning', async (req: express.Request, res: express.Response) => {
+  try {
+    const { id } = req.params
+    const { plans } = req.body || {}
+
+    // 校验项目存在
+    const project = await db.getProjectById(id)
+    if (!project) {
+      const response = createErrorResponse(
+        ApiErrorCode.NOT_FOUND,
+        'Project not found'
+      )
+      return res.status(ErrorCodeToHttpStatus[ApiErrorCode.NOT_FOUND]).json(response)
+    }
+
+    const updated = await db.updateProjectChapterPlanning(id, Array.isArray(plans) ? plans : [])
+    const response = createSuccessResponse(updated, { projectId: id })
+    res.json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to update chapter planning'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+router.post('/:id/metadata/:field/save-version', async (req: express.Request, res: express.Response) => {
+  try {
+    const { id, field } = req.params
+    const { content, userNote, autoSaved } = req.body || {}
+    const version = await db.saveProjectMetadataVersion(id, field, content || '', userNote || '', !!autoSaved)
+    const response = createSuccessResponse(version, { projectId: id, field })
+    res.status(201).json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to save metadata version'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
 /**
  * 获取所有项目
  * GET /api/v1/projects?collectionId=xxx

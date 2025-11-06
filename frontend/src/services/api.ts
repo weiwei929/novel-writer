@@ -13,6 +13,20 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // 允许在需要时发送 cookie（虽然当前主要使用 Authorization 头）
+  withCredentials: true
+})
+
+// 请求拦截器：为所有受保护请求附带本地会话令牌
+api.interceptors.request.use((config) => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('novel_auth_token') : null
+  if (token) {
+    config.headers = config.headers || {}
+    ;(config.headers as Record<string, string>).Authorization = `Bearer ${token}`
+    // 兼容后端的 x-auth-token 读取（多一层保险）
+    ;(config.headers as Record<string, string>)["x-auth-token"] = token
+  }
+  return config
 })
 
 // 添加响应拦截器统一处理ApiResponse格式
@@ -98,6 +112,9 @@ export interface Project {
   updatedAt: string
   publishedAt?: string
   completedAt?: string
+  // 元数据与章节规划（后端已提供，前端暂作可选以保持兼容）
+  metadata?: Record<string, any>
+  chapterPlanning?: any[]
 }
 
 export interface CreateProjectData {
@@ -152,6 +169,33 @@ export const projectsApi = {
   async archiveToCollection(projectId: string, collectionId: string): Promise<Project> {
     const response = await api.put(`/projects/${projectId}/archive`, { collectionId })
     return response.data
+  },
+
+  // ===== 项目元数据管理（试点：synopsis）=====
+  async updateMetadata(projectId: string, field: string, content: string): Promise<any> {
+    const response = await api.put(`/projects/${projectId}/metadata/${field}`, { content })
+    return response.data
+  },
+
+  async getMetadata(projectId: string, field: string): Promise<{ current: string; lastModified: string; wordCount: number; versions: any[] }> {
+    const response = await api.get(`/projects/${projectId}/metadata/${field}`)
+    return response.data
+  },
+
+  async getMetadataVersions(projectId: string, field: string): Promise<any[]> {
+    const response = await api.get(`/projects/${projectId}/metadata/${field}/versions`)
+    return response.data || []
+  },
+
+  async saveMetadataVersion(projectId: string, field: string, content: string, userNote = '', autoSaved = false): Promise<any> {
+    const response = await api.post(`/projects/${projectId}/metadata/${field}/save-version`, { content, userNote, autoSaved })
+    return response.data
+  },
+
+  // ===== 项目章节规划 =====
+  async updateChapterPlanning(projectId: string, plans: any[]): Promise<any[]> {
+    const response = await api.put(`/projects/${projectId}/chapter-planning`, { plans })
+    return response.data || []
   },
 }
 
@@ -221,6 +265,29 @@ export const chaptersApi = {
   // 删除章节
   async delete(id: string): Promise<void> {
     await api.delete(`/chapters/${id}`)
+  },
+
+  // 更新章节元数据字段
+  async updateMetadata(chapterId: string, field: string, content: string): Promise<any> {
+    const response = await api.put(`/chapters/${chapterId}/metadata/${field}`, { content })
+    return response.data
+  },
+
+  async getMetadata(chapterId: string, field: string): Promise<{ current: string; lastModified: string; wordCount: number; versions: any[] }> {
+    const response = await api.get(`/chapters/${chapterId}/metadata/${field}`)
+    return response.data
+  },
+
+  // 获取章节元数据版本历史
+  async getMetadataVersions(chapterId: string, field: string): Promise<any[]> {
+    const response = await api.get(`/chapters/${chapterId}/metadata/${field}/versions`)
+    return response.data || []
+  },
+
+  // 保存章节元数据版本
+  async saveMetadataVersion(chapterId: string, field: string, content: string, userNote = '', autoSaved = false): Promise<any> {
+    const response = await api.post(`/chapters/${chapterId}/metadata/${field}/save-version`, { content, userNote, autoSaved })
+    return response.data
   },
 }
 

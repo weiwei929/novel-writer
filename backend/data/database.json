@@ -1,5 +1,250 @@
 {
-  "collections": [],
-  "projects": [],
-  "chapters": []
+  "collections": [
+    {
+      "id": "63d1deaa-eddd-493a-be7f-7568c215a950",
+      "name": "测试文集_1762389193698",
+      "description": "这是一个API测试文集",
+      "tags": [
+        "测试"
+      ],
+      "projectCount": 1,
+      "createdAt": "2025-11-06T00:33:13.702Z",
+      "updatedAt": "2025-11-06T00:33:13.702Z"
+    },
+    {
+      "id": "e39c84b3-c842-4fa6-a786-36e7a0161896",
+      "name": "测试",
+      "description": "这还是一个测试集合",
+      "tags": [],
+      "projectCount": 0,
+      "createdAt": "2025-11-06T01:41:52.509Z",
+      "updatedAt": "2025-11-06T01:41:52.509Z"
+    }
+  ],
+  "projects": [
+    {
+      "id": "c9f39da3-5fc8-45fe-872a-325aaf36df71",
+      "title": "测试项目_1762389194131",
+      "description": "这是一个API测试项目",
+      "author": "API测试员",
+      "genre": [
+        "测试"
+      ],
+      "tags": [],
+      "status": "draft",
+      "collectionId": "",
+      "wordCount": 2,
+      "chapterCount": 1,
+      "createdAt": "2025-11-06T00:33:14.135Z",
+      "updatedAt": "2025-11-06T00:33:14.135Z",
+      "metadata": {
+        "synopsis": {
+          "current": "梗概V0：初始内容",
+          "versions": [
+            {
+              "id": "8c34ed76-3b13-48b9-ad8b-10c6e07185cf",
+              "content": "版本1：第一版",
+              "timestamp": "2025-11-06T00:43:47.662Z",
+              "userNote": "save",
+              "autoSaved": false
+            }
+          ],
+          "lastModified": "2025-11-06T00:43:47.662Z",
+          "wordCount": 1
+        }
+      }
+    },
+    {
+      "id": "cbbeb984-bad8-494c-a944-e09f6df349cd",
+      "title": "元数据试点项目",
+      "description": "用于元数据API试点",
+      "author": "系统",
+      "genre": [
+        "测试"
+      ],
+      "tags": [],
+      "status": "draft",
+      "collectionId": "",
+      "wordCount": 0,
+      "chapterCount": 0,
+      "createdAt": "2025-11-06T00:43:09.335Z",
+      "updatedAt": "2025-11-06T00:43:09.335Z",
+      "metadata": {
+        "synopsis": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T00:43:09.335Z",
+          "wordCount": 0
+        }
+      }
+    },
+    {
+      "id": "6e4b39fe-d623-428c-a195-ad033ecd6f4a",
+      "title": "哈哈",
+      "description": "这是一个测试项目，看看能否打通？",
+      "author": "张宁",
+      "genre": [],
+      "tags": [],
+      "status": "draft",
+      "collectionId": "63d1deaa-eddd-493a-be7f-7568c215a950",
+      "wordCount": 0,
+      "chapterCount": 0,
+      "createdAt": "2025-11-06T01:33:50.240Z",
+      "updatedAt": "2025-11-06T01:33:50.240Z",
+      "metadata": {
+        "synopsis": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:33:50.240Z",
+          "wordCount": 0
+        },
+        "characters": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:33:50.240Z",
+          "wordCount": 0
+        },
+        "timeline": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:33:50.240Z",
+          "wordCount": 0
+        },
+        "settings": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:33:50.240Z",
+          "wordCount": 0
+        },
+        "relationships": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:33:50.240Z",
+          "wordCount": 0
+        },
+        "plotStructure": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:33:50.240Z",
+          "wordCount": 0
+        },
+        "chapterPlanning": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:33:50.240Z",
+          "wordCount": 0
+        }
+      },
+      "chapterPlanning": []
+    },
+    {
+      "id": "1352aa7a-7ae6-4a6b-ab42-0fb400cf862f",
+      "title": "远山呼唤",
+      "description": "新建一个项目试试",
+      "author": "飞飞",
+      "genre": [],
+      "tags": [],
+      "status": "draft",
+      "collectionId": "",
+      "wordCount": 2,
+      "chapterCount": 1,
+      "createdAt": "2025-11-06T01:38:34.891Z",
+      "updatedAt": "2025-11-06T02:05:46.973Z",
+      "metadata": {
+        "synopsis": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:38:34.892Z",
+          "wordCount": 0
+        },
+        "characters": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:38:34.892Z",
+          "wordCount": 0
+        },
+        "timeline": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:38:34.892Z",
+          "wordCount": 0
+        },
+        "settings": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:38:34.892Z",
+          "wordCount": 0
+        },
+        "relationships": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:38:34.892Z",
+          "wordCount": 0
+        },
+        "plotStructure": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:38:34.892Z",
+          "wordCount": 0
+        },
+        "chapterPlanning": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:38:34.892Z",
+          "wordCount": 0
+        }
+      },
+      "chapterPlanning": []
+    }
+  ],
+  "chapters": [
+    {
+      "id": "be7394ef-3678-4c64-9678-ca53d08ea81a",
+      "title": "测试章节_1762389194354",
+      "content": "这是一个API测试章节的内容。\n\n包含一些测试文字来验证字数统计功能。",
+      "projectId": "c9f39da3-5fc8-45fe-872a-325aaf36df71",
+      "order": 1,
+      "wordCount": 2,
+      "status": "draft",
+      "createdAt": "2025-11-06T00:33:14.357Z",
+      "updatedAt": "2025-11-06T00:33:14.357Z"
+    },
+    {
+      "id": "4d74cc77-b8d8-402f-b78f-29920ea088f9",
+      "title": "第1章",
+      "content": "春天来了，张三每天都在等待一个人\r\n\r\n丽丽是他的同学，充满幻想",
+      "projectId": "1352aa7a-7ae6-4a6b-ab42-0fb400cf862f",
+      "order": 1,
+      "wordCount": 2,
+      "status": "draft",
+      "createdAt": "2025-11-06T02:00:31.019Z",
+      "updatedAt": "2025-11-06T02:05:46.968Z",
+      "metadata": {
+        "synopsis": {
+          "current": "这是一个无厘头的故事，哈哈",
+          "versions": [],
+          "lastModified": "2025-11-06T02:00:59.698Z",
+          "wordCount": 1
+        },
+        "characters": {
+          "current": "张三：纯真少年\n丽丽：张三的女同学，充满幻想",
+          "versions": [],
+          "lastModified": "2025-11-06T02:01:58.856Z",
+          "wordCount": 2
+        },
+        "timeSetting": {
+          "current": "2025年春天，高三的时候",
+          "versions": [],
+          "lastModified": "2025-11-06T02:02:20.661Z",
+          "wordCount": 1
+        },
+        "sceneSettings": {
+          "current": "校园里，",
+          "versions": [],
+          "lastModified": "2025-11-06T02:02:41.562Z",
+          "wordCount": 1
+        }
+      }
+    }
+  ]
 }

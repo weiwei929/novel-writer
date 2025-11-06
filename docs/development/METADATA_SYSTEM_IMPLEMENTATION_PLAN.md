@@ -489,7 +489,48 @@ const SaveVersionDialog = ({ onSave, onCancel }) => {
 
 ---
 
----
+## ✅ 2025-11-06 实施进展与结构更新
+
+本节记录本阶段已落地的实现、和原方案的小幅结构调整，确保文档与代码一致。
+
+### 已完成功能（对照计划）
+- 后端
+  - 启用项目/章节元数据字段白名单：
+    - ProjectMetadata: synopsis, characters, timeline, settings, relationships, plotStructure
+    - ChapterMetadata: synopsis, characters, timeSetting, sceneSettings
+  - 元数据与版本接口已上线：
+    - GET  /api/v1/projects/:id/metadata/:field
+    - PUT  /api/v1/projects/:id/metadata/:field
+    - GET  /api/v1/projects/:id/metadata/:field/versions
+    - POST /api/v1/projects/:id/metadata/:field/save-version
+    - GET  /api/v1/chapters/:id/metadata/:field
+    - PUT  /api/v1/chapters/:id/metadata/:field
+    - GET  /api/v1/chapters/:id/metadata/:field/versions
+    - POST /api/v1/chapters/:id/metadata/:field/save-version
+  - 章节规划接口：PUT /api/v1/projects/:id/chapter-planning
+  - 统计同步：章节保存成功后尝试更新项目 wordCount/chapterCount（失败时不阻塞并有提示）。
+
+- 前端
+  - 三栏编辑器页面 EnhancedEditorPage 稳定运行：左（项目导航）| 中（Markdown 编辑器）| 右（章节元数据）。
+  - 新增 ProjectMetadataPanel 抽屉面板，支持项目级元数据编辑、保存版本与历史恢复。
+  - MetadataEditor 组件统一承载保存/版本历史/恢复与字数统计。
+  - ProjectsList 的“编辑”可进入编辑器；编辑页支持快速“创建章节并跳转”。
+  - 未保存改动采用“自动保存 + 通知”替代阻塞式确认框。
+
+### 与原方案的结构性修正（重要）
+- chapterPlanning 不再作为 ProjectMetadata 下的 MetadataItem；统一为项目对象根上的结构化数组：`project.chapterPlanning: ChapterPlan[]`。
+  - 对应后端：从元数据白名单与初始化中移除了 `chapterPlanning` 字段，并在兼容处理里清理历史 `metadata.chapterPlanning`。
+  - 对应前端：在 ProjectNavigationPanel 中提供“编辑章节规划（JSON）”入口，调用独立的 `PUT /projects/:id/chapter-planning`。
+
+### 当前状态与验证
+- 后端日志显示 5000 端口启动稳定，关键端点 200/201 正常（项目、章节、元数据保存与版本、章节创建、统计刷新等）。
+- 前端多次构建通过（vite/tsc），三栏布局与抽屉面板交互顺畅。
+
+### 下一步建议（小步快跑）
+- 已完成：为 MetadataEditor 增加“拉取当前已保存值”的只读端点与前端初始化加载。
+- 已完成：将 MetadataEditor 内部遗留的 alert/confirm 替换为通知组件（非阻塞提示：成功/失败/警告）。
+- 已完成：将章节规划由 JSON 输入演进为结构化表单编辑器（增删改排序、状态、要点、字数）。
+
 
 ## 🎯 Phase 0 紧急修复执行报告 (已完成)
 

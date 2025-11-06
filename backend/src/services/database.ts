@@ -5,6 +5,7 @@ import { existsSync } from 'fs'
 import { mkdir } from 'fs/promises'
 import { v4 as uuidv4 } from 'uuid'
 import { Collection, Project, Chapter } from '../types/index.js'
+import { MetadataItem, SavedVersion } from '../types/metadata.js'
 
 interface DatabaseData {
   collections: Collection[]
@@ -15,6 +16,50 @@ interface DatabaseData {
 class DatabaseService {
   private db?: Low<DatabaseData>
   private readonly dataPath: string
+
+  private createDefaultMetadataItem(): MetadataItem {
+    const now = new Date().toISOString()
+    return {
+      current: '',
+      versions: [],
+      lastModified: now,
+      wordCount: 0
+    }
+  }
+
+  private ensureProjectMetadata(p: any) {
+    if (!p.metadata) p.metadata = {}
+    const projectFields = [
+      'synopsis',
+      'characters',
+      'timeline',
+      'settings',
+      'relationships',
+      'plotStructure'
+    ]
+    for (const f of projectFields) {
+      if (!p.metadata[f]) p.metadata[f] = this.createDefaultMetadataItem()
+    }
+    // 兼容旧数据：若曾把 chapterPlanning 作为 MetadataItem 写入元数据，清理掉
+    if (p.metadata.chapterPlanning) {
+      delete p.metadata.chapterPlanning
+    }
+    // 确保章节规划数组存在（Project 级别结构化数据，非 MetadataItem）
+    if (!Array.isArray(p.chapterPlanning)) p.chapterPlanning = []
+  }
+
+  private ensureChapterMetadata(c: any) {
+    if (!c.metadata) c.metadata = {}
+    const chapterFields = [
+      'synopsis',
+      'characters',
+      'timeSetting',
+      'sceneSettings'
+    ]
+    for (const f of chapterFields) {
+      if (!c.metadata[f]) c.metadata[f] = this.createDefaultMetadataItem()
+    }
+  }
 
   constructor(dataPath = './data') {
     this.dataPath = dataPath
@@ -118,7 +163,8 @@ class DatabaseService {
     await this.init()
     await this.db!.read()
 
-    const project: Project = {
+    const now = new Date().toISOString()
+    const project: Project & { metadata?: any; chapterPlanning?: any[] } = {
       id: uuidv4(),
       title: data.title,
       description: data.description || '',
@@ -129,11 +175,20 @@ class DatabaseService {
       collectionId: data.collectionId || '',
       wordCount: 0,
       chapterCount: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      createdAt: now,
+      updatedAt: now,
+      metadata: {
+        synopsis: this.createDefaultMetadataItem(),
+        characters: this.createDefaultMetadataItem(),
+        timeline: this.createDefaultMetadataItem(),
+        settings: this.createDefaultMetadataItem(),
+        relationships: this.createDefaultMetadataItem(),
+        plotStructure: this.createDefaultMetadataItem()
+      },
+      chapterPlanning: []
     }
 
-    this.db!.data.projects.push(project)
+    this.db!.data.projects.push(project as Project)
 
     if (project.collectionId) {
       const collection = this.db!.data.collections.find(c => c.id === project.collectionId)
@@ -150,23 +205,29 @@ class DatabaseService {
     await this.init()
     await this.db!.read()
 
-    if (collectionId) {
-      return this.db!.data.projects.filter(p => p.collectionId === collectionId)
-    }
-    return this.db!.data.projects
+    const list = collectionId
+      ? this.db!.data.projects.filter(p => p.collectionId === collectionId)
+      : this.db!.data.projects
+
+    // 确保元数据存在
+    list.forEach(p => this.ensureProjectMetadata(p as any))
+    return list
   }
 
   async getProjectById(id: string): Promise<Project | null> {
     await this.init()
     await this.db!.read()
-    return this.db!.data.projects.find(p => p.id === id) || null
+    const p = this.db!.data.projects.find(p => p.id === id) as any
+    if (!p) return null
+    this.ensureProjectMetadata(p)
+    return p as Project
   }
 
   async updateProject(id: string, updates: Partial<Project>): Promise<Project | null> {
     await this.init()
     await this.db!.read()
 
-    const project = this.db!.data.projects.find(p => p.id === id)
+    const project = this.db!.data.projects.find(p => p.id === id) as any
     if (!project) return null
 
     Object.assign(project, updates, {
@@ -174,8 +235,10 @@ class DatabaseService {
       updatedAt: new Date().toISOString()
     })
 
+    this.ensureProjectMetadata(project)
+
     await this.db!.write()
-    return project
+    return project as Project
   }
 
   async deleteProject(id: string): Promise<boolean> {
@@ -218,7 +281,7 @@ class DatabaseService {
       throw new Error('Project not found')
     }
 
-    const chapter: Chapter = {
+    const chapter: Chapter & { metadata?: any } = {
       id: uuidv4(),
       title: data.title,
       content: data.content || '',
@@ -227,7 +290,13 @@ class DatabaseService {
       wordCount: data.content ? data.content.split(/\s+/).length : 0,
       status: 'draft',
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      metadata: {
+        synopsis: this.createDefaultMetadataItem(),
+        characters: this.createDefaultMetadataItem(),
+        timeSetting: this.createDefaultMetadataItem(),
+        sceneSettings: this.createDefaultMetadataItem()
+      }
     }
 
     this.db!.data.chapters.push(chapter)
@@ -245,15 +314,19 @@ class DatabaseService {
   async getChapters(projectId: string): Promise<Chapter[]> {
     await this.init()
     await this.db!.read()
-    return this.db!.data.chapters
+    const list = this.db!.data.chapters
       .filter(c => c.projectId === projectId)
       .sort((a, b) => a.order - b.order)
+    list.forEach(c => this.ensureChapterMetadata(c as any))
+    return list
   }
 
   async getChapterById(id: string): Promise<Chapter | null> {
     await this.init()
     await this.db!.read()
-    return this.db!.data.chapters.find(c => c.id === id) || null
+    const chapter = this.db!.data.chapters.find(c => c.id === id) || null
+    if (chapter) this.ensureChapterMetadata(chapter as any)
+    return chapter
   }
 
   async updateChapter(id: string, updates: Partial<Chapter>): Promise<Chapter | null> {
@@ -281,6 +354,7 @@ class DatabaseService {
       project.wordCount = project.wordCount - oldWordCount + chapter.wordCount
     }
 
+    this.ensureChapterMetadata(chapter as any)
     await this.db!.write()
     return chapter
   }
@@ -354,6 +428,216 @@ class DatabaseService {
       totalWords: this.db!.data.projects.reduce((sum, p) => sum + p.wordCount, 0),
       lastUpdated: new Date().toISOString()
     }
+  }
+
+  // ===== 元数据字段白名单 =====
+  private isAllowedField(field: string) {
+    const projectFields = [
+      'synopsis',
+      'characters',
+      'timeline',
+      'settings',
+      'relationships',
+      'plotStructure'
+    ]
+    const chapterFields = [
+      'synopsis',
+      'characters',
+      'timeSetting',
+      'sceneSettings'
+    ]
+    return [...projectFields, ...chapterFields].includes(field)
+  }
+
+  // ===== 章节规划（Project级结构化数据） =====
+  async updateProjectChapterPlanning(projectId: string, plans: any[]) {
+    await this.init()
+    await this.db!.read()
+
+    const project = this.db!.data.projects.find(p => p.id === projectId) as any
+    if (!project) throw new Error('Project not found')
+
+    if (!Array.isArray(plans)) throw new Error('Invalid chapter planning payload')
+    project.chapterPlanning = plans
+    project.updatedAt = new Date().toISOString()
+
+    await this.db!.write()
+    return project.chapterPlanning
+  }
+
+  async updateProjectMetadataField(projectId: string, field: string, content: string) {
+    await this.init()
+    await this.db!.read()
+
+    if (!this.isAllowedField(field)) {
+      throw new Error('Unsupported metadata field')
+    }
+
+    const project = this.db!.data.projects.find(p => p.id === projectId) as any
+    if (!project) throw new Error('Project not found')
+
+    this.ensureProjectMetadata(project)
+
+    const now = new Date().toISOString()
+    const item: MetadataItem = project.metadata[field] || this.createDefaultMetadataItem()
+    item.current = content || ''
+    item.wordCount = item.current ? item.current.trim().split(/\s+/).length : 0
+    item.lastModified = now
+    project.metadata[field] = item
+
+    await this.db!.write()
+    return item
+  }
+
+  async getProjectMetadataVersions(projectId: string, field: string) {
+    await this.init()
+    await this.db!.read()
+
+    if (!this.isAllowedField(field)) {
+      throw new Error('Unsupported metadata field')
+    }
+
+    const project = this.db!.data.projects.find(p => p.id === projectId) as any
+    if (!project) throw new Error('Project not found')
+
+    this.ensureProjectMetadata(project)
+    const item: MetadataItem = project.metadata[field] || this.createDefaultMetadataItem()
+    return item.versions
+  }
+
+  async getProjectMetadataField(projectId: string, field: string) {
+    await this.init()
+    await this.db!.read()
+
+    if (!this.isAllowedField(field)) {
+      throw new Error('Unsupported metadata field')
+    }
+
+    const project = this.db!.data.projects.find(p => p.id === projectId) as any
+    if (!project) throw new Error('Project not found')
+
+    this.ensureProjectMetadata(project)
+    const item: MetadataItem = project.metadata[field] || this.createDefaultMetadataItem()
+    return item
+  }
+
+  async saveProjectMetadataVersion(projectId: string, field: string, content: string, userNote = '', autoSaved = false) {
+    await this.init()
+    await this.db!.read()
+
+    if (!this.isAllowedField(field)) {
+      throw new Error('Unsupported metadata field')
+    }
+
+    const project = this.db!.data.projects.find(p => p.id === projectId) as any
+    if (!project) throw new Error('Project not found')
+
+    this.ensureProjectMetadata(project)
+
+    const now = new Date().toISOString()
+    const version: SavedVersion = {
+      id: uuidv4(),
+      content: content || '',
+      timestamp: now,
+      userNote: userNote || '',
+      autoSaved: !!autoSaved
+    }
+
+    const item: MetadataItem = project.metadata[field] || this.createDefaultMetadataItem()
+    item.versions.push(version)
+    item.lastModified = now
+    project.metadata[field] = item
+
+    await this.db!.write()
+    return version
+  }
+
+  // Chapter Metadata Methods
+  async updateChapterMetadataField(chapterId: string, field: string, content: string) {
+    await this.init()
+    await this.db!.read()
+
+    if (!this.isAllowedField(field)) {
+      throw new Error('Unsupported metadata field')
+    }
+
+    const chapter = this.db!.data.chapters.find(c => c.id === chapterId) as any
+    if (!chapter) throw new Error('Chapter not found')
+
+    this.ensureChapterMetadata(chapter)
+
+    const now = new Date().toISOString()
+    const item: MetadataItem = chapter.metadata[field] || this.createDefaultMetadataItem()
+    item.current = content || ''
+    item.wordCount = item.current ? item.current.trim().split(/\s+/).length : 0
+    item.lastModified = now
+    chapter.metadata[field] = item
+
+    await this.db!.write()
+    return item
+  }
+
+  async getChapterMetadataVersions(chapterId: string, field: string) {
+    await this.init()
+    await this.db!.read()
+
+    if (!this.isAllowedField(field)) {
+      throw new Error('Unsupported metadata field')
+    }
+
+    const chapter = this.db!.data.chapters.find(c => c.id === chapterId) as any
+    if (!chapter) throw new Error('Chapter not found')
+
+    this.ensureChapterMetadata(chapter)
+    const item: MetadataItem = chapter.metadata[field] || this.createDefaultMetadataItem()
+    return item.versions
+  }
+
+  async getChapterMetadataField(chapterId: string, field: string) {
+    await this.init()
+    await this.db!.read()
+
+    if (!this.isAllowedField(field)) {
+      throw new Error('Unsupported metadata field')
+    }
+
+    const chapter = this.db!.data.chapters.find(c => c.id === chapterId) as any
+    if (!chapter) throw new Error('Chapter not found')
+
+    this.ensureChapterMetadata(chapter)
+    const item: MetadataItem = chapter.metadata[field] || this.createDefaultMetadataItem()
+    return item
+  }
+
+  async saveChapterMetadataVersion(chapterId: string, field: string, content: string, userNote = '', autoSaved = false) {
+    await this.init()
+    await this.db!.read()
+
+    if (!this.isAllowedField(field)) {
+      throw new Error('Unsupported metadata field')
+    }
+
+    const chapter = this.db!.data.chapters.find(c => c.id === chapterId) as any
+    if (!chapter) throw new Error('Chapter not found')
+
+    this.ensureChapterMetadata(chapter)
+
+    const now = new Date().toISOString()
+    const version: SavedVersion = {
+      id: uuidv4(),
+      content: content || '',
+      timestamp: now,
+      userNote: userNote || '',
+      autoSaved: !!autoSaved
+    }
+
+    const item: MetadataItem = chapter.metadata[field] || this.createDefaultMetadataItem()
+    item.versions.push(version)
+    item.lastModified = now
+    chapter.metadata[field] = item
+
+    await this.db!.write()
+    return version
   }
 }
 

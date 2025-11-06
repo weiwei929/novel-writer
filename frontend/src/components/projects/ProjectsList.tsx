@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { projectsApi, collectionsApi, Project, Collection, CreateProjectData } from '../../services/api'
 import { Plus, Edit, Trash2, FileText, User, Calendar, BarChart3 } from 'lucide-react'
 
@@ -178,12 +179,17 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   getStatusColor,
   getStatusText
 }) => {
+  const navigate = useNavigate()
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-xl font-semibold line-clamp-2">{project.title}</h3>
         <div className="flex gap-2">
-          <button className="text-blue-500 hover:text-blue-700">
+          <button 
+            className="text-blue-500 hover:text-blue-700"
+            onClick={() => navigate(`/editor/${project.id}`)}
+            title="进入编辑器"
+          >
             <Edit size={18} />
           </button>
           <button 
@@ -257,6 +263,7 @@ interface CreateProjectModalProps {
 }
 
 const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ collections, onClose, onSuccess }) => {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState<CreateProjectData & { genre: string[], tags: string[] }>({
     title: '',
     description: '',
@@ -277,12 +284,16 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ collections, on
 
     try {
       setLoading(true)
-      await projectsApi.create({
+      const newProject = await projectsApi.create({
         ...formData,
         title: formData.title.trim(),
         description: formData.description?.trim(),
         author: formData.author.trim(),
       })
+      // 创建成功后直接跳转到编辑器
+      if (newProject?.id) {
+        navigate(`/editor/${newProject.id}`)
+      }
       onSuccess()
     } catch (err) {
       setError('创建项目失败')
