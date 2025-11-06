@@ -35,15 +35,21 @@ const EnhancedEditorPage: React.FC = () => {
     }
   }, [projectId])
 
+  // 当路由参数变化时（项目/章节切换）加载章节
   useEffect(() => {
     if (projectId && chapterId) {
       loadChapter()
-    } else if (project && !chapterId) {
+    }
+  }, [projectId, chapterId])
+
+  // 当处于项目层级（没有选中章节）且项目数据就绪时，填充项目简介
+  useEffect(() => {
+    if (project && !chapterId) {
       setChapter(null)
       setContent(generateProjectIntro(project))
       setLoading(false)
     }
-  }, [projectId, chapterId, project])
+  }, [project, chapterId])
 
   const loadProject = async () => {
     if (!projectId) return
