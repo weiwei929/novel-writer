@@ -1,173 +1,107 @@
 # Novel-Writer 小说创作器
 
-## 🚀 项目状态：产品化开发阶段
+基于 React + Node.js 的本地优先小说创作平台，支持项目/章节元数据管理、版本历史与结构化章节规划，已在本地开发环境稳定运行并进入功能迭代阶段。
 
-**重大突破 (2025/11/4)**: 成功解决API路由架构问题，前后端连接完全打通！  
-**当前状态**: 稳固的全栈架构基础已建立，进入快速功能迭代阶段
+## � 当前状态（2025-11-06）
 
-基于AI辅助的个人小说创作工具，支持文集管理、无审查内容生成和媒体补充。
+- 前后端架构稳定：Express(5000) + Vite(3000) 端到端联通
+- 认证与拦截器完善：前端 Axios 拦截器与后端认证路由工作正常
+- 编辑器体系落地：三栏编辑器 + 项目/章节元数据面板 + 版本管理
+- 章节规划升级：从自由 JSON 提示，升级为结构化规划编辑器（CRUD/排序/状态/要点）
 
-## 🎯 项目概述
+## ✨ 核心能力
 
-Novel-Writer是一个完整的个人创作管理平台，从单篇小说到系列作品的全生命周期管理。采用React + Node.js + Grok API技术栈，支持本地VPS部署，确保隐私和创作自由。
-
-### 📅 最新成就 (2025年11月4日)
-- ✅ **API路由系统修复** - 解决Express.js路由冲突，实现前后端稳定连接
-- ✅ **开发环境优化** - 前端(3001)和后端(5000)端口稳定运行，支持热重载  
-- ✅ **API测试体系** - 完整的接口测试页面 `/api-test` 可用
-- ✅ **技术文档体系** - 建立了完善的技术文档和经验总结
-
-## ✨ 核心功能
-
-- 📚 **文集管理**：多项目归类、系列管理、批量操作
-- 🤖 **AI辅助创作**：基于Grok API的无审查内容生成
-- ✏️ **Markdown编辑**：实时预览、媒体嵌入、交叉引用
-- 🎨 **可视化工具**：人物关系图、时间线编辑器
-- 🖼️ **媒体处理**：图片视频上传、自动嵌入
-- 💾 **数据安全**：本地存储、自动备份、加密保护
+- 📚 文集与项目管理：项目统计、章节创建、导航跳转
+- � 三栏编辑器：左侧项目导航 | 中部正文编辑 | 右侧章节元数据
+- 🧩 元数据系统：项目/章节字段可视化编辑，支持版本保存与回滚
+- 🧱 章节规划：结构化规划项（标题、状态、关键要点、顺序），独立保存
+- � 友好交互：自动保存、非阻塞通知、失败提示与复原
+- � 本地优先：JSON/LowDB 存储，可备份与回滚
 
 ## 🚀 快速开始
 
-> 🎉 **V1.0 核心版本已发布！** - [查看里程碑](./MILESTONE-v1.0.md)
+参考完整快速指南：`QUICKSTART.md`
 
-### 📋 系统要求
-- Node.js 18+
-- npm 或 yarn 
-- 现代浏览器
-
-### ⚡ 快速启动
+1) 安装依赖
 
 ```bash
-# 1. 克隆项目
-git clone <your-repo> && cd novel-writer
-
-# 2. 安装依赖
 cd backend && npm install
 cd ../frontend && npm install
-
-# 3. 启动应用
-# 终端1: 启动后端
-cd backend && npm run build && npm start
-
-# 终端2: 启动前端  
-cd frontend && npm run dev
 ```
 
-**访问地址**:
-- 前端应用: http://localhost:3000
-- 后端API: http://localhost:5000
-
-> 📖 **完整指南**: [QUICK-START.md](./QUICK-START.md) | **里程碑记录**: [MILESTONE-v1.0.md](./MILESTONE-v1.0.md)
-
-### 生产环境部署
+2) 启动服务（两个终端）
 
 ```bash
-# 1. 构建项目
-npm run build
+# 终端 A：后端（http://localhost:5000）
+cd backend
+npm run dev
 
-# 2. 本地部署
-npm start
-
-# 3. 使用PM2管理进程
-npm install -g pm2
-pm2 start ecosystem.config.js
+# 终端 B：前端（http://localhost:3000）
+cd frontend
+npm run dev
 ```
 
-## 📁 项目结构
+可选：打包与预览
+
+```bash
+# 前端
+cd frontend
+npm run build
+npm run preview
+
+# 后端（生产）
+cd ../backend
+npm run build
+npm start
+```
+
+## 📍 访问地址
+
+- 前端开发：http://localhost:3000
+- 后端健康：http://localhost:5000/health
+
+提示：根目录有 `api-test.html` 可用于快速调用 API（直接用浏览器打开本地文件）。
+
+## 📁 主要结构
 
 ```
 novel-writer/
-├── frontend/          # React前端应用
-├── backend/           # Node.js后端服务
-├── deployment/        # Docker和Caddy配置
-├── docs/              # 项目文档
-├── data/              # 数据存储目录
-└── README.md
+├─ frontend/           # React + Vite 前端
+├─ backend/            # Express + TypeScript 后端
+├─ docs/               # 文档索引与说明
+├─ data/               # 本地数据（LowDB/JSON）
+├─ deployment/         # 部署与进程管理示例
+└─ README.md
 ```
 
 ## 📖 文档
 
-### 核心文档
-- **[📚 文档索引](./docs/INDEX.md)** - 完整文档导航
-- **[🚀 快速开始](./QUICKSTART.md)** - 快速启动指南
-- **[📋 需求文档](./docs/requirements/小说创作器应用需求文档（优化版）.md)** - 产品需求规格  
-- **[🏗️ 技术文档](./docs/architecture/小说创作器应用技术文档（优化版）.md)** - 系统架构设计
+- 文档总览：`docs/INDEX.md`
+- 快速启动：`QUICKSTART.md`
+- 需求规格：`docs/requirements/小说创作器应用需求文档（优化版）.md`
+- 技术架构：`docs/architecture/小说创作器应用技术文档（优化版）.md`
+- 元数据实现进展：`docs/development/METADATA_SYSTEM_IMPLEMENTATION_PLAN.md`
 
-### 开发相关  
-- **[🏆 技术成就](./docs/development/TECHNICAL_ACHIEVEMENTS.md)** - 重要技术突破
-- **[📝 开发日志](./docs/development/DEVELOPMENT_LOG.md)** - 开发过程记录
-- **[🔧 API路由修复](./docs/technical/API_ROUTING_FIX.md)** - 技术问题解决案例
+## 🛠️ 技术栈（当前真实使用）
 
-## 🛠️ 技术栈
+- 前端：React 18 + TypeScript + Vite，Axios，React Router，Tailwind 实用类（tailwind-merge），Lucide 图标，Monaco Editor
+- 后端：Express + TypeScript，LowDB(JSON) 持久化，CORS，dotenv
+- 架构：REST API（/api/v1），前端代理转发到 5000，版本化元数据与结构化章节规划
 
-### 前端
-- **框架**：React 18 + TypeScript
-- **UI库**：Material-UI 5
-- **状态管理**：Redux Toolkit
-- **编辑器**：Monaco Editor
-- **可视化**：React Flow
-- **构建**：Vite
+## 🔒 隐私与本地化
 
-### 后端
-- **框架**：Express.js + TypeScript
-- **AI集成**：Grok API (xAI)
-- **文件处理**：Multer + FFmpeg
-- **数据存储**：JSON文件 + LowDB
-- **安全**：加密存储 + HTTPS
+- 本地运行与存储，便于离线创作与隐私保护
+- 可选备份目录与版本快照，支持回滚
 
-### 部署
-- **容器化**：Docker + Docker Compose
-- **Web服务器**：Caddy (自动HTTPS)
-- **进程管理**：PM2
-- **监控**：日志轮转 + 健康检查
+## �️ 道路图（节选）
 
-## 🔒 隐私和安全
+- [ ] 章节规划拖拽排序与键入优化（chips）
+- [ ] 从规划一键生成章节（可选）
+- [ ] README 英文化与截图
 
-- ✅ 完全本地化部署，无云端数据传输
-- ✅ AES加密存储创作内容
-- ✅ Grok API仅传输必要提示，不记录敏感信息
-- ✅ 自动备份和恢复机制
-- ✅ 防火墙和HTTPS安全防护
+## 📄 许可证
 
-## 📚 重要文档索引
+MIT License（详见根目录 `LICENSE`）
 
-### 🎯 快速导航
-- **[📚 完整文档索引](./docs/INDEX.md)** - 所有文档的详细导航
-- **[🚀 快速开始指南](./QUICKSTART.md)** - 5分钟启动项目
-
-### 📋 核心文档
-- **[需求规格](./docs/requirements/小说创作器应用需求文档（优化版）.md)** - 产品功能和用户需求
-- **[技术架构](./docs/architecture/小说创作器应用技术文档（优化版）.md)** - 系统架构和实现规格  
-- **[技术成就](./docs/development/TECHNICAL_ACHIEVEMENTS.md)** - 重要技术突破总结
-- **[开发日志](./docs/development/DEVELOPMENT_LOG.md)** - 详细开发进展记录
-
-### 🔗 快速链接  
-- **前端应用**: http://localhost:3001
-- **API测试页面**: http://localhost:3001/api-test
-- **后端健康检查**: http://localhost:5000/health
-
-## 🏆 项目里程碑
-
-**2025年11月4日** - API路由架构修复重大突破  
-标志着项目从概念验证阶段正式进入产品化开发阶段，建立了稳固的全栈架构基础。
-
-## �📄 许可证
-
-MIT License - 仅限个人使用，请遵守当地法律法规。
-
----
-**项目状态**: 🚀 产品化开发中  
-**最后更新**: 2025年11月4日  
-**维护团队**: Novel-Writer开发团队
-
-## 🤝 贡献
-
-这是个人项目，当前不接受外部贡献。
-
-## 📞 联系
-
-如有问题请查看文档或创建Issue。
-
----
-
-**⚠️ 重要提示**：本应用支持无审查内容生成，用户需自行承担内容责任，确保遵守当地法律法规。
+——
+最后更新：2025-11-06
