@@ -26,6 +26,8 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const [editorTheme, setEditorTheme] = useState<string>('novel-light')
   
   const autoSaveTimer = useRef<NodeJS.Timeout>()
+  const onSaveRef = useRef<typeof onSave>()
+  onSaveRef.current = onSave
 
   // 更新内容
   useEffect(() => {
@@ -34,16 +36,19 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     }
   }, [initialContent])
 
-  // 自动保存
+  // 自动保存：仅在内容变化时调度，避免因 onSave 重新创建导致重复定时器
   useEffect(() => {
-    if (!autoSave || !onSave || content === initialContent) return
+    if (!autoSave || content === initialContent) return
 
     if (autoSaveTimer.current) {
       clearTimeout(autoSaveTimer.current)
     }
 
     autoSaveTimer.current = setTimeout(() => {
-      handleSave()
+      // 使用稳定的回调引用，避免依赖变更导致重复触发
+      if (onSaveRef.current) {
+        onSaveRef.current(content)
+      }
     }, autoSaveDelay)
 
     return () => {
@@ -51,7 +56,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         clearTimeout(autoSaveTimer.current)
       }
     }
-  }, [content, autoSave, autoSaveDelay, onSave, initialContent])
+  }, [content, autoSave, autoSaveDelay, initialContent])
 
   const handleEditorChange = (newContent: string) => {
     setContent(newContent)

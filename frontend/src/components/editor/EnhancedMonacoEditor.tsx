@@ -32,6 +32,8 @@ const EnhancedMonacoEditor: React.FC<EnhancedMonacoEditorProps> = ({
   const [readingTime, setReadingTime] = useState(0)
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout>()
+  const onSaveRef = useRef<typeof onSave>()
+  onSaveRef.current = onSave
 
   const updateStatistics = (text: string) => {
     const chars = text.length
@@ -43,14 +45,17 @@ const EnhancedMonacoEditor: React.FC<EnhancedMonacoEditorProps> = ({
     setReadingTime(reading)
   }
 
+  // 仅在 value 变化时调度自动保存，使用稳定回调引用避免重复定时
   useEffect(() => {
-    if (autoSave && value && onSave) {
+    if (autoSave && value && onSaveRef.current) {
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current)
       }
-      
+
       autoSaveTimeoutRef.current = setTimeout(() => {
-        onSave(value)
+        if (onSaveRef.current) {
+          onSaveRef.current(value)
+        }
       }, autoSaveDelay)
     }
 
@@ -59,7 +64,7 @@ const EnhancedMonacoEditor: React.FC<EnhancedMonacoEditorProps> = ({
         clearTimeout(autoSaveTimeoutRef.current)
       }
     }
-  }, [value, autoSave, autoSaveDelay, onSave])
+  }, [value, autoSave, autoSaveDelay])
 
   const handleEditorDidMount = (editorInstance: editor.IStandaloneCodeEditor, monaco: Monaco) => {
     editorRef.current = editorInstance
