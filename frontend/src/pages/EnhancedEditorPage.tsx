@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import MarkdownEditor from '../components/editor/MarkdownEditor'
 import ProjectNavigationPanel from '../components/editor/ProjectNavigationPanel'
-import ChapterMetadataPanel from '../components/editor/ChapterMetadataPanel'
 import ProjectMetadataPanel from '../components/editor/ProjectMetadataPanel'
 import ModeSwitcher from '../components/writing-mode/ModeSwitcher'
 import ModeIndicator from '../components/writing-mode/ModeIndicator'
 import PlanningPanel from '../components/writing-mode/PlanningPanel'
 import WritingStatsPanel from '../components/writing-mode/WritingStatsPanel'
+import VersionManagementPanel from '../components/version/VersionManagementPanel'
 import { WritingModeProvider, useWritingMode, WritingMode } from '../contexts/WritingModeContext'
+import { VersionManagementProvider, useVersionManagement } from '../contexts/VersionManagementContext'
 import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
 import { ArrowLeft, Save } from 'lucide-react'
 import { useNotifications } from '../contexts/UIContext'
@@ -17,6 +18,7 @@ const EnhancedEditorPageContent: React.FC = () => {
   const { error: notifyError, success: notifySuccess } = useNotifications()
   const { projectId, chapterId } = useParams<{ projectId?: string; chapterId?: string }>()
   const navigate = useNavigate()
+  const { initializeProject } = useVersionManagement()
 
   // 数据状态
   const [project, setProject] = useState<Project | null>(null)
@@ -67,6 +69,14 @@ const EnhancedEditorPageContent: React.FC = () => {
       ])
       setProject(projectData)
       setChapters(chaptersData)
+      
+      // 初始化版本管理系统
+      try {
+        await initializeProject(projectId)
+      } catch (versionError) {
+        console.error('版本管理初始化失败:', versionError)
+        // 版本管理初始化失败不应该阻止主功能
+      }
     } catch (err) {
       setError('加载项目失败')
       console.error('Error loading project:', err)
@@ -208,10 +218,6 @@ const EnhancedEditorPageContent: React.FC = () => {
     navigate('/projects')
   }
 
-
-  const handleMetadataUpdate = (field: string, value: string) => {
-    console.log(`元数据更新: ${field} =`, value)
-  }
 
   if (loading) return (
     <div className="h-screen flex items-center justify-center">
@@ -360,31 +366,25 @@ const EnhancedEditorPageContent: React.FC = () => {
         
       case WritingMode.REVIEW:
       default:
-        // 审阅模式：显示章节元数据（默认行为）
+        // 审阅模式：显示版本管理面板
         return (
-          <div className="bg-purple-50 border-l border-purple-200 shadow-lg flex-shrink-0 w-80">
-            <div className="p-4 border-b border-purple-200 bg-purple-100">
-              <h3 className="font-medium text-purple-900">审阅模式</h3>
-              <p className="text-xs text-purple-600">预览、元数据与版本管理</p>
-            </div>
-            <div className="bg-white">
-              <ChapterMetadataPanel 
-                chapter={chapter} 
-                onUpdate={handleMetadataUpdate}
-              />
-            </div>
-          </div>
+          <VersionManagementPanel 
+            chapter={chapter}
+            className="flex-shrink-0 w-80"
+          />
         )
     }
   }
 }
 
-// 主组件：提供写作模式上下文
+// 主组件：提供写作模式和版本管理上下文
 const EnhancedEditorPage: React.FC = () => {
   return (
-    <WritingModeProvider>
-      <EnhancedEditorPageContent />
-    </WritingModeProvider>
+    <VersionManagementProvider>
+      <WritingModeProvider>
+        <EnhancedEditorPageContent />
+      </WritingModeProvider>
+    </VersionManagementProvider>
   )
 }
 
