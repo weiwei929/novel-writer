@@ -60,9 +60,9 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
   }
 
   return (
-    <div className={`w-80 border-r bg-gray-50 flex flex-col ${className}`}>
+    <div className={`w-80 bg-gray-100 flex flex-col ${className}`}>
       {/* 顶部工具栏 */}
-      <div className="flex items-center justify-between p-3 border-b bg-white">
+      <div className="flex items-center justify-between p-4 border-b border-gray-300 bg-white shadow-sm">
         <h2 className="font-semibold text-gray-900 truncate flex-1">项目导航</h2>
         <div className="flex items-center gap-1">
           {onProjectSettings && (
@@ -85,7 +85,7 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
       </div>
 
       {/* 项目信息 */}
-      <div className="p-4 border-b bg-white">
+      <div className="p-4 border-b border-gray-300 bg-white shadow-sm">
         <h3 className="font-medium text-lg text-gray-900 mb-2">{project.title}</h3>
         <div className="space-y-1.5 text-sm text-gray-600">
           <div className="flex items-center justify-between">

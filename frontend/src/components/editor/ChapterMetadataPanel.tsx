@@ -41,8 +41,8 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
 
   if (!chapter) {
     return (
-      <div className={`w-80 border-l bg-gray-50 flex flex-col ${className}`}>
-        <div className="flex items-center justify-between p-3 border-b bg-white">
+      <div className={`w-80 bg-gray-100 flex flex-col ${className}`}>
+        <div className="flex items-center justify-between p-4 border-b border-gray-300 bg-white shadow-sm">
           <h2 className="font-semibold text-gray-900">章节元数据</h2>
           <button
             onClick={() => setIsCollapsed(true)}
@@ -60,9 +60,9 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
   }
 
   return (
-    <div className={`w-80 border-l bg-gray-50 flex flex-col ${className}`}>
+    <div className={`w-80 bg-gray-100 flex flex-col ${className}`}>
       {/* 顶部工具栏 */}
-      <div className="flex items-center justify-between p-3 border-b bg-white">
+      <div className="flex items-center justify-between p-4 border-b border-gray-300 bg-white shadow-sm">
         <h2 className="font-semibold text-gray-900">章节元数据</h2>
         <button
           onClick={() => setIsCollapsed(true)}
@@ -74,7 +74,7 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
       </div>
 
       {/* 当前章节信息 */}
-      <div className="p-3 border-b bg-white">
+      <div className="p-4 border-b border-gray-300 bg-white shadow-sm">
         <div className="text-xs text-gray-500 mb-1">第 {chapter.order} 章</div>
         <h3 className="font-medium text-gray-900 truncate">{chapter.title}</h3>
         <div className="flex items-center gap-3 mt-2 text-xs text-gray-600">
@@ -84,7 +84,7 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
       </div>
 
       {/* 元数据字段导航 */}
-      <div className="border-b bg-white">
+      <div className="border-b border-gray-300 bg-white shadow-sm">
         <div className="flex flex-col">
           {metadataFields.map((field) => (
             <button
@@ -119,7 +119,7 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
       </div>
 
       {/* 底部提示 */}
-      <div className="p-3 border-t bg-white">
+      <div className="p-4 border-t border-gray-300 bg-white shadow-sm">
         <div className="text-xs text-gray-500 space-y-1">
           <p>💡 <strong>快速保存</strong>: 点击"保存"按钮即时保存当前内容</p>
           <p>📦 <strong>版本管理</strong>: 点击"保存版本"添加版本说明并保存历史记录</p>

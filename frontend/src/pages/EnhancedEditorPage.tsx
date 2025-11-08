@@ -275,11 +275,45 @@ const EnhancedEditorPage: React.FC = () => {
         </div>
       </div>
       <div className="flex-1 flex overflow-hidden">
-  <ProjectNavigationPanel project={project} chapters={chapters} currentChapter={chapter} onChapterSelect={handleChapterSelect} onCreateChapter={handleCreateChapter} onProjectSettings={() => setShowProjectMetadata(true)} className="flex-shrink-0" />
-        <div className="flex-1 flex flex-col overflow-hidden bg-white">
-          <MarkdownEditor key={chapterId} initialContent={content} onSave={handleSave} onContentChange={handleContentChange} autoSave={true} autoSaveDelay={3000} />
+        {/* 左侧边栏 - 项目导航 */}
+        <div className="bg-gray-100 border-r border-gray-300 shadow-lg">
+          <ProjectNavigationPanel 
+            project={project} 
+            chapters={chapters} 
+            currentChapter={chapter} 
+            onChapterSelect={handleChapterSelect} 
+            onCreateChapter={handleCreateChapter} 
+            onProjectSettings={() => setShowProjectMetadata(true)} 
+            className="flex-shrink-0" 
+          />
         </div>
-        <ChapterMetadataPanel chapter={chapter} onUpdate={handleMetadataUpdate} className="flex-shrink-0" />
+        
+        {/* 分隔线 */}
+        <div className="w-1 bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 shadow-sm"></div>
+        
+        {/* 中间主编辑区域 */}
+        <div className="flex-1 flex flex-col overflow-hidden bg-white relative z-20 shadow-xl border-y border-gray-200">
+          <MarkdownEditor 
+            key={chapterId} 
+            initialContent={content} 
+            onSave={handleSave} 
+            onContentChange={handleContentChange} 
+            autoSave={true} 
+            autoSaveDelay={3000} 
+          />
+        </div>
+        
+        {/* 分隔线 */}
+        <div className="w-1 bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 shadow-sm"></div>
+        
+        {/* 右侧边栏 - 章节元数据 */}
+        <div className="bg-gray-100 border-l border-gray-300 shadow-lg">
+          <ChapterMetadataPanel 
+            chapter={chapter} 
+            onUpdate={handleMetadataUpdate} 
+            className="flex-shrink-0" 
+          />
+        </div>
       </div>
       {showProjectMetadata && (
         <ProjectMetadataPanel
