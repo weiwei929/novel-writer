@@ -4,11 +4,16 @@ import MarkdownEditor from '../components/editor/MarkdownEditor'
 import ProjectNavigationPanel from '../components/editor/ProjectNavigationPanel'
 import ChapterMetadataPanel from '../components/editor/ChapterMetadataPanel'
 import ProjectMetadataPanel from '../components/editor/ProjectMetadataPanel'
+import ModeSwitcher from '../components/writing-mode/ModeSwitcher'
+import ModeIndicator from '../components/writing-mode/ModeIndicator'
+import PlanningPanel from '../components/writing-mode/PlanningPanel'
+import WritingStatsPanel from '../components/writing-mode/WritingStatsPanel'
+import { WritingModeProvider, useWritingMode, WritingMode } from '../contexts/WritingModeContext'
 import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
 import { ArrowLeft, Save } from 'lucide-react'
 import { useNotifications } from '../contexts/UIContext'
 
-const EnhancedEditorPage: React.FC = () => {
+const EnhancedEditorPageContent: React.FC = () => {
   const { error: notifyError, success: notifySuccess } = useNotifications()
   const { projectId, chapterId } = useParams<{ projectId?: string; chapterId?: string }>()
   const navigate = useNavigate()
@@ -259,6 +264,14 @@ const EnhancedEditorPage: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center space-x-3">
+          {/* 写作模式指示器 */}
+          <ModeIndicator />
+          
+          {/* 写作模式切换器 */}
+          <ModeSwitcher variant="tabs" size="sm" />
+          
+          <div className="h-5 w-px bg-gray-300"></div>
+          
           <button
             onClick={() => setShowProjectMetadata(true)}
             className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50"
@@ -306,14 +319,8 @@ const EnhancedEditorPage: React.FC = () => {
         {/* 分隔线 */}
         <div className="w-1 bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 shadow-sm"></div>
         
-        {/* 右侧边栏 - 章节元数据 */}
-        <div className="bg-gray-100 border-l border-gray-300 shadow-lg">
-          <ChapterMetadataPanel 
-            chapter={chapter} 
-            onUpdate={handleMetadataUpdate} 
-            className="flex-shrink-0" 
-          />
-        </div>
+        {/* 右侧边栏 - 根据写作模式智能显示 */}
+        {renderRightPanel()}
       </div>
       {showProjectMetadata && (
         <ProjectMetadataPanel
@@ -322,6 +329,62 @@ const EnhancedEditorPage: React.FC = () => {
         />
       )}
     </div>
+  )
+
+  // 根据写作模式渲染右侧面板
+  function renderRightPanel() {
+    const { modeState } = useWritingMode()
+    
+    switch (modeState.currentMode) {
+      case WritingMode.PLANNING:
+        // 规划模式：显示项目规划面板
+        return (
+          <PlanningPanel 
+            chapter={chapter}
+            onOutlineChange={(outline) => console.log('大纲更新:', outline)}
+            onCharactersChange={(characters) => console.log('角色更新:', characters)}
+            className="flex-shrink-0 w-80"
+          />
+        )
+        
+      case WritingMode.WRITING:
+        // 写作模式：显示写作统计面板
+        return (
+          <WritingStatsPanel 
+            content={content}
+            wordTarget={1000}
+            timeTarget={60}
+            className="flex-shrink-0 w-80"
+          />
+        )
+        
+      case WritingMode.REVIEW:
+      default:
+        // 审阅模式：显示章节元数据（默认行为）
+        return (
+          <div className="bg-purple-50 border-l border-purple-200 shadow-lg flex-shrink-0 w-80">
+            <div className="p-4 border-b border-purple-200 bg-purple-100">
+              <h3 className="font-medium text-purple-900">审阅模式</h3>
+              <p className="text-xs text-purple-600">预览、元数据与版本管理</p>
+            </div>
+            <div className="bg-white">
+              <ChapterMetadataPanel 
+                chapter={chapter} 
+                onUpdate={handleMetadataUpdate}
+              />
+            </div>
+          </div>
+        )
+    }
+  }
+}
+
+// 主组件：提供写作模式上下文
+const EnhancedEditorPage: React.FC = () => {
+  return (
+    <WritingModeProvider>
+      <EnhancedEditorPageContent />
+    </WritingModeProvider>
   )
 }
 
