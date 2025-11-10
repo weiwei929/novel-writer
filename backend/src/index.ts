@@ -15,7 +15,7 @@ import statsRouter from './routes/stats.js'
 import apiRouter from './routes/api.js'
 import authRouter from './routes/auth.js'
 import fileRouter from './routes/fileRoutes.js'
-// import versionsRouter from './routes/versions.js' // 暂时禁用版本管理路由
+import versionsRouter from './routes/versions.js' 
 
 // 导入中间件
 import { errorHandler, notFoundHandler, requestLogger } from './middleware/errorHandler.js'
@@ -101,7 +101,7 @@ app.use('/api/v1/projects', projectsRouter)
 app.use('/api/v1/chapters', chaptersRouter)
 app.use('/api/v1/stats', statsRouter)
 app.use('/api/v1/files', fileRouter)
-// app.use('/api/v1/versions', versionsRouter) // 暂时禁用版本管理路由
+app.use('/api/v1/versions', versionsRouter) 
 // 只有在路径是 '/api/' 或 '/api/v1' 开头时才使用 apiRouter
 app.use('/api/v1', apiRouter)
 
