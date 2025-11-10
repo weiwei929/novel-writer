@@ -90,7 +90,7 @@ export const authenticateApp = (req: Request, res: Response, next: NextFunction)
   }
 
   // 检查是否是公开路由
-  const publicRoutes = ['/health', '/auth/status']
+  const publicRoutes = ['/health', '/api/v1/health', '/auth/status']
   if (publicRoutes.includes(req.path)) {
     return next()
   }

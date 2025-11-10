@@ -1,7 +1,11 @@
 import { Application } from 'express'
+import versionRoutes from './versions'
 
 export function setupRoutes(app: Application) {
   // 基础健康检查路由已在index.ts中定义
+  
+  // 版本管理API路由
+  app.use('/api', versionRoutes)
   
   // TODO: 添加各种API路由
   // app.use('/api/v1/collections', collectionRoutes)

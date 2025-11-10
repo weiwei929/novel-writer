@@ -301,3 +301,7 @@ export interface QueryParams {
   search?: string
   filter?: Record<string, any>
 }
+
+// 导出版本管理类型
+// ESM 运行时需要显式 .js 扩展，TS 会保持 .js 到 dist
+export * from './version.js'

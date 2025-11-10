@@ -15,6 +15,7 @@ import statsRouter from './routes/stats.js'
 import apiRouter from './routes/api.js'
 import authRouter from './routes/auth.js'
 import fileRouter from './routes/fileRoutes.js'
+// import versionsRouter from './routes/versions.js' // 暂时禁用版本管理路由
 
 // 导入中间件
 import { errorHandler, notFoundHandler, requestLogger } from './middleware/errorHandler.js'
@@ -67,9 +68,21 @@ app.get('/health', (req: express.Request, res: express.Response) => {
   })
 })
 
+// 根健康检查（未认证）
+// app.get('/health', (req: express.Request, res: express.Response) => {
+//   res.json({
+//     status: 'ok',
+//     scope: 'public',
+//     timestamp: new Date().toISOString(),
+//     environment: process.env.NODE_ENV || 'development'
+//   })
+// })
+
+// 版本化健康检查（可公开访问，已加入白名单）
 app.get('/api/v1/health', (req: express.Request, res: express.Response) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
+    scope: 'api',
     timestamp: new Date().toISOString(),
     version: '1.0.0',
     environment: process.env.NODE_ENV || 'development'
@@ -88,6 +101,7 @@ app.use('/api/v1/projects', projectsRouter)
 app.use('/api/v1/chapters', chaptersRouter)
 app.use('/api/v1/stats', statsRouter)
 app.use('/api/v1/files', fileRouter)
+// app.use('/api/v1/versions', versionsRouter) // 暂时禁用版本管理路由
 // 只有在路径是 '/api/' 或 '/api/v1' 开头时才使用 apiRouter
 app.use('/api/v1', apiRouter)
 
@@ -149,7 +163,7 @@ async function startServer() {
       console.log(`🚀 Novel-Writer Backend Server running on port ${PORT}`)
       console.log(`📁 Environment: ${process.env.NODE_ENV || 'development'}`)
       console.log(`💾 Data path: ${process.env.DATA_PATH || './data'}`)
-      console.log(`🔗 Health check: http://localhost:5000/health`)
+      console.log(`🔗 Health check: http://localhost:${PORT}/health`)
       console.log(`🔍 Server address: ${JSON.stringify(server.address())}`)
       console.log('✅ Server fully initialized and listening')
     })
@@ -177,4 +191,5 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1)
 })
 
+// 启动应用
 startServer()
