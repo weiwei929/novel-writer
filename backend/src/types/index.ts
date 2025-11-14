@@ -89,6 +89,7 @@ export interface Chapter {
   // 章节设定
   notes?: string
   tags?: string[]
+  summary?: string
   
   // AI辅助信息
   aiPrompts?: {

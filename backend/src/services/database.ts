@@ -150,6 +150,16 @@ class DatabaseService {
     return true
   }
 
+  // 生成带时间戳的ID
+  private generateTimestampId(prefix: string): string {
+    const timestamp = new Date().toISOString()
+      .replace(/[-:T]/g, '')
+      .replace(/\.\d+Z$/, '')
+      .slice(0, 14) // YYYYMMDDHHmmss
+    const random = Math.random().toString(36).substring(2, 8)
+    return `${prefix}_${timestamp}_${random}`
+  }
+
   // 项目管理
   async createProject(data: {
     title: string
@@ -165,7 +175,7 @@ class DatabaseService {
 
     const now = new Date().toISOString()
     const project: Project & { metadata?: any; chapterPlanning?: any[] } = {
-      id: uuidv4(),
+      id: this.generateTimestampId('proj'),
       title: data.title,
       description: data.description || '',
       author: data.author,
@@ -282,7 +292,7 @@ class DatabaseService {
     }
 
     const chapter: Chapter & { metadata?: any } = {
-      id: uuidv4(),
+      id: this.generateTimestampId('chap'),
       title: data.title,
       content: data.content || '',
       projectId: data.projectId,

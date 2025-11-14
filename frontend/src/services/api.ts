@@ -41,10 +41,19 @@ api.interceptors.response.use(
       return Promise.reject(error)
     }
   },
-  (error) => {
-    return handleApiError(error)
+  async (error) => {
+    let handledError: any;
+    try {
+      throw handleApiError(error); // 直接抛出
+    } catch (e) {
+      handledError = e;
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('ui:error', { detail: { message: handledError.message, code: handledError.code } }));
+      }
+    }
+    return Promise.reject(handledError);
   }
-)
+);
 
 // 文集相关类型定义
 export interface Collection {

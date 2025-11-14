@@ -31,7 +31,7 @@ const EnhancedMonacoEditor: React.FC<EnhancedMonacoEditorProps> = ({
   const [charCount, setCharCount] = useState(0)
   const [readingTime, setReadingTime] = useState(0)
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout>()
+  const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
   const onSaveRef = useRef<typeof onSave>()
   onSaveRef.current = onSave
 
@@ -67,14 +67,48 @@ const EnhancedMonacoEditor: React.FC<EnhancedMonacoEditorProps> = ({
   }, [value, autoSave, autoSaveDelay])
 
   const handleEditorDidMount = (editorInstance: editor.IStandaloneCodeEditor, monaco: Monaco) => {
+    // 定义自定义主题
+    monaco.editor.defineTheme('novel-light', {
+      base: 'vs',
+      inherit: true,
+      rules: [],
+      colors: {
+        'editor.background': '#FFFFFF',
+        'editor.foreground': '#000000',
+        'editor.lineHighlightBackground': '#F0F0F0'
+      }
+    });
+    
+    monaco.editor.defineTheme('novel-dark', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [],
+      colors: {
+        'editor.background': '#1E1E1E',
+        'editor.foreground': '#D4D4D4',
+        'editor.lineHighlightBackground': '#2D2D2D'
+      }
+    });
+    
+    monaco.editor.defineTheme('novel-sepia', {
+      base: 'vs',
+      inherit: true,
+      rules: [],
+      colors: {
+        'editor.background': '#FBF0D9',
+        'editor.foreground': '#5C3D2E',
+        'editor.lineHighlightBackground': '#F0E4C9'
+      }
+    });
+  
     editorRef.current = editorInstance
-
+  
     editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
       if (onSave) {
         onSave(editorInstance.getValue())
       }
     })
-
+  
     updateStatistics(value)
   }
 

@@ -1,6 +1,6 @@
 import React from 'react'
 import { useWritingMode, WritingMode } from '../../contexts/WritingModeContext'
-import { FileText, Layers, Eye, ChevronDown } from 'lucide-react'
+import { FileText, Layers, ChevronDown } from 'lucide-react'
 
 interface ModeIndicatorProps {
   className?: string
@@ -8,7 +8,14 @@ interface ModeIndicatorProps {
 }
 
 // 模式配置映射
-const modeDisplayConfig = {
+const modeDisplayConfig: Partial<Record<WritingMode, {
+  icon: any
+  label: string
+  description: string
+  color: string
+  bgColor: string
+  borderColor: string
+}>> = {
   [WritingMode.PLANNING]: {
     icon: Layers,
     label: '规划模式',
@@ -25,14 +32,7 @@ const modeDisplayConfig = {
     bgColor: 'bg-green-50',
     borderColor: 'border-green-200'
   },
-  [WritingMode.REVIEW]: {
-    icon: Eye,
-    label: '审阅模式',
-    description: '预览 & 版本管理',
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-50',
-    borderColor: 'border-purple-200'
-  }
+  // 审阅模式暂不在指示器中呈现，后续用于版本管理
 }
 
 const ModeIndicator: React.FC<ModeIndicatorProps> = ({ 
@@ -41,7 +41,8 @@ const ModeIndicator: React.FC<ModeIndicatorProps> = ({
 }) => {
   const { modeState, switchMode } = useWritingMode()
   const { currentMode } = modeState
-  const config = modeDisplayConfig[currentMode]
+  const config = modeDisplayConfig[currentMode] || modeDisplayConfig[WritingMode.WRITING]
+  if (!config) return null
   const IconComponent = config.icon
 
   return (
@@ -82,8 +83,7 @@ const ModeIndicator: React.FC<ModeIndicatorProps> = ({
                   w-full flex items-center space-x-3 px-4 py-3 text-left
                   hover:bg-gray-50 transition-colors
                   ${isActive ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                  ${mode === WritingMode.PLANNING ? 'rounded-t-lg' : ''}
-                  ${mode === WritingMode.REVIEW ? 'rounded-b-lg' : ''}
+                  ${mode === WritingMode.PLANNING ? 'rounded-t-lg' : 'rounded-b-lg'}
                 `}
               >
                 <ModeIcon size={16} className={modeConfig.color} />

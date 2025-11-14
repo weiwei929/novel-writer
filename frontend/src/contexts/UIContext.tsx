@@ -46,8 +46,8 @@ type UIAction =
 const initialState: UIState = {
   notifications: [],
   loading: { isLoading: false },
-  theme: (localStorage.getItem('theme') as 'light' | 'dark' | 'auto') || 'auto',
-  sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+  theme: (() => { try { return (localStorage.getItem('theme') as 'light' | 'dark' | 'auto') || 'auto' } catch { return 'auto' } })(),
+  sidebarCollapsed: (() => { try { return localStorage.getItem('sidebarCollapsed') === 'true' } catch { return false } })(),
   mobileMenuOpen: false
 }
 
@@ -85,7 +85,7 @@ const uiReducer = (state: UIState, action: UIAction): UIState => {
       }
     
     case 'SET_THEME':
-      localStorage.setItem('theme', action.payload)
+      try { localStorage.setItem('theme', action.payload) } catch {}
       return {
         ...state,
         theme: action.payload
@@ -93,7 +93,7 @@ const uiReducer = (state: UIState, action: UIAction): UIState => {
     
     case 'TOGGLE_SIDEBAR':
       const newCollapsedState = !state.sidebarCollapsed
-      localStorage.setItem('sidebarCollapsed', newCollapsedState.toString())
+      try { localStorage.setItem('sidebarCollapsed', newCollapsedState.toString()) } catch {}
       return {
         ...state,
         sidebarCollapsed: newCollapsedState

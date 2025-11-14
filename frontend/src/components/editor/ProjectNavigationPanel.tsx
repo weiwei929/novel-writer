@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Project, Chapter } from '../../services/api'
-import { ChevronRight, ChevronDown, FileText, Plus, Settings } from 'lucide-react'
+import { ChevronRight, FileText, Settings } from 'lucide-react'
 import { useNotifications } from '../../contexts/UIContext'
 import ChapterPlanningEditor from './ChapterPlanningEditor'
 
@@ -9,8 +9,8 @@ interface ProjectNavigationPanelProps {
   chapters: Chapter[]
   currentChapter: Chapter | null
   onChapterSelect: (chapter: Chapter) => void
-  onCreateChapter?: () => void
-  onProjectSettings?: () => void
+  onProjectSettings?: (field?: string) => void
+  onChaptersRefresh?: () => void
   className?: string
 }
 
@@ -19,12 +19,11 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
   chapters,
   currentChapter,
   onChapterSelect,
-  onCreateChapter,
   onProjectSettings,
+  onChaptersRefresh,
   className = ''
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const [showMetadata, setShowMetadata] = useState(false)
   const { success: notifySuccess } = useNotifications()
   const [showPlanning, setShowPlanning] = useState(false)
 
@@ -60,14 +59,14 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
   }
 
   return (
-    <div className={`w-80 bg-gray-100 flex flex-col ${className}`}>
+    <div className={`w-80 h-full bg-gray-100 flex flex-col overflow-hidden ${className}`}>
       {/* 顶部工具栏 */}
       <div className="flex items-center justify-between p-4 border-b border-gray-300 bg-white shadow-sm">
         <h2 className="font-semibold text-gray-900 truncate flex-1">项目导航</h2>
         <div className="flex items-center gap-1">
           {onProjectSettings && (
             <button
-              onClick={onProjectSettings}
+              onClick={() => onProjectSettings()}
               className="p-1.5 hover:bg-gray-100 rounded"
               title="项目设置"
             >
@@ -89,6 +88,10 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
         <h3 className="font-medium text-lg text-gray-900 mb-2">{project.title}</h3>
         <div className="space-y-1.5 text-sm text-gray-600">
           <div className="flex items-center justify-between">
+            <span>作者:</span>
+            <span className="font-medium">{project.author}</span>
+          </div>
+          <div className="flex items-center justify-between">
             <span>状态:</span>
             <span className="font-medium">{getStatusText(project.status)}</span>
           </div>
@@ -104,77 +107,29 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
             <span>创建时间:</span>
             <span className="text-xs">{formatDate(project.createdAt)}</span>
           </div>
+          <div className="flex items-center justify-between">
+            <span>更新时间:</span>
+            <span className="text-xs">{formatDate(project.updatedAt)}</span>
+          </div>
         </div>
 
-        {/* 快速查看元数据 */}
-        <button
-          onClick={() => setShowMetadata(!showMetadata)}
-          className="mt-3 w-full text-sm text-blue-600 hover:text-blue-700 flex items-center justify-center gap-1"
-        >
-          {showMetadata ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          <span>{showMetadata ? '隐藏' : '查看'}项目元数据</span>
-        </button>
-
-        {showMetadata && (
-          <div className="mt-3 p-3 bg-gray-50 rounded text-xs space-y-2">
-            <div>
-              <div className="font-medium text-gray-700 mb-1">类型:</div>
-              <div className="flex flex-wrap gap-1">
-                {project.genre?.map((g) => (
-                  <span key={g} className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded">
-                    {g}
-                  </span>
-                ))}
-              </div>
-            </div>
-            {project.tags && project.tags.length > 0 && (
-              <div>
-                <div className="font-medium text-gray-700 mb-1">标签:</div>
-                <div className="flex flex-wrap gap-1">
-                  {project.tags.map((tag) => (
-                    <span key={tag} className="px-2 py-0.5 bg-gray-200 text-gray-700 rounded">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {project.description && (
-              <div>
-                <div className="font-medium text-gray-700 mb-1">简介:</div>
-                <div className="text-gray-600 line-clamp-3">{project.description}</div>
-              </div>
-            )}
-
-            {/* 章节规划入口（结构化编辑器） */}
-            <div className="pt-2 border-t">
-              <div className="font-medium text-gray-700 mb-1">章节规划:</div>
-              <div className="text-gray-600">
-                <button
-                  className="mt-1 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                  onClick={() => setShowPlanning(true)}
-                >
-                  管理章节规划
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* 章节规划入口（始终可见） */}
+        <div className="mt-3 p-3 bg-gray-50 rounded">
+          <div className="font-medium text-gray-700 mb-2">章节规划</div>
+          <button
+            className="w-full px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            onClick={() => setShowPlanning(true)}
+          >
+            管理章节规划
+          </button>
+        </div>
       </div>
 
       {/* 章节列表 */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-3 border-b bg-white flex items-center justify-between">
           <h4 className="font-medium text-sm text-gray-700">章节列表</h4>
-          {onCreateChapter && (
-            <button
-              onClick={onCreateChapter}
-              className="p-1.5 hover:bg-gray-100 rounded text-blue-600"
-              title="创建新章节"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-          )}
+          {/* 已移除“+”新建入口，统一通过“管理章节规划”进行新建/规划 */}
         </div>
 
         <div className="divide-y">
@@ -182,14 +137,7 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
             <div className="p-6 text-center text-gray-400 text-sm">
               <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <p>暂无章节</p>
-              {onCreateChapter && (
-                <button
-                  onClick={onCreateChapter}
-                  className="mt-2 text-blue-600 hover:text-blue-700"
-                >
-                  创建第一章
-                </button>
-              )}
+              {/* 取消空状态下的新建按钮入口 */}
             </div>
           ) : (
             chapters.map((chapter) => {
@@ -243,6 +191,7 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
           onSaved={() => {
             setShowPlanning(false)
             notifySuccess('章节规划已更新')
+            onChaptersRefresh?.()
           }}
         />
       )}

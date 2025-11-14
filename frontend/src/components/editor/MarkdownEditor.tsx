@@ -25,7 +25,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const [isSaving, setIsSaving] = useState(false)
   const [editorTheme, setEditorTheme] = useState<string>('novel-light')
   
-  const autoSaveTimer = useRef<NodeJS.Timeout>()
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout>>()
   const onSaveRef = useRef<typeof onSave>()
   onSaveRef.current = onSave
 
@@ -150,6 +150,8 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const containerClasses = isFullscreen 
     ? 'fixed inset-0 z-50 bg-white' 
     : 'w-full h-full min-h-[600px]'
+
+  const editorHeight = isFullscreen ? 'calc(100vh - 60px)' : 'calc(100vh - 220px)'
 
   return (
     <div className={containerClasses}>
@@ -282,6 +284,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               autoSave={autoSave}
               autoSaveDelay={autoSaveDelay}
               showWordCount={true}
+              height={editorHeight}
             />
           </div>
         ) : (

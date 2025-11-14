@@ -105,7 +105,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
               </div>
 
               {/* 错误详情（开发模式或显式启用时显示） */}
-              {(this.props.showDetails || process.env.NODE_ENV === 'development') && this.state.error && (
+              {(this.props.showDetails || import.meta.env.DEV) && this.state.error && (
                 <div className="mt-6">
                   <details className="text-sm">
                     <summary className="cursor-pointer text-gray-600 hover:text-gray-800">

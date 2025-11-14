@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { X, Plus, Trash2, ArrowUp, ArrowDown, Copy } from 'lucide-react'
-import { projectsApi } from '../../services/api'
+import { projectsApi, chaptersApi, Chapter } from '../../services/api'
 import { useNotifications } from '../../contexts/UIContext'
 
 type PlanStatus = 'planned' | 'started' | 'completed'
@@ -10,7 +10,8 @@ export interface ChapterPlanItem {
   order: number
   title: string
   plannedLength: number
-  keyPlotPoints: string[]
+  synopsisText?: string
+  keyPlotPoints?: string[]
   status: PlanStatus
 }
 
@@ -26,7 +27,7 @@ const emptyPlan = (nextOrder: number): ChapterPlanItem => ({
   order: nextOrder,
   title: `第${nextOrder}章（待定）`,
   plannedLength: 2000,
-  keyPlotPoints: [],
+  synopsisText: '',
   status: 'planned'
 })
 
@@ -37,6 +38,7 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({ projectId
     return sorted.map((p, idx) => ({ ...p, order: idx + 1 }))
   })
   const [saving, setSaving] = useState(false)
+  const [chapters, setChapters] = useState<Chapter[]>([])
 
   // 预留：如需基于 nextOrder 显示建议标题等，可启用
   // const nextOrder = useMemo(() => plans.length + 1, [plans.length])
@@ -82,7 +84,23 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({ projectId
 
   const reorder = (arr: ChapterPlanItem[]) => arr.map((p, i) => ({ ...p, order: i + 1 }))
 
-  const parsePoints = (value: string) => value.split(',').map(s => s.trim()).filter(Boolean)
+  // 载入现有章节，作为顶部参考列表；若无初始规划，按章节生成规划草稿
+  useEffect(() => {
+    (async () => {
+      try {
+        const list = await chaptersApi.getByProjectId(projectId)
+        setChapters(list)
+        if (initialPlans.length === 0 && list.length > 0) {
+          const drafts: ChapterPlanItem[] = list
+            .sort((a, b) => a.order - b.order)
+            .map((c) => ({ id: Math.random().toString(36).slice(2), order: c.order, title: c.title || `第${c.order}章`, plannedLength: c.wordCount || 2000, synopsisText: c.summary || '', status: 'planned' }))
+          setPlans(drafts)
+        }
+      } catch (e) {
+        // ignore
+      }
+    })()
+  }, [projectId, initialPlans.length])
 
   const save = async () => {
     try {
@@ -95,6 +113,38 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({ projectId
       }
       const payload = reorder(plans)
       const saved = await projectsApi.updateChapterPlanning(projectId, payload)
+      // 同步：根据规划创建缺失章节，并更新已存在章节的标题/状态/梗概
+      try {
+        const existing = await chaptersApi.getByProjectId(projectId)
+        const byOrder = new Map(existing.map((c) => [c.order, c]))
+        for (const p of payload) {
+          const mappedStatus = p.status === 'planned' ? 'draft' : p.status === 'started' ? 'writing' : p.status === 'completed' ? 'completed' : undefined
+          const at = byOrder.get(p.order)
+          if (!at) {
+            const created = await chaptersApi.createForProject(projectId, {
+              title: p.title,
+              order: p.order,
+              content: ''
+            })
+            if (mappedStatus || p.synopsisText) {
+              await chaptersApi.update(created.id, {
+                status: (mappedStatus as any) || created.status,
+                summary: p.synopsisText || created.summary
+              })
+            }
+          } else {
+            const patch: Partial<Chapter> = {}
+            if (p.title && p.title !== at.title) patch.title = p.title
+            if ((p.synopsisText || '') !== (at.summary || '')) patch.summary = p.synopsisText
+            if (mappedStatus && mappedStatus !== at.status) patch.status = mappedStatus as any
+            if (Object.keys(patch).length > 0) {
+              await chaptersApi.update(at.id, patch)
+            }
+          }
+        }
+      } catch (syncErr) {
+        console.warn('章节同步未完成（不影响规划保存）：', syncErr)
+      }
       success('章节规划已保存')
       onSaved?.(saved as ChapterPlanItem[])
       onClose()
@@ -114,7 +164,7 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({ projectId
         <div className="px-4 py-3 border-b flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">章节规划</h2>
-            <p className="text-xs text-gray-500 mt-0.5">结构化编辑（顺序、标题、预计字数、关键情节点、状态）</p>
+            <p className="text-xs text-gray-500 mt-0.5">结构化编辑（顺序、标题、预计字数、梗概、状态）</p>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={addPlan} className="inline-flex items-center gap-1 px-2.5 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
@@ -131,6 +181,20 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({ projectId
 
         {/* Body */}
         <div className="flex-1 overflow-auto p-4 space-y-3 bg-gray-50">
+          {/* 现有章节参考列表 */}
+          {chapters.length > 0 && (
+            <div className="bg-white rounded border p-3">
+              <div className="font-medium text-gray-900 mb-2">现有章节</div>
+              <div className="grid grid-cols-12 gap-2 text-xs">
+                {[...chapters].sort((a,b)=>a.order-b.order).map((c) => (
+                  <div key={c.id} className="col-span-6 flex items-center gap-2">
+                    <span className="px-1.5 py-0.5 bg-gray-100 rounded">第 {c.order} 章</span>
+                    <span className="truncate">{c.title || `第${c.order}章`}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {plans.length === 0 && (
             <div className="text-center text-gray-400 text-sm py-10">暂无规划项，点击“新增”开始</div>
           )}
@@ -163,12 +227,12 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({ projectId
                     </select>
                   </div>
                   <div className="col-span-12">
-                    <label className="block text-xs text-gray-600 mb-1">关键情节点（用逗号分隔）</label>
-                    <input
-                      value={p.keyPlotPoints.join(', ')}
-                      onChange={e => updatePlan(idx, { keyPlotPoints: parsePoints(e.target.value) })}
-                      placeholder="例：冲突升级, 新线索, 反转"
-                      className="w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    <label className="block text-xs text-gray-600 mb-1">章节梗概</label>
+                    <textarea
+                      value={p.synopsisText || ''}
+                      onChange={e => updatePlan(idx, { synopsisText: e.target.value })}
+                      placeholder="简述本章的核心推进与要点"
+                      className="w-full px-2 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px]"
                     />
                   </div>
                 </div>

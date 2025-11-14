@@ -95,13 +95,20 @@ app.use('/auth', authRouter)
 // 应用认证中间件 (保护所有 API 路由)
 app.use('/api', authenticateApp)
 
+
+
+
 // API 路由 - 更具体的路由在前面
+// 注意：路由顺序很重要！/api/v1 必须放在 /api/v1/projects 之前
+// 因为 versionsRouter 中有 /projects/:id/versions 路由
+// 如果顺序反了，/api/v1/projects/:id/versions 会被 projectsRouter 捕获并返回 404
+app.use('/api/v1', versionsRouter)  // 这匹配 /api/v1/projects/:id/versions 等
 app.use('/api/v1/collections', collectionsRouter)
-app.use('/api/v1/projects', projectsRouter)  
+app.use('/api/v1/projects', projectsRouter)  // 这匹配 /api/v1/projects/:id
 app.use('/api/v1/chapters', chaptersRouter)
 app.use('/api/v1/stats', statsRouter)
 app.use('/api/v1/files', fileRouter)
-app.use('/api/v1/versions', versionsRouter) 
+
 // 只有在路径是 '/api/' 或 '/api/v1' 开头时才使用 apiRouter
 app.use('/api/v1', apiRouter)
 

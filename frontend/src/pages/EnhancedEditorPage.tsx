@@ -6,19 +6,19 @@ import ProjectMetadataPanel from '../components/editor/ProjectMetadataPanel'
 import ModeSwitcher from '../components/writing-mode/ModeSwitcher'
 import ModeIndicator from '../components/writing-mode/ModeIndicator'
 import PlanningPanel from '../components/writing-mode/PlanningPanel'
-import WritingStatsPanel from '../components/writing-mode/WritingStatsPanel'
-import VersionManagementPanel from '../components/version/VersionManagementPanel'
+import ChapterMetadataPanel from '../components/editor/ChapterMetadataPanel'
+// import VersionManagementPanel from '../components/version/VersionManagementPanel'  // 暂时禁用版本管理
 import { WritingModeProvider, useWritingMode, WritingMode } from '../contexts/WritingModeContext'
-import { VersionManagementProvider, useVersionManagement } from '../contexts/VersionManagementContext'
+// import { VersionManagementProvider, useVersionManagement } from '../contexts/VersionManagementContext'  // 暂时禁用版本管理
 import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
 import { ArrowLeft, Save } from 'lucide-react'
 import { useNotifications } from '../contexts/UIContext'
 
 const EnhancedEditorPageContent: React.FC = () => {
   const { error: notifyError, success: notifySuccess } = useNotifications()
-  const { projectId, chapterId } = useParams<{ projectId?: string; chapterId?: string }>()
+  const { chapterId } = useParams<{ chapterId?: string }>()
   const navigate = useNavigate()
-  const { initializeProject } = useVersionManagement()
+  // const { initializeProject } = useVersionManagement()  // 暂时禁用版本管理
 
   // 数据状态
   const [project, setProject] = useState<Project | null>(null)
@@ -33,33 +33,20 @@ const EnhancedEditorPageContent: React.FC = () => {
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [showProjectMetadata, setShowProjectMetadata] = useState(false)
+  const [projectMetadataField, setProjectMetadataField] = useState<string>('synopsis')
+  const [showChapterMetadata, setShowChapterMetadata] = useState(false)
+  const [exitStatus, setExitStatus] = useState<'writing' | 'completed'>('writing')
+  const { modeState } = useWritingMode()
 
   useEffect(() => {
-    if (projectId) {
-      loadProject()
+    if (chapterId) {
+      loadChapter()
     } else {
       setLoading(false)
     }
-  }, [projectId])
+  }, [chapterId])
 
-  // 当路由参数变化时（项目/章节切换）加载章节
-  useEffect(() => {
-    if (projectId && chapterId) {
-      loadChapter()
-    }
-  }, [projectId, chapterId])
-
-  // 当处于项目层级（没有选中章节）且项目数据就绪时，填充项目简介
-  useEffect(() => {
-    if (project && !chapterId) {
-      setChapter(null)
-      setContent(generateProjectIntro(project))
-      setLoading(false)
-    }
-  }, [project, chapterId])
-
-  const loadProject = async () => {
-    if (!projectId) return
+  const loadProject = async (projectId: string) => {
     try {
       setLoading(true)
       setError(null)
@@ -70,13 +57,13 @@ const EnhancedEditorPageContent: React.FC = () => {
       setProject(projectData)
       setChapters(chaptersData)
       
-      // 初始化版本管理系统
-      try {
-        await initializeProject(projectId)
-      } catch (versionError) {
-        console.error('版本管理初始化失败:', versionError)
-        // 版本管理初始化失败不应该阻止主功能
-      }
+      // // 初始化版本管理系统（暂时禁用）
+      // try {
+      //   await initializeProject(projectId)
+      // } catch (versionError) {
+      //   console.error('版本管理初始化失败:', versionError)
+      //   // 版本管理初始化失败不应该阻止主功能
+      // }
     } catch (err) {
       setError('加载项目失败')
       console.error('Error loading project:', err)
@@ -93,6 +80,12 @@ const EnhancedEditorPageContent: React.FC = () => {
       setChapter(chapterData)
       setContent(chapterData.content || '')
       setHasUnsavedChanges(false)
+      
+      // 加载章节所属的项目
+      if (chapterData.projectId) {
+        await loadProject(chapterData.projectId)
+      }
+      
       setLoading(false)
     } catch (err) {
       setError('加载章节失败')
@@ -101,20 +94,16 @@ const EnhancedEditorPageContent: React.FC = () => {
     }
   }
 
-  const generateProjectIntro = (project: Project): string => `# ${project.title}
-
-## 项目信息
-- **作者**: ${project.author}
-- **类型**: ${project.genre.join(', ')}
-- **状态**: ${project.status}
-- **字数**: ${project.wordCount.toLocaleString()}
-- **章节**: ${project.chapterCount}
-
-## 开始创作
-在左侧面板中选择一个章节开始编辑，或者创建新的章节开始写作。
-
-祝你写作愉快！ 📝
-`
+  // 刷新当前项目的章节列表（用于章节规划保存后）
+  const refreshChapters = async () => {
+    if (!project) return
+    try {
+      const chaptersData = await chaptersApi.getByProjectId(project.id)
+      setChapters(chaptersData)
+    } catch (err) {
+      console.error('刷新章节列表失败:', err)
+    }
+  }
 
   const handleContentChange = (newContent: string) => {
     setContent(newContent)
@@ -161,24 +150,10 @@ const EnhancedEditorPageContent: React.FC = () => {
         // 已在 handleSave 内部处理错误提示
       }
     }
-    navigate(`/editor/${projectId}/${selectedChapter.id}`)
+    navigate(`/editor/${selectedChapter.id}`)
   }
 
-  const handleCreateChapter = async () => {
-    try {
-      if (!project) return
-      const defaultTitle = `第${chapters.length + 1}章`
-      const title = prompt('请输入新章节标题', defaultTitle)
-      if (title === null) return
-      const newChapter = await chaptersApi.createForProject(project.id, { title: title || defaultTitle, content: '' })
-      setChapters([...chapters, newChapter])
-      notifySuccess('章节已创建', `已创建：${newChapter.title}`)
-      navigate(`/editor/${project.id}/${newChapter.id}`)
-    } catch (e: any) {
-      console.error(e)
-      notifyError('创建章节失败', e?.message || '请稍后重试')
-    }
-  }
+  
 
   const updateChapterAndProject = async (chapterId: string, updates: Partial<Chapter>) => {
     try {
@@ -218,6 +193,18 @@ const EnhancedEditorPageContent: React.FC = () => {
     navigate('/projects')
   }
 
+  // 退出保存提醒（关闭页面或刷新时提示）
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [hasUnsavedChanges])
+
 
   if (loading) return (
     <div className="h-screen flex items-center justify-center">
@@ -240,16 +227,18 @@ const EnhancedEditorPageContent: React.FC = () => {
     </div>
   )
 
-  if (!project) return (
-    <div className="h-screen flex items-center justify-center">
-      <div className="text-center text-gray-500">
-        <p>未找到项目</p>
-        <button onClick={() => navigate('/projects')} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-          返回项目列表
-        </button>
+  if (!chapter && !chapterId) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center text-gray-500">
+          <p>请选择要编辑的章节</p>
+          <button onClick={() => navigate('/projects')} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+            返回项目列表
+          </button>
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
@@ -260,20 +249,35 @@ const EnhancedEditorPageContent: React.FC = () => {
           </button>
           <div className="h-5 w-px bg-gray-300"></div>
           <div className="flex flex-col">
-            <h1 className="font-semibold text-gray-900">{project.title}</h1>
+            <h1 className="font-semibold text-gray-900">
+              {project ? project.title : '加载中...'}
+            </h1>
             {chapter && (
               <div className="text-xs text-gray-500">
                 第 {chapter.order} 章: {chapter.title}
+                {hasUnsavedChanges && ' · 有未保存更改'}
                 {lastSaved && !hasUnsavedChanges && ` · ${lastSaved.toLocaleTimeString()} 已保存`}
+              </div>
+            )}
+            {project?.metadata?.synopsis?.current && (
+              <div className="mt-2 text-sm line-clamp-2">
+                <span className="px-2 py-0.5 mr-2 rounded bg-blue-100 text-blue-700 border border-blue-200 text-xs">作品梗概</span>
+                <span className="text-gray-800">{project.metadata.synopsis.current}</span>
+              </div>
+            )}
+            {(((chapter as any)?.metadata?.synopsis?.current) || chapter?.summary) && (
+              <div className="mt-1 text-xs line-clamp-1">
+                <span className="px-2 py-0.5 mr-2 rounded bg-green-100 text-green-700 border border-green-200">章节梗概</span>
+                <span className="text-gray-700">{((chapter as any)?.metadata?.synopsis?.current) || chapter?.summary}</span>
               </div>
             )}
           </div>
         </div>
         <div className="flex items-center space-x-3">
           {/* 写作模式指示器 */}
-          <ModeIndicator />
+          <ModeIndicator showDropdown={false} />
           
-          {/* 写作模式切换器 */}
+          {/* 写作模式切换器（仅显示规划/写作） */}
           <ModeSwitcher variant="tabs" size="sm" />
           
           <div className="h-5 w-px bg-gray-300"></div>
@@ -284,31 +288,89 @@ const EnhancedEditorPageContent: React.FC = () => {
           >
             项目元数据
           </button>
+          <button
+            onClick={() => { setProjectMetadataField('synopsis'); setShowProjectMetadata(true) }}
+            className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50"
+          >
+            编辑梗概
+          </button>
+          {chapter && (
+            <button
+              onClick={() => setShowChapterMetadata(true)}
+              className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50"
+            >
+              章节元数据
+            </button>
+          )}
           {chapter && (
             <button onClick={() => handleSave()} disabled={saving || !hasUnsavedChanges}
               className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">
               <Save size={16} />{saving ? '保存中...' : '保存'}
             </button>
           )}
-          {project && <div className="text-sm text-gray-500">{project.wordCount.toLocaleString()} 字 · {project.chapterCount} 章节</div>}
+
+          {chapter && (
+            <div className="flex items-center gap-2">
+              <select
+                value={exitStatus}
+                onChange={(e) => setExitStatus(e.target.value as 'writing' | 'completed')}
+                className="px-2 py-1 text-sm border rounded"
+              >
+                <option value="writing">写作中</option>
+                <option value="completed">已完成</option>
+              </select>
+              <button
+                onClick={async () => {
+                  const navigateProjectId = project?.id || chapter?.projectId
+                  try {
+                    await handleSave()
+                  } catch (err) {
+                    notifyError('章节保存失败', '将尝试仅更新状态并继续退出')
+                  }
+                  if (chapter) {
+                    try {
+                      await chaptersApi.update(chapter.id, { status: exitStatus })
+                      notifySuccess('章节状态已更新', exitStatus === 'completed' ? '状态：已完成' : '状态：写作中')
+                    } catch (err) {
+                      console.error('更新章节状态失败:', err)
+                      notifyError('更新章节状态失败', '请稍后在章节列表重试。')
+                    }
+                  } else {
+                    notifyError('无有效章节', '无法更新章节状态')
+                  }
+                  if (navigateProjectId) {
+                    navigate(`/projects/${navigateProjectId}`)
+                  } else {
+                    navigate('/projects')
+                  }
+                }}
+                className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50"
+              >
+                保存并退出
+              </button>
+            </div>
+          )}
+          
         </div>
       </div>
       <div className="flex-1 flex overflow-hidden">
         {/* 左侧边栏 - 项目导航 */}
-        <div className="bg-gray-100 border-r border-gray-300 shadow-lg">
-          <ProjectNavigationPanel 
-            project={project} 
-            chapters={chapters} 
-            currentChapter={chapter} 
-            onChapterSelect={handleChapterSelect} 
-            onCreateChapter={handleCreateChapter} 
-            onProjectSettings={() => setShowProjectMetadata(true)} 
+        {project && (
+          <div className="bg-gray-100 border-r border-gray-300 shadow-lg h-full">
+            <ProjectNavigationPanel 
+              project={project} 
+              chapters={chapters} 
+              currentChapter={chapter} 
+              onChapterSelect={handleChapterSelect} 
+            onProjectSettings={(field) => { setProjectMetadataField(field || 'synopsis'); setShowProjectMetadata(true) }} 
+            onChaptersRefresh={refreshChapters}
             className="flex-shrink-0" 
           />
-        </div>
+          </div>
+        )}
         
         {/* 分隔线 */}
-        <div className="w-1 bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 shadow-sm"></div>
+        {project && <div className="w-1 bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 shadow-sm"></div>}
         
         {/* 中间主编辑区域 */}
         <div className="flex-1 flex flex-col overflow-hidden bg-white relative z-20 shadow-xl border-y border-gray-200">
@@ -317,7 +379,7 @@ const EnhancedEditorPageContent: React.FC = () => {
             initialContent={content} 
             onSave={handleSave} 
             onContentChange={handleContentChange} 
-            autoSave={true} 
+            autoSave={false} 
             autoSaveDelay={3000} 
           />
         </div>
@@ -325,68 +387,50 @@ const EnhancedEditorPageContent: React.FC = () => {
         {/* 分隔线 */}
         <div className="w-1 bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 shadow-sm"></div>
         
-        {/* 右侧边栏 - 根据写作模式智能显示 */}
-        {renderRightPanel()}
-      </div>
-      {showProjectMetadata && (
-        <ProjectMetadataPanel
-          project={project}
-          onClose={() => setShowProjectMetadata(false)}
-        />
-      )}
-    </div>
-  )
-
-  // 根据写作模式渲染右侧面板
-  function renderRightPanel() {
-    const { modeState } = useWritingMode()
-    
-    switch (modeState.currentMode) {
-      case WritingMode.PLANNING:
-        // 规划模式：显示项目规划面板
-        return (
+        {modeState.currentMode === WritingMode.PLANNING ? (
           <PlanningPanel 
             chapter={chapter}
             onOutlineChange={(outline) => console.log('大纲更新:', outline)}
             onCharactersChange={(characters) => console.log('角色更新:', characters)}
             className="flex-shrink-0 w-80"
           />
-        )
-        
-      case WritingMode.WRITING:
-        // 写作模式：显示写作统计面板
-        return (
-          <WritingStatsPanel 
-            content={content}
-            wordTarget={1000}
-            timeTarget={60}
-            className="flex-shrink-0 w-80"
-          />
-        )
-        
-      case WritingMode.REVIEW:
-      default:
-        // 审阅模式：显示版本管理面板
-        return (
-          <VersionManagementPanel 
-            chapter={chapter}
-            className="flex-shrink-0 w-80"
-          />
-        )
-    }
-  }
+        ) : null}
+
+        {/* 章节元数据弹窗（与项目元数据一致的固定遮罩抽屉） */}
+        {showChapterMetadata && (
+          <div className="fixed inset-0 z-50 flex">
+            <div className="absolute inset-0 bg-black bg-opacity-30" onClick={() => setShowChapterMetadata(false)} />
+            <ChapterMetadataPanel
+              chapter={chapter}
+              onUpdate={(_field, _value) => { setShowChapterMetadata(false); if (project) navigate(`/projects/${project.id}`) }}
+              onClose={() => setShowChapterMetadata(false)}
+              className="relative ml-auto h-full w-[28rem]"
+            />
+          </div>
+        )}
+      </div>
+      {showProjectMetadata && project && (
+        <ProjectMetadataPanel
+          project={project}
+          onClose={() => setShowProjectMetadata(false)}
+          initialField={projectMetadataField}
+        />
+      )}
+    </div>
+  )
+
+  
 }
 
-// 主组件：提供写作模式和版本管理上下文
+// 主组件：提供写作模式上下文（版本管理上下文暂时禁用）
 const EnhancedEditorPage: React.FC = () => {
   return (
-    <VersionManagementProvider>
+    // <VersionManagementProvider>  // 暂时禁用版本管理
       <WritingModeProvider>
         <EnhancedEditorPageContent />
       </WritingModeProvider>
-    </VersionManagementProvider>
+    // </VersionManagementProvider>
   )
 }
 
 export default EnhancedEditorPage
-

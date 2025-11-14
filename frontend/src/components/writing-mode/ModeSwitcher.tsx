@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useWritingMode, WritingMode } from '../../contexts/WritingModeContext'
-import { FileText, Layers, Eye, Check } from 'lucide-react'
+import { FileText, Layers, Check } from 'lucide-react'
 
 interface ModeSwitcherProps {
   className?: string
@@ -8,8 +8,15 @@ interface ModeSwitcherProps {
   size?: 'sm' | 'md' | 'lg'
 }
 
-// 模式配置
-const modeConfig = {
+// 模式配置（不包含审阅）
+const modeConfig: Partial<Record<WritingMode, {
+  icon: any
+  label: string
+  fullLabel: string
+  description: string
+  color: string
+  shortcut: string
+}>> = {
   [WritingMode.PLANNING]: {
     icon: Layers,
     label: '规划',
@@ -26,14 +33,7 @@ const modeConfig = {
     color: 'green',
     shortcut: '2'
   },
-  [WritingMode.REVIEW]: {
-    icon: Eye,
-    label: '审阅',
-    fullLabel: '审阅模式',
-    description: '预览与版本管理',
-    color: 'purple',
-    shortcut: '3'
-  }
+  // 审阅模式暂不在切换器中呈现，后续用于版本管理
 }
 
 const ModeSwitcher: React.FC<ModeSwitcherProps> = ({
@@ -58,10 +58,7 @@ const ModeSwitcher: React.FC<ModeSwitcherProps> = ({
             event.preventDefault()
             canSwitchToMode(WritingMode.WRITING) && switchMode(WritingMode.WRITING)
             break
-          case '3':
-            event.preventDefault()
-            canSwitchToMode(WritingMode.REVIEW) && switchMode(WritingMode.REVIEW)
-            break
+          // 移除审阅模式快捷键
         }
       }
     }
@@ -144,7 +141,8 @@ const ModeSwitcher: React.FC<ModeSwitcherProps> = ({
 
   // 下拉式切换器
   const renderDropdown = () => {
-    const currentConfig = modeConfig[currentMode]
+    const currentConfig = modeConfig[currentMode] || modeConfig[WritingMode.WRITING]
+    if (!currentConfig) return renderTabs()
     const CurrentIcon = currentConfig.icon
 
     return (

@@ -79,7 +79,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
       if (onChapterSelect) {
         onChapterSelect(newChapter)
       } else {
-        navigate(`/editor/${projectId}/${newChapter.id}`)
+        navigate(`/editor/${newChapter.id}`)
       }
     } catch (err) {
       setError('创建章节失败')
@@ -270,7 +270,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
                     if (onChapterSelect) {
                       onChapterSelect(chapter)
                     } else {
-                      navigate(`/editor/${projectId}/${chapter.id}`)
+                      navigate(`/editor/${chapter.id}`)
                     }
                   }}
                 >
@@ -297,11 +297,11 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
                 <div className="flex items-center gap-1 ml-4">
                   <button
                     onClick={() => {
-                      if (onChapterSelect) {
-                        onChapterSelect(chapter)
-                      } else {
-                        navigate(`/editor/${projectId}/${chapter.id}`)
-                      }
+                    if (onChapterSelect) {
+                      onChapterSelect(chapter)
+                    } else {
+                      navigate(`/editor/${chapter.id}`)
+                    }
                     }}
                     className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors"
                     title="编辑章节"

@@ -1,21 +1,27 @@
-import React, { useState } from 'react'
-import { Chapter } from '../../services/api'
+import React, { useEffect, useState } from 'react'
+import { Chapter, chaptersApi } from '../../services/api'
 import MetadataEditor from '../metadata/MetadataEditor'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 
 interface ChapterMetadataPanelProps {
   chapter: Chapter | null
   onUpdate?: (field: string, value: string) => void
+  onClose?: () => void
   className?: string
 }
 
 const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
   chapter,
   onUpdate,
+  onClose,
   className = ''
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [activeField, setActiveField] = useState<string>('synopsis')
+  const [mode, setMode] = useState<'view' | 'edit' | 'view_all'>('view')
+  const [preview, setPreview] = useState<{ current: string; lastModified?: string; wordCount?: number } | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [previewsAll, setPreviewsAll] = useState<Record<string, { current: string; lastModified?: string; wordCount?: number } | null>>({})
 
   // 章节元数据字段定义 (根据PLAN第119-127行)
   const metadataFields = [
@@ -25,13 +31,43 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
     { key: 'sceneSettings', label: '场景设定', required: true },
   ]
 
+  useEffect(() => {
+    if (chapter && mode === 'view' && activeField) {
+      setLoading(true)
+      chaptersApi.getMetadata(chapter.id, activeField)
+        .then((res) => setPreview({ current: res.current || '', lastModified: res.lastModified, wordCount: res.wordCount }))
+        .catch(() => setPreview(null))
+        .finally(() => setLoading(false))
+    }
+  }, [chapter?.id, activeField, mode])
+
+  useEffect(() => {
+    if (chapter && mode === 'view_all') {
+      setLoading(true)
+      Promise.all(
+        metadataFields.map(async (f) => {
+          try {
+            const res = await chaptersApi.getMetadata(chapter.id, f.key)
+            return { key: f.key, value: { current: res.current || '', lastModified: res.lastModified, wordCount: res.wordCount } }
+          } catch {
+            return { key: f.key, value: null }
+          }
+        })
+      ).then((arr) => {
+        const map: Record<string, { current: string; lastModified?: string; wordCount?: number } | null> = {}
+        arr.forEach(({ key, value }) => { map[key] = value })
+        setPreviewsAll(map)
+      }).finally(() => setLoading(false))
+    }
+  }, [chapter?.id, mode])
+
   if (isCollapsed) {
     return (
       <div className={`w-12 border-l bg-gray-50 flex flex-col items-center py-4 ${className}`}>
         <button
-          onClick={() => setIsCollapsed(false)}
+          onClick={() => onClose ? onClose() : setIsCollapsed(false)}
           className="p-2 hover:bg-gray-200 rounded"
-          title="展开元数据面板"
+          title="关闭元数据面板"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -44,13 +80,13 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
       <div className={`w-80 bg-gray-100 flex flex-col ${className}`}>
         <div className="flex items-center justify-between p-4 border-b border-gray-300 bg-white shadow-sm">
           <h2 className="font-semibold text-gray-900">章节元数据</h2>
-          <button
-            onClick={() => setIsCollapsed(true)}
-            className="p-1.5 hover:bg-gray-100 rounded"
-            title="收起面板"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
+        <button
+          onClick={() => onClose ? onClose() : setIsCollapsed(true)}
+          className="p-1.5 hover:bg-gray-100 rounded"
+          title="关闭面板"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
         </div>
         <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
           请选择一个章节
@@ -63,58 +99,97 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
     <div className={`w-80 bg-gray-100 flex flex-col ${className}`}>
       {/* 顶部工具栏 */}
       <div className="flex items-center justify-between p-4 border-b border-gray-300 bg-white shadow-sm">
-        <h2 className="font-semibold text-gray-900">章节元数据</h2>
-        <button
-          onClick={() => setIsCollapsed(true)}
-          className="p-1.5 hover:bg-gray-100 rounded"
-          title="收起面板"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* 当前章节信息 */}
-      <div className="p-4 border-b border-gray-300 bg-white shadow-sm">
-        <div className="text-xs text-gray-500 mb-1">第 {chapter.order} 章</div>
-        <h3 className="font-medium text-gray-900 truncate">{chapter.title}</h3>
-        <div className="flex items-center gap-3 mt-2 text-xs text-gray-600">
-          <span>{chapter.wordCount.toLocaleString()} 字</span>
-          <span>更新于 {new Date(chapter.updatedAt).toLocaleDateString('zh-CN')}</span>
+        <div className="min-w-0">
+          <h2 className="font-semibold text-gray-900">章节元数据</h2>
+          <div className="text-xs text-gray-500 truncate">第 {chapter.order} 章：{chapter.title}</div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button className={`px-2 py-1 text-xs border rounded ${mode === 'view' ? 'bg-gray-50' : ''}`} onClick={() => setMode('view')}>预览</button>
+          <button className={`px-2 py-1 text-xs border rounded ${mode === 'view_all' ? 'bg-gray-50' : ''}`} onClick={() => setMode('view_all')}>预览全部</button>
+          <button className={`px-2 py-1 text-xs border rounded ${mode === 'edit' ? 'bg-gray-50' : ''}`} onClick={() => setMode('edit')}>编辑</button>
+          <button
+            onClick={() => onClose ? onClose() : setIsCollapsed(true)}
+            className="p-1.5 hover:bg-gray-100 rounded"
+            title="关闭面板"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
-      {/* 元数据字段导航 */}
-      <div className="border-b border-gray-300 bg-white shadow-sm">
-        <div className="flex flex-col">
+
+      <div className="border-b bg-white">
+        <div className="flex flex-wrap gap-1 p-2">
           {metadataFields.map((field) => (
             <button
               key={field.key}
               onClick={() => setActiveField(field.key)}
-              className={`flex items-center justify-between px-3 py-2.5 text-sm hover:bg-gray-50 transition-colors ${
-                activeField === field.key ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-500' : 'text-gray-700'
+              className={`px-2.5 py-1 text-sm rounded border transition-colors ${
+                activeField === field.key
+                  ? 'bg-blue-50 text-blue-700 border-blue-300'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200'
               }`}
             >
-              <span className="font-medium">
-                {field.label}
-                {field.required && <span className="text-red-500 ml-1">*</span>}
-              </span>
-              <ChevronRight className="w-4 h-4" />
+              {field.label}
+              {field.required && <span className="text-red-500 ml-1">*</span>}
             </button>
           ))}
         </div>
       </div>
 
-      {/* 元数据编辑器 */}
-      <div className="flex-1 overflow-hidden">
-        {metadataFields.find(f => f.key === activeField) && (
-          <MetadataEditor
-            type="chapter"
-            entityId={chapter.id}
-            field={activeField}
-            required={metadataFields.find(f => f.key === activeField)?.required}
-            onSave={(content) => onUpdate?.(activeField, content)}
-            className="h-full"
-          />
+      {/* 预览/编辑 */}
+      <div className="flex-1 overflow-auto p-3">
+        {mode === 'view' ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-gray-900">{metadataFields.find(f => f.key === activeField)?.label}</h3>
+              <button className="px-2 py-1 text-sm border rounded hover:bg-gray-50" onClick={() => setMode('edit')}>编辑此字段</button>
+            </div>
+            {loading ? (
+              <div className="text-gray-500 text-sm">加载中...</div>
+            ) : (
+              <div className="text-sm text-gray-800 whitespace-pre-wrap min-h-[120px] p-3 bg-white border rounded">
+                {preview?.current || '暂无内容'}
+              </div>
+            )}
+            <div className="text-xs text-gray-500">
+              {preview?.wordCount !== undefined && <span className="mr-3">字数：{preview.wordCount}</span>}
+              {preview?.lastModified && <span>更新于：{new Date(preview.lastModified).toLocaleString('zh-CN')}</span>}
+            </div>
+          </div>
+        ) : mode === 'view_all' ? (
+          <div className="space-y-4">
+            {loading ? (
+              <div className="text-gray-500 text-sm">加载中...</div>
+            ) : (
+              metadataFields.map((f) => (
+                <div key={f.key} className="p-3 bg-white border rounded">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-gray-900">{f.label}{f.required && <span className="text-red-500 ml-1">*</span>}</h4>
+                    <button className="px-2 py-1 text-xs border rounded hover:bg-gray-50" onClick={() => { setActiveField(f.key); setMode('edit') }}>编辑</button>
+                  </div>
+                  <div className="mt-2 text-sm text-gray-800 whitespace-pre-wrap min-h-[80px]">
+                    {previewsAll[f.key]?.current || '暂无内容'}
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    {previewsAll[f.key]?.wordCount !== undefined && <span className="mr-3">字数：{previewsAll[f.key]?.wordCount}</span>}
+                    {previewsAll[f.key]?.lastModified && <span>更新于：{new Date(previewsAll[f.key]!.lastModified!).toLocaleString('zh-CN')}</span>}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        ) : (
+          metadataFields.find(f => f.key === activeField) && (
+            <MetadataEditor
+              type="chapter"
+              entityId={chapter.id}
+              field={activeField}
+              required={metadataFields.find(f => f.key === activeField)?.required}
+              onSave={(content) => onUpdate?.(activeField, content)}
+              className="h-full"
+            />
+          )
         )}
       </div>
 

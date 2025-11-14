@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { projectsApi, collectionsApi, Project, Collection, CreateProjectData } from '../../services/api'
+import { projectsApi, collectionsApi, chaptersApi, Project, Collection, CreateProjectData } from '../../services/api'
 import { Plus, Edit, Trash2, FileText, User, Calendar, BarChart3 } from 'lucide-react'
 
 const ProjectsList: React.FC = () => {
@@ -187,7 +187,19 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         <div className="flex gap-2">
           <button 
             className="text-blue-500 hover:text-blue-700"
-            onClick={() => navigate(`/editor/${project.id}`)}
+            onClick={async () => {
+              try {
+                const chapters = await chaptersApi.getByProjectId(project.id)
+                if (chapters && chapters.length > 0) {
+                  navigate(`/editor/${chapters[0].id}`)
+                } else {
+                  // 无章节时改为进入项目详情页，统一通过“章节规划”新增
+                  navigate(`/projects/${project.id}`)
+                }
+              } catch {
+                navigate(`/projects/${project.id}`)
+              }
+            }}
             title="进入编辑器"
           >
             <Edit size={18} />
@@ -284,16 +296,19 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ collections, on
 
     try {
       setLoading(true)
+      // 1. 创建项目
       const newProject = await projectsApi.create({
         ...formData,
         title: formData.title.trim(),
         description: formData.description?.trim(),
         author: formData.author.trim(),
       })
-      // 创建成功后直接跳转到编辑器
+      
+      // 2. 不再自动创建默认章节；直接跳转到项目详情页进行章节规划
       if (newProject?.id) {
-        navigate(`/editor/${newProject.id}`)
+        navigate(`/projects/${newProject.id}`)
       }
+      
       onSuccess()
     } catch (err) {
       setError('创建项目失败')

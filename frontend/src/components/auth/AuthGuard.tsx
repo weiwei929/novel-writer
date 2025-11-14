@@ -30,17 +30,16 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
       const response = await fetch('/auth/status', {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       })
-      
+      const contentType = response.headers.get('content-type') || ''
+      if (!response.ok || !contentType.includes('application/json')) {
+        setAuthStatus({ requireAuth: true, authenticated: false, message: '需要认证' })
+        return
+      }
       const result = await response.json()
-      
-      if (result.success) {
+      if (result?.success && result?.data) {
         setAuthStatus(result.data)
       } else {
-        setAuthStatus({
-          requireAuth: true,
-          authenticated: false,
-          message: '需要认证'
-        })
+        setAuthStatus({ requireAuth: true, authenticated: false, message: '需要认证' })
       }
     } catch (error) {
       console.error('认证状态检查失败:', error)

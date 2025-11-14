@@ -70,6 +70,40 @@ router.put('/:id/chapter-planning', async (req: express.Request, res: express.Re
     }
 
     const updated = await db.updateProjectChapterPlanning(id, Array.isArray(plans) ? plans : [])
+
+    try {
+      const existing = await db.getChapters(id)
+      const byOrder = new Map<number, Chapter>(existing.map((c) => [c.order, c]))
+      for (const p of (Array.isArray(plans) ? plans : [])) {
+        const mappedStatus = p.status === 'planned' ? 'draft' : p.status === 'started' ? 'writing' : p.status === 'completed' ? 'completed' : undefined
+        const at = byOrder.get(p.order)
+        if (!at) {
+          const created = await db.createChapter({
+            title: p.title,
+            projectId: id,
+            order: p.order,
+            content: ''
+          })
+          if (mappedStatus || p.synopsisText) {
+            await db.updateChapter(created.id, {
+              status: (mappedStatus as any) || created.status,
+              summary: p.synopsisText || (created as any).summary
+            })
+          }
+        } else {
+          const patch: Partial<Chapter> = {}
+          if (p.title && p.title !== at.title) patch.title = p.title
+          if ((p.synopsisText || '') !== ((at as any).summary || '')) patch.summary = p.synopsisText
+          if (mappedStatus && mappedStatus !== at.status) patch.status = mappedStatus as any
+          if (Object.keys(patch).length > 0) {
+            await db.updateChapter(at.id, patch)
+          }
+        }
+      }
+    } catch (syncErr) {
+      console.warn('章节同步未完成（不影响规划保存）：', syncErr)
+    }
+
     const response = createSuccessResponse(updated, { projectId: id })
     res.json(response)
   } catch (error) {

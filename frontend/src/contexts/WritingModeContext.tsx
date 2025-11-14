@@ -103,18 +103,14 @@ export const WritingModeProvider: React.FC<WritingModeProviderProps> = ({
       modeHistory: [...prev.modeHistory, prev.currentMode].slice(-10), // 保留最近10次切换
       transitionTimestamp: Date.now()
     }))
-
-    // 触发模式切换事件（可用于日志记录等）
-    console.log(`Writing mode switched: ${modeState.currentMode} → ${newMode}`)
   }, [modeState.currentMode])
 
   // 检查是否可以切换到指定模式
-  const canSwitchToMode = useCallback((mode: WritingMode): boolean => {
+  const canSwitchToMode = useCallback((_mode: WritingMode): boolean => {
     // 这里可以添加业务逻辑，比如检查当前状态是否允许切换
     // 例如：编辑模式下有未保存内容时可能需要提醒
     
     // 暂时允许所有模式切换
-    console.log(`Checking if can switch to mode: ${mode}`)
     return true
   }, [])
 

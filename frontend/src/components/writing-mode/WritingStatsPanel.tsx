@@ -27,7 +27,7 @@ const WritingStatsPanel: React.FC<WritingStatsProps> = ({
 
   // 写作计时器
   useEffect(() => {
-    let interval: NodeJS.Timeout
+    let interval: ReturnType<typeof setInterval>
     if (isWriting) {
       interval = setInterval(() => {
         setWritingTime(prev => prev + 1)

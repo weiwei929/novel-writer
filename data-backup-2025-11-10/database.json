@@ -1,0 +1,546 @@
+{
+  "collections": [
+    {
+      "id": "63d1deaa-eddd-493a-be7f-7568c215a950",
+      "name": "测试文集_1762389193698",
+      "description": "这是一个API测试文集",
+      "tags": [
+        "测试"
+      ],
+      "projectCount": 1,
+      "createdAt": "2025-11-06T00:33:13.702Z",
+      "updatedAt": "2025-11-06T00:33:13.702Z"
+    },
+    {
+      "id": "e39c84b3-c842-4fa6-a786-36e7a0161896",
+      "name": "测试",
+      "description": "这还是一个测试集合",
+      "tags": [],
+      "projectCount": 2,
+      "createdAt": "2025-11-06T01:41:52.509Z",
+      "updatedAt": "2025-11-06T01:41:52.509Z"
+    },
+    {
+      "id": "2723ef5c-5710-4ac0-bb30-739e94f2255a",
+      "name": "测试文集_1762400205818",
+      "description": "这是一个API测试文集",
+      "tags": [
+        "测试"
+      ],
+      "projectCount": 0,
+      "createdAt": "2025-11-06T03:36:45.824Z",
+      "updatedAt": "2025-11-06T03:36:45.824Z"
+    }
+  ],
+  "projects": [
+    {
+      "id": "c9f39da3-5fc8-45fe-872a-325aaf36df71",
+      "title": "测试项目_1762389194131",
+      "description": "这是一个API测试项目",
+      "author": "API测试员",
+      "genre": [
+        "测试"
+      ],
+      "tags": [],
+      "status": "draft",
+      "collectionId": "",
+      "wordCount": 4,
+      "chapterCount": 2,
+      "createdAt": "2025-11-06T00:33:14.135Z",
+      "updatedAt": "2025-11-06T00:33:14.135Z",
+      "metadata": {
+        "synopsis": {
+          "current": "梗概V0：初始内容",
+          "versions": [
+            {
+              "id": "8c34ed76-3b13-48b9-ad8b-10c6e07185cf",
+              "content": "版本1：第一版",
+              "timestamp": "2025-11-06T00:43:47.662Z",
+              "userNote": "save",
+              "autoSaved": false
+            }
+          ],
+          "lastModified": "2025-11-06T00:43:47.662Z",
+          "wordCount": 1
+        }
+      }
+    },
+    {
+      "id": "cbbeb984-bad8-494c-a944-e09f6df349cd",
+      "title": "元数据试点项目",
+      "description": "用于元数据API试点",
+      "author": "系统",
+      "genre": [
+        "测试"
+      ],
+      "tags": [],
+      "status": "draft",
+      "collectionId": "",
+      "wordCount": 0,
+      "chapterCount": 0,
+      "createdAt": "2025-11-06T00:43:09.335Z",
+      "updatedAt": "2025-11-06T00:43:09.335Z",
+      "metadata": {
+        "synopsis": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T00:43:09.335Z",
+          "wordCount": 0
+        }
+      }
+    },
+    {
+      "id": "6e4b39fe-d623-428c-a195-ad033ecd6f4a",
+      "title": "哈哈",
+      "description": "这是一个测试项目，看看能否打通？",
+      "author": "张宁",
+      "genre": [],
+      "tags": [],
+      "status": "draft",
+      "collectionId": "63d1deaa-eddd-493a-be7f-7568c215a950",
+      "wordCount": 0,
+      "chapterCount": 0,
+      "createdAt": "2025-11-06T01:33:50.240Z",
+      "updatedAt": "2025-11-06T01:33:50.240Z",
+      "metadata": {
+        "synopsis": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:33:50.240Z",
+          "wordCount": 0
+        },
+        "characters": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:33:50.240Z",
+          "wordCount": 0
+        },
+        "timeline": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:33:50.240Z",
+          "wordCount": 0
+        },
+        "settings": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:33:50.240Z",
+          "wordCount": 0
+        },
+        "relationships": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:33:50.240Z",
+          "wordCount": 0
+        },
+        "plotStructure": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:33:50.240Z",
+          "wordCount": 0
+        },
+        "chapterPlanning": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:33:50.240Z",
+          "wordCount": 0
+        }
+      },
+      "chapterPlanning": []
+    },
+    {
+      "id": "1352aa7a-7ae6-4a6b-ab42-0fb400cf862f",
+      "title": "远山呼唤",
+      "description": "新建一个项目试试",
+      "author": "飞飞",
+      "genre": [],
+      "tags": [],
+      "status": "draft",
+      "collectionId": "",
+      "wordCount": 6,
+      "chapterCount": 1,
+      "createdAt": "2025-11-06T01:38:34.891Z",
+      "updatedAt": "2025-11-10T03:33:00.747Z",
+      "metadata": {
+        "synopsis": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:38:34.892Z",
+          "wordCount": 0
+        },
+        "characters": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:38:34.892Z",
+          "wordCount": 0
+        },
+        "timeline": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:38:34.892Z",
+          "wordCount": 0
+        },
+        "settings": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:38:34.892Z",
+          "wordCount": 0
+        },
+        "relationships": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:38:34.892Z",
+          "wordCount": 0
+        },
+        "plotStructure": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T01:38:34.892Z",
+          "wordCount": 0
+        }
+      },
+      "chapterPlanning": [
+        {
+          "id": "nwhqalqzu3",
+          "order": 1,
+          "title": "第1章 春天来临",
+          "plannedLength": 2000,
+          "keyPlotPoints": [
+            "相识相遇，互相了解"
+          ],
+          "status": "planned"
+        }
+      ]
+    },
+    {
+      "id": "015dbd16-bc46-4992-ac19-619195ce2b61",
+      "title": "2025年相遇",
+      "description": "哈哈，看看如何玩转？",
+      "author": "张三",
+      "genre": [],
+      "tags": [],
+      "status": "draft",
+      "collectionId": "e39c84b3-c842-4fa6-a786-36e7a0161896",
+      "wordCount": 15,
+      "chapterCount": 2,
+      "createdAt": "2025-11-06T03:30:38.476Z",
+      "updatedAt": "2025-11-10T04:29:39.946Z",
+      "metadata": {
+        "synopsis": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T03:30:38.476Z",
+          "wordCount": 0
+        },
+        "characters": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T03:30:38.476Z",
+          "wordCount": 0
+        },
+        "timeline": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T03:30:38.476Z",
+          "wordCount": 0
+        },
+        "settings": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T03:30:38.476Z",
+          "wordCount": 0
+        },
+        "relationships": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T03:30:38.476Z",
+          "wordCount": 0
+        },
+        "plotStructure": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T03:30:38.476Z",
+          "wordCount": 0
+        }
+      },
+      "chapterPlanning": []
+    },
+    {
+      "id": "7669fd7e-f3c7-4280-92b6-780ae8ab6de0",
+      "title": "测试项目_1762400206245",
+      "description": "这是一个API测试项目",
+      "author": "API测试员",
+      "genre": [
+        "测试"
+      ],
+      "tags": [],
+      "status": "draft",
+      "collectionId": "",
+      "wordCount": 0,
+      "chapterCount": 0,
+      "createdAt": "2025-11-06T03:36:46.248Z",
+      "updatedAt": "2025-11-06T03:36:46.248Z",
+      "metadata": {
+        "synopsis": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T03:36:46.248Z",
+          "wordCount": 0
+        },
+        "characters": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T03:36:46.248Z",
+          "wordCount": 0
+        },
+        "timeline": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T03:36:46.248Z",
+          "wordCount": 0
+        },
+        "settings": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T03:36:46.248Z",
+          "wordCount": 0
+        },
+        "relationships": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T03:36:46.248Z",
+          "wordCount": 0
+        },
+        "plotStructure": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T03:36:46.248Z",
+          "wordCount": 0
+        }
+      },
+      "chapterPlanning": []
+    },
+    {
+      "id": "f34e4e2b-d3f5-4eb4-92d1-b7a94305fff6",
+      "title": "测试1111",
+      "description": "这是一个测试文档，准备全部测试",
+      "author": "张三",
+      "genre": [],
+      "tags": [],
+      "status": "writing",
+      "collectionId": "e39c84b3-c842-4fa6-a786-36e7a0161896",
+      "wordCount": 0,
+      "chapterCount": 0,
+      "createdAt": "2025-11-10T06:33:51.631Z",
+      "updatedAt": "2025-11-10T06:33:51.631Z",
+      "metadata": {
+        "synopsis": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-10T06:33:51.631Z",
+          "wordCount": 0
+        },
+        "characters": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-10T06:33:51.631Z",
+          "wordCount": 0
+        },
+        "timeline": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-10T06:33:51.631Z",
+          "wordCount": 0
+        },
+        "settings": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-10T06:33:51.631Z",
+          "wordCount": 0
+        },
+        "relationships": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-10T06:33:51.631Z",
+          "wordCount": 0
+        },
+        "plotStructure": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-10T06:33:51.631Z",
+          "wordCount": 0
+        }
+      },
+      "chapterPlanning": []
+    }
+  ],
+  "chapters": [
+    {
+      "id": "be7394ef-3678-4c64-9678-ca53d08ea81a",
+      "title": "测试章节_1762389194354",
+      "content": "这是一个API测试章节的内容。\n\n包含一些测试文字来验证字数统计功能。",
+      "projectId": "c9f39da3-5fc8-45fe-872a-325aaf36df71",
+      "order": 1,
+      "wordCount": 2,
+      "status": "draft",
+      "createdAt": "2025-11-06T00:33:14.357Z",
+      "updatedAt": "2025-11-06T00:33:14.357Z"
+    },
+    {
+      "id": "4d74cc77-b8d8-402f-b78f-29920ea088f9",
+      "title": "第1章",
+      "content": "\r\n\r\n哈哈\r\n\r\n\r\n为什么不能看到？\r\n春天来了，张三每天都在等待一个人\r\n\r\n丽丽是他的同学，充满幻想。这是一个美好故事的开始，哈哈。\r\n\r\n就是这样的随着时间流逝，一种莫名的忧伤弥漫。",
+      "projectId": "1352aa7a-7ae6-4a6b-ab42-0fb400cf862f",
+      "order": 1,
+      "wordCount": 6,
+      "status": "draft",
+      "createdAt": "2025-11-06T02:00:31.019Z",
+      "updatedAt": "2025-11-10T03:33:00.737Z",
+      "metadata": {
+        "synopsis": {
+          "current": "这是一个无厘头的故事，哈哈",
+          "versions": [],
+          "lastModified": "2025-11-06T03:12:46.337Z",
+          "wordCount": 1
+        },
+        "characters": {
+          "current": "张三：纯真少年\n丽丽：张三的女同学，充满幻想",
+          "versions": [],
+          "lastModified": "2025-11-06T03:12:39.608Z",
+          "wordCount": 2
+        },
+        "timeSetting": {
+          "current": "2025年春天，高三的时候",
+          "versions": [],
+          "lastModified": "2025-11-06T03:12:42.240Z",
+          "wordCount": 1
+        },
+        "sceneSettings": {
+          "current": "校园里，",
+          "versions": [
+            {
+              "id": "717c5c3e-f7ba-4046-b513-9ccf0e658a0b",
+              "content": "校园里，",
+              "timestamp": "2025-11-06T03:25:11.301Z",
+              "userNote": "1.0",
+              "autoSaved": false
+            }
+          ],
+          "lastModified": "2025-11-06T03:25:11.301Z",
+          "wordCount": 1
+        }
+      }
+    },
+    {
+      "id": "f4311df9-0b07-4520-81f8-6186edb67a21",
+      "title": "如何迎接这个新工具",
+      "content": "## 第一次尝试使用这个工具\r\n\r\n经过艰难的开发，终于可以看到这个工具的雏形，虽然还很粗糙，但是，能够使用已经是极大的成果。\r\n\r\n## 说说感受吧\r\n\r\n千辛万苦，终于可以再这里测试，很开心。当然，这还只是万里长征的第一步。",
+      "projectId": "015dbd16-bc46-4992-ac19-619195ce2b61",
+      "order": 1,
+      "wordCount": 6,
+      "status": "draft",
+      "createdAt": "2025-11-06T03:31:08.744Z",
+      "updatedAt": "2025-11-10T04:29:39.938Z",
+      "metadata": {
+        "synopsis": {
+          "current": "就是一个测试环节",
+          "versions": [],
+          "lastModified": "2025-11-06T03:31:28.008Z",
+          "wordCount": 1
+        },
+        "characters": {
+          "current": "李四",
+          "versions": [],
+          "lastModified": "2025-11-06T03:31:36.783Z",
+          "wordCount": 1
+        },
+        "timeSetting": {
+          "current": "2025年春天",
+          "versions": [],
+          "lastModified": "2025-11-06T03:31:46.202Z",
+          "wordCount": 1
+        },
+        "sceneSettings": {
+          "current": "办公室规划",
+          "versions": [],
+          "lastModified": "2025-11-06T03:31:52.958Z",
+          "wordCount": 1
+        }
+      }
+    },
+    {
+      "id": "338865c1-6934-4ade-9ae0-dc2b883982cf",
+      "title": "测试章节_1762400206459",
+      "content": "这是一个API测试章节的内容。\n\n包含一些测试文字来验证字数统计功能。",
+      "projectId": "c9f39da3-5fc8-45fe-872a-325aaf36df71",
+      "order": 1,
+      "wordCount": 2,
+      "status": "draft",
+      "createdAt": "2025-11-06T03:36:46.464Z",
+      "updatedAt": "2025-11-06T03:36:46.464Z",
+      "metadata": {
+        "synopsis": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T03:36:46.464Z",
+          "wordCount": 0
+        },
+        "characters": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T03:36:46.464Z",
+          "wordCount": 0
+        },
+        "timeSetting": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T03:36:46.464Z",
+          "wordCount": 0
+        },
+        "sceneSettings": {
+          "current": "",
+          "versions": [],
+          "lastModified": "2025-11-06T03:36:46.464Z",
+          "wordCount": 0
+        }
+      }
+    },
+    {
+      "id": "1bd1ae18-6402-4cb6-b8c1-3a0a6d0a18e0",
+      "title": "可以继续改进",
+      "content": "## 还想继续测试改进\r\n\r\n这里似乎编辑板块有些复杂，三栏式虽然实现了，但是没有区隔，容易分散注意力。\r\n\r\n## 章节元数据需要改进\r\n\r\n这里的章节元数据似乎有些不妥，应该是在填写完之后，显示在这，而不是一直处于填写状态。、\r\n\r\n## 目标\r\n你说呢？是不是会更好？",
+      "projectId": "015dbd16-bc46-4992-ac19-619195ce2b61",
+      "order": 2,
+      "wordCount": 9,
+      "status": "draft",
+      "createdAt": "2025-11-06T03:42:36.857Z",
+      "updatedAt": "2025-11-06T03:51:06.336Z",
+      "metadata": {
+        "synopsis": {
+          "current": "应该继续改进",
+          "versions": [],
+          "lastModified": "2025-11-06T03:42:54.024Z",
+          "wordCount": 1
+        },
+        "characters": {
+          "current": "哈哈哈",
+          "versions": [],
+          "lastModified": "2025-11-06T03:43:00.961Z",
+          "wordCount": 1
+        },
+        "timeSetting": {
+          "current": "2025年11月",
+          "versions": [],
+          "lastModified": "2025-11-06T03:43:14.310Z",
+          "wordCount": 1
+        },
+        "sceneSettings": {
+          "current": "还是在办公室",
+          "versions": [],
+          "lastModified": "2025-11-06T03:43:21.597Z",
+          "wordCount": 1
+        }
+      }
+    }
+  ]
+}
