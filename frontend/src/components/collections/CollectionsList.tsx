@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { collectionsApi, Collection, CreateCollectionData } from '../../services/api'
-import { Plus, Edit, Trash2, FolderOpen, Tag } from 'lucide-react'
+import { Plus, Edit, Trash2, FolderOpen, Tag, ArrowRight } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useNotifications, useLoading } from '../../contexts/UIContext'
 import { LoadingState } from '../ui/LoadingComponents'
 import ErrorBoundary from '../ui/ErrorBoundary'
@@ -135,6 +136,7 @@ interface CollectionCardProps {
 }
 
 const CollectionCard: React.FC<CollectionCardProps> = ({ collection, onDelete, onUpdate }) => {
+  const navigate = useNavigate()
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex justify-between items-start mb-4">
@@ -153,6 +155,13 @@ const CollectionCard: React.FC<CollectionCardProps> = ({ collection, onDelete, o
             title="删除文集"
           >
             <Trash2 size={18} />
+          </button>
+          <button
+            onClick={() => navigate(`/projects?collectionId=${collection.id}`)}
+            className="text-gray-600 hover:text-gray-800"
+            title="查看该文集下的项目"
+          >
+            <ArrowRight size={18} />
           </button>
         </div>
       </div>

@@ -164,7 +164,8 @@ router.put('/:id', async (req: express.Request, res: express.Response) => {
       order: updates.order,
       status: updates.status,
       notes: updates.notes,
-      tags: updates.tags
+      tags: updates.tags,
+      summary: updates.summary
     }
     
     // 移除 undefined 值
@@ -187,6 +188,15 @@ router.put('/:id', async (req: express.Request, res: express.Response) => {
       return res.status(500).json(response)
     }
     
+    // 若有梗概更新，同步到章节元数据的 synopsis 字段
+    if (allowedUpdates.summary !== undefined) {
+      try {
+        await db.updateChapterMetadataField(id, 'synopsis', allowedUpdates.summary || '')
+      } catch (syncErr) {
+        console.warn('章节梗概同步到元数据失败：', syncErr)
+      }
+    }
+
     const response: ApiResponse<Chapter> = {
       success: true,
       data: updatedChapter
@@ -254,6 +264,70 @@ router.delete('/:id', async (req: express.Request, res: express.Response) => {
       }
     }
     res.status(500).json(response)
+  }
+})
+
+// ===== 章节元数据路由 =====
+router.put('/:id/metadata/:field', async (req: express.Request, res: express.Response) => {
+  try {
+    const { id, field } = req.params
+    const { content } = req.body || {}
+
+    const item = await db.updateChapterMetadataField(id, field, content || '')
+    const response = createSuccessResponse(item, { chapterId: id, field })
+    res.json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to update chapter metadata'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+router.get('/:id/metadata/:field', async (req: express.Request, res: express.Response) => {
+  try {
+    const { id, field } = req.params
+    const item = await db.getChapterMetadataField(id, field)
+    const response = createSuccessResponse(item, { chapterId: id, field })
+    res.json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to fetch chapter metadata'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+router.get('/:id/metadata/:field/versions', async (req: express.Request, res: express.Response) => {
+  try {
+    const { id, field } = req.params
+    const versions = await db.getChapterMetadataVersions(id, field)
+    const response = createSuccessResponse(versions, { chapterId: id, field })
+    res.json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to fetch chapter metadata versions'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+router.post('/:id/metadata/:field/save-version', async (req: express.Request, res: express.Response) => {
+  try {
+    const { id, field } = req.params
+    const { content, userNote, autoSaved } = req.body || {}
+    const version = await db.saveChapterMetadataVersion(id, field, content || '', userNote || '', !!autoSaved)
+    const response = createSuccessResponse(version, { chapterId: id, field })
+    res.status(201).json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to save chapter metadata version'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
   }
 })
 

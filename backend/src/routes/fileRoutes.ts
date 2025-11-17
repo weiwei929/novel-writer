@@ -44,6 +44,8 @@ router.post('/import', requireAuth, async (req: Request, res: Response) => {
 
     const file = req.files.file as fileUpload.UploadedFile
     const collectionId = req.body.collectionId as string | undefined
+    const createNewCollection = (req.body.createNewCollection === 'true')
+    const mergeStrategy = (req.body.mergeStrategy as 'replace'|'merge'|'skip') || 'merge'
 
     // 验证文件类型
     const allowedExtensions = ['.docx', '.txt', '.md', '.json', '.zip']
@@ -62,6 +64,8 @@ router.post('/import', requireAuth, async (req: Request, res: Response) => {
     try {
       const result = await importService.importFromFile(tempPath, { 
         targetCollectionId: collectionId,
+        createNewCollection,
+        mergeStrategy,
         validateContent: true
       })
 

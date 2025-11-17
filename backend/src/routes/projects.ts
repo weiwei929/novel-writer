@@ -77,29 +77,41 @@ router.put('/:id/chapter-planning', async (req: express.Request, res: express.Re
       for (const p of (Array.isArray(plans) ? plans : [])) {
         const mappedStatus = p.status === 'planned' ? 'draft' : p.status === 'started' ? 'writing' : p.status === 'completed' ? 'completed' : undefined
         const at = byOrder.get(p.order)
-        if (!at) {
-          const created = await db.createChapter({
-            title: p.title,
-            projectId: id,
-            order: p.order,
-            content: ''
-          })
-          if (mappedStatus || p.synopsisText) {
-            await db.updateChapter(created.id, {
-              status: (mappedStatus as any) || created.status,
-              summary: p.synopsisText || (created as any).summary
+          if (!at) {
+            const created = await db.createChapter({
+              title: p.title,
+              projectId: id,
+              order: p.order,
+              content: ''
             })
+            if (mappedStatus || p.synopsisText) {
+              await db.updateChapter(created.id, {
+                status: (mappedStatus as any) || created.status,
+                summary: p.synopsisText || (created as any).summary
+              })
+              if (p.synopsisText) {
+                await db.updateChapterMetadataField(created.id, 'synopsis', p.synopsisText)
+              }
+            }
+          } else {
+            const patch: Partial<Chapter> = {}
+            if (p.title && p.title !== at.title) patch.title = p.title
+            if ((p.synopsisText || '') !== ((at as any).summary || '')) patch.summary = p.synopsisText
+            if (mappedStatus && mappedStatus !== at.status) patch.status = mappedStatus as any
+            if (Object.keys(patch).length > 0) {
+              await db.updateChapter(at.id, patch)
+            }
+            if (p.synopsisText) {
+              await db.updateChapterMetadataField(at.id, 'synopsis', p.synopsisText)
+            }
           }
-        } else {
-          const patch: Partial<Chapter> = {}
-          if (p.title && p.title !== at.title) patch.title = p.title
-          if ((p.synopsisText || '') !== ((at as any).summary || '')) patch.summary = p.synopsisText
-          if (mappedStatus && mappedStatus !== at.status) patch.status = mappedStatus as any
-          if (Object.keys(patch).length > 0) {
-            await db.updateChapter(at.id, patch)
-          }
-        }
       }
+      // 聚合项目大纲：章节名 + 梗概
+      try {
+        const chapters = await db.getChapters(id)
+        const outline = chapters.map(c => `第 ${c.order} 章：${c.title}${(c as any).summary ? ' — ' + (c as any).summary : ''}`).join('\n')
+        await db.updateProjectMetadataField(id, 'plotStructure', outline)
+      } catch {}
     } catch (syncErr) {
       console.warn('章节同步未完成（不影响规划保存）：', syncErr)
     }

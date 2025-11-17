@@ -65,12 +65,25 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
     }
   }
 
-  const handleCreateChapter = async (chapterData: Omit<CreateChapterData, 'projectId'>) => {
+  const handleCreateChapter = async (chapterData: Omit<CreateChapterData, 'projectId'> & { summary?: string; mdSynopsis?: string }) => {
     try {
       const newChapter = await chaptersApi.createForProject(projectId, {
-        ...chapterData,
+        title: chapterData.title,
+        content: chapterData.content,
+        notes: chapterData.notes,
         order: chapters.length + 1
       })
+      // 写入章节梗概与初始元数据
+      try {
+        if (chapterData.summary && chapterData.summary.trim()) {
+          await chaptersApi.update(newChapter.id, { summary: chapterData.summary.trim() })
+        }
+        if (chapterData.mdSynopsis && chapterData.mdSynopsis.trim()) {
+          await chaptersApi.updateMetadata(newChapter.id, 'synopsis', chapterData.mdSynopsis.trim())
+        }
+      } catch (metaErr) {
+        console.warn('初始化章节元数据失败：', metaErr)
+      }
       
       setChapters([...chapters, newChapter])
       setShowCreateModal(false)

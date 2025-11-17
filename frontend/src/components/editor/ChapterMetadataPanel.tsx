@@ -8,17 +8,19 @@ interface ChapterMetadataPanelProps {
   onUpdate?: (field: string, value: string) => void
   onClose?: () => void
   className?: string
+  initialMode?: 'view' | 'edit' | 'view_all'
 }
 
 const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
   chapter,
   onUpdate,
   onClose,
-  className = ''
+  className = '',
+  initialMode
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [activeField, setActiveField] = useState<string>('synopsis')
-  const [mode, setMode] = useState<'view' | 'edit' | 'view_all'>('view')
+  const [mode, setMode] = useState<'view' | 'edit' | 'view_all'>(initialMode || 'view')
   const [preview, setPreview] = useState<{ current: string; lastModified?: string; wordCount?: number } | null>(null)
   const [loading, setLoading] = useState(false)
   const [previewsAll, setPreviewsAll] = useState<Record<string, { current: string; lastModified?: string; wordCount?: number } | null>>({})
@@ -36,7 +38,14 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
       setLoading(true)
       chaptersApi.getMetadata(chapter.id, activeField)
         .then((res) => setPreview({ current: res.current || '', lastModified: res.lastModified, wordCount: res.wordCount }))
-        .catch(() => setPreview(null))
+        .catch(() => {
+          // 后端暂未提供章节元数据接口时的回退：使用章节 summary 作为梗概预览
+          if (activeField === 'synopsis' && (chapter as any)?.summary) {
+            setPreview({ current: (chapter as any).summary, lastModified: chapter.updatedAt, wordCount: undefined })
+          } else {
+            setPreview(null)
+          }
+        })
         .finally(() => setLoading(false))
     }
   }, [chapter?.id, activeField, mode])

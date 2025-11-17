@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { projectsApi, collectionsApi, chaptersApi, Project, Collection, CreateProjectData } from '../../services/api'
-import { Plus, Edit, Trash2, FileText, User, Calendar, BarChart3 } from 'lucide-react'
+import { Plus, Edit, Trash2, FileText, User, Calendar, BarChart3, Eye } from 'lucide-react'
 
 const ProjectsList: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([])
@@ -10,10 +10,34 @@ const ProjectsList: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedCollection, setSelectedCollection] = useState<string>('')
+  const [previewProject, setPreviewProject] = useState<Project | null>(null)
+  const [previewChapters, setPreviewChapters] = useState<any[]>([])
+  const [previewLoading, setPreviewLoading] = useState(false)
 
   useEffect(() => {
-    loadData()
-  }, [selectedCollection])
+    (async () => {
+      if (!previewProject) return
+      try {
+        setPreviewLoading(true)
+        const chs = await chaptersApi.getByProjectId(previewProject.id)
+        setPreviewChapters(chs.sort((a,b)=>a.order-b.order))
+      } catch {
+        setPreviewChapters([])
+      } finally {
+        setPreviewLoading(false)
+      }
+    })()
+  }, [previewProject])
+  const [searchParams] = useSearchParams()
+
+  useEffect(() => {
+    const fromUrl = searchParams.get('collectionId') || ''
+    if (fromUrl && fromUrl !== selectedCollection) {
+      setSelectedCollection(fromUrl)
+    } else {
+      loadData()
+    }
+  }, [selectedCollection, searchParams])
 
   const loadData = async () => {
     try {
@@ -144,6 +168,7 @@ const ProjectsList: React.FC = () => {
               onUpdate={loadData}
               getStatusColor={getStatusColor}
               getStatusText={getStatusText}
+              onPreview={(p)=>setPreviewProject(p)}
             />
           ))}
         </div>
@@ -159,6 +184,47 @@ const ProjectsList: React.FC = () => {
           }}
         />
       )}
+
+      {/* 预览弹窗 */}
+      {previewProject && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex">
+          <div className="absolute inset-0" onClick={()=>setPreviewProject(null)}></div>
+          <div className="relative ml-auto h-full w-[36rem] bg-white shadow-2xl border flex flex-col">
+            <div className="p-4 border-b flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">项目预览</h3>
+                <div className="text-xs text-gray-500 truncate">{previewProject.title}</div>
+              </div>
+              <button className="p-2 hover:bg-gray-100 rounded" onClick={()=>setPreviewProject(null)}>关闭</button>
+            </div>
+            <div className="p-4 space-y-3 overflow-auto">
+              <div className="text-sm text-gray-700">
+                <div className="font-medium mb-1">项目梗概</div>
+                <div className="p-3 bg-gray-50 border rounded whitespace-pre-wrap min-h-[80px]">{(previewProject as any)?.metadata?.synopsis?.current || '暂无梗概'}</div>
+              </div>
+              <div className="text-sm text-gray-700">
+                <div className="font-medium mb-1">全文预览</div>
+                <div className="p-3 bg-gray-50 border rounded whitespace-pre-wrap min-h-[160px] max-h-[480px] overflow-auto">
+                  {previewLoading ? (
+                    <div className="text-gray-500">加载章节中...</div>
+                  ) : previewChapters.length === 0 ? (
+                    <div className="text-gray-500">暂无章节内容</div>
+                  ) : (
+                    previewChapters.map((c)=> (
+                      <div key={c.id} className="mb-4">
+                        <div className="font-medium text-gray-900">第 {c.order} 章：{c.title}</div>
+                        {c.summary && <div className="text-xs text-gray-500 mt-0.5">{c.summary}</div>}
+                        <div className="text-sm text-gray-800 whitespace-pre-wrap mt-1">{c.content || '（空）'}</div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+              <div className="text-xs text-gray-500">字数：{previewProject.wordCount.toLocaleString()} · 章节：{previewProject.chapterCount}</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -170,6 +236,7 @@ interface ProjectCardProps {
   onUpdate: () => void
   getStatusColor: (status: string) => string
   getStatusText: (status: string) => string
+  onPreview: (project: Project) => void
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ 
@@ -177,12 +244,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   collectionName, 
   onDelete,
   getStatusColor,
-  getStatusText
+  getStatusText,
+  onPreview
 }) => {
   const navigate = useNavigate()
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex justify-between items-start mb-3">
         <h3 className="text-xl font-semibold line-clamp-2">{project.title}</h3>
         <div className="flex gap-2">
           <button 
@@ -204,6 +272,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           >
             <Edit size={18} />
           </button>
+          <button
+            className="text-gray-500 hover:text-gray-700"
+            onClick={() => onPreview(project)}
+            title="预览项目"
+          >
+            <Eye size={18} />
+          </button>
           <button 
             onClick={() => onDelete(project.id)}
             className="text-red-500 hover:text-red-700"
@@ -217,29 +292,40 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         <p className="text-gray-600 mb-4 line-clamp-3">{project.description}</p>
       )}
 
-      <div className="space-y-3 mb-4">
-        <div className="flex items-center gap-2">
-          <User size={16} className="text-gray-400" />
-          <span className="text-sm text-gray-600">{project.author}</span>
+      <div className="mb-4">
+        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+          <span className="inline-flex items-center gap-2"><User size={16} className="text-gray-400" />{project.author}</span>
+          <span className="inline-flex items-center gap-2"><FileText size={16} className="text-gray-400" />{collectionName}</span>
+          <span className="inline-flex items-center gap-2"><Calendar size={16} className="text-gray-400" />{new Date(project.createdAt).toLocaleDateString()}</span>
+          <span className="inline-flex items-center gap-2"><BarChart3 size={16} className="text-gray-400" />{project.wordCount.toLocaleString()} 字 · {project.chapterCount} 章</span>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <FileText size={16} className="text-gray-400" />
-          <span className="text-sm text-gray-600">{collectionName}</span>
-        </div>
+      </div>
 
-        <div className="flex items-center gap-2">
-          <Calendar size={16} className="text-gray-400" />
-          <span className="text-sm text-gray-600">
-            {new Date(project.createdAt).toLocaleDateString()}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <BarChart3 size={16} className="text-gray-400" />
-          <span className="text-sm text-gray-600">
-            {project.wordCount.toLocaleString()} 字 · {project.chapterCount} 章
-          </span>
+      {/* 大纲预览（只显示章节序号与标题；梗概小号置于下一行） */}
+      <div className="mb-4">
+        <div className="text-sm font-medium text-gray-800 mb-1">大纲</div>
+        <div className="p-3 bg-gray-50 border rounded text-sm text-gray-700 min-h-[60px]">
+          {(() => {
+            const outlineText = (project as any)?.metadata?.plotStructure?.current || ''
+            const lines = outlineText.split('\n').filter(Boolean)
+            if (lines.length === 0) return <div className="text-gray-500">暂无大纲</div>
+            return (
+              <div className="space-y-1">
+                {lines.slice(0, 5).map((line: string, idx: number) => {
+                  const parts = line.split(' — ')
+                  const main = parts[0]
+                  const synopsis = parts[1] || ''
+                  return (
+                    <div key={idx} className="leading-tight">
+                      <div className="text-gray-800">{main}</div>
+                      {synopsis && <div className="text-xs text-gray-500 mt-0.5">{synopsis}</div>}
+                    </div>
+                  )
+                })}
+                {lines.length > 5 && <div className="text-xs text-gray-400">… 更多章节</div>}
+              </div>
+            )
+          })()}
         </div>
       </div>
 
@@ -285,6 +371,8 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ collections, on
     status: 'draft',
     collectionId: ''
   })
+  const [initialSynopsis, setInitialSynopsis] = useState('')
+  const [autoCreateFirstChapter, setAutoCreateFirstChapter] = useState(true)
   const [genreInput, setGenreInput] = useState('')
   const [tagInput, setTagInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -292,7 +380,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ collections, on
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.title.trim() || !formData.author.trim()) return
+    if (!formData.title.trim() || !formData.author.trim() || !initialSynopsis.trim()) return
 
     try {
       setLoading(true)
@@ -303,9 +391,26 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ collections, on
         description: formData.description?.trim(),
         author: formData.author.trim(),
       })
-      
-      // 2. 不再自动创建默认章节；直接跳转到项目详情页进行章节规划
+
       if (newProject?.id) {
+        // 2. 写入初始项目元数据（梗概）
+        try {
+          await projectsApi.updateMetadata(newProject.id, 'synopsis', initialSynopsis.trim())
+        } catch {}
+
+        // 3. 默认生成第1章（可开关）
+        if (autoCreateFirstChapter) {
+          try {
+            const created = await chaptersApi.createForProject(newProject.id, {
+              title: '第1章',
+              content: '',
+              order: 1
+            })
+            await chaptersApi.update(created.id, { summary: initialSynopsis.trim() })
+            await chaptersApi.updateMetadata(created.id, 'synopsis', initialSynopsis.trim())
+          } catch {}
+        }
+
         navigate(`/projects/${newProject.id}`)
       }
       
@@ -448,6 +553,29 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ collections, on
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
+                项目梗概（必填）
+              </label>
+              <textarea
+                value={initialSynopsis}
+                onChange={(e) => setInitialSynopsis(e.target.value)}
+                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="简要描述作品的核心构思与目标"
+                rows={4}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">初始化选项</label>
+              <div className="flex items-center gap-2">
+                <input id="autoCreateFirstChapter" type="checkbox" checked={autoCreateFirstChapter} onChange={(e)=>setAutoCreateFirstChapter(e.target.checked)} />
+                <label htmlFor="autoCreateFirstChapter" className="text-sm text-gray-700">创建后默认生成第 1 章，并写入梗概</label>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 类型标签
               </label>
               <div className="flex gap-2 mb-2">
@@ -541,7 +669,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ collections, on
             </button>
             <button
               type="submit"
-              disabled={loading || !formData.title.trim() || !formData.author.trim()}
+              disabled={loading || !formData.title.trim() || !formData.author.trim() || !initialSynopsis.trim()}
               className="flex-1 bg-blue-500 text-white py-2 rounded hover:bg-blue-600 disabled:opacity-50"
             >
               {loading ? '创建中...' : '创建'}

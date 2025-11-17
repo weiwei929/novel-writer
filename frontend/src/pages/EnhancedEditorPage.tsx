@@ -3,12 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom'
 import MarkdownEditor from '../components/editor/MarkdownEditor'
 import ProjectNavigationPanel from '../components/editor/ProjectNavigationPanel'
 import ProjectMetadataPanel from '../components/editor/ProjectMetadataPanel'
-import ModeSwitcher from '../components/writing-mode/ModeSwitcher'
 import ModeIndicator from '../components/writing-mode/ModeIndicator'
-import PlanningPanel from '../components/writing-mode/PlanningPanel'
 import ChapterMetadataPanel from '../components/editor/ChapterMetadataPanel'
 // import VersionManagementPanel from '../components/version/VersionManagementPanel'  // 暂时禁用版本管理
-import { WritingModeProvider, useWritingMode, WritingMode } from '../contexts/WritingModeContext'
+import { WritingModeProvider } from '../contexts/WritingModeContext'
 // import { VersionManagementProvider, useVersionManagement } from '../contexts/VersionManagementContext'  // 暂时禁用版本管理
 import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
 import { ArrowLeft, Save } from 'lucide-react'
@@ -36,7 +34,6 @@ const EnhancedEditorPageContent: React.FC = () => {
   const [projectMetadataField, setProjectMetadataField] = useState<string>('synopsis')
   const [showChapterMetadata, setShowChapterMetadata] = useState(false)
   const [exitStatus, setExitStatus] = useState<'writing' | 'completed'>('writing')
-  const { modeState } = useWritingMode()
 
   useEffect(() => {
     if (chapterId) {
@@ -78,14 +75,24 @@ const EnhancedEditorPageContent: React.FC = () => {
       setError(null)
       const chapterData = await chaptersApi.getById(chapterId)
       setChapter(chapterData)
-      setContent(chapterData.content || '')
+      const raw = chapterData.content || ''
+      const hasHeader = /^#\s/.test(raw.trim()) || /^---\n/.test(raw.trim())
+      let header = ''
+      if (project) {
+        const projSynopsis = (project as any)?.metadata?.synopsis?.current || ''
+        const chapSynopsis = (chapterData as any)?.summary || ((chapterData as any)?.metadata?.synopsis?.current) || ''
+        header += `---\nprojectTitle: ${project.title}\nprojectAuthor: ${project.author}\nprojectCreatedAt: ${new Date(project.createdAt).toLocaleDateString()}\nprojectUpdatedAt: ${new Date(project.updatedAt).toLocaleDateString()}\nprojectSynopsis: ${projSynopsis}\nchapterOrder: ${chapterData.order}\nchapterTitle: ${chapterData.title}\nchapterAuthor: ${project.author}\nchapterCreatedAt: ${new Date(chapterData.createdAt).toLocaleDateString()}\nchapterUpdatedAt: ${new Date(chapterData.updatedAt).toLocaleDateString()}\nchapterSynopsis: ${chapSynopsis}\n---\n\n# ${project.title}\n\n`
+      }
+      header += `## 第 ${chapterData.order} 章：${chapterData.title}\n\n`
+      const composed = hasHeader ? raw : `${header}${raw}`
+      setContent(composed)
       setHasUnsavedChanges(false)
       
       // 加载章节所属的项目
       if (chapterData.projectId) {
         await loadProject(chapterData.projectId)
       }
-      
+
       setLoading(false)
     } catch (err) {
       setError('加载章节失败')
@@ -116,10 +123,42 @@ const EnhancedEditorPageContent: React.FC = () => {
 
   const handleSave = async (saveContent?: string) => {
     if (!chapter) return
-    const contentToSave = saveContent || content
+    let contentToSave = saveContent || content
     const newWordCount = calculateWordCount(contentToSave)
     try {
       setSaving(true)
+      const fmMatch = contentToSave.match(/^---\n([\s\S]*?)\n---\n/)
+      if (fmMatch) {
+        const lines = fmMatch[1].split(/\n/)
+        const kv: Record<string, string> = {}
+        for (const line of lines) {
+          const idx = line.indexOf(':')
+          if (idx > -1) {
+            const key = line.slice(0, idx).trim()
+            const val = line.slice(idx + 1).trim()
+            kv[key] = val
+          }
+        }
+        if (kv['chapterSynopsis']) {
+          try {
+            await chaptersApi.update(chapter.id, { summary: kv['chapterSynopsis'] })
+            await chaptersApi.updateMetadata(chapter.id, 'synopsis', kv['chapterSynopsis'])
+          } catch {}
+        }
+        if (kv['projectSynopsis'] && project) {
+          try {
+            await projectsApi.updateMetadata(project.id, 'synopsis', kv['projectSynopsis'])
+          } catch {}
+        }
+        const nowStr = new Date().toISOString()
+        kv['projectUpdatedAt'] = nowStr
+        kv['chapterUpdatedAt'] = nowStr
+        const pTitle = kv['projectTitle'] || (project?.title || '')
+        const cTitle = kv['chapterTitle'] || chapter.title
+        const header = `---\nprojectTitle: ${pTitle}\nprojectAuthor: ${kv['projectAuthor'] || project?.author || ''}\nprojectCreatedAt: ${kv['projectCreatedAt'] || new Date(project!.createdAt).toLocaleDateString()}\nprojectUpdatedAt: ${kv['projectUpdatedAt']}\nprojectSynopsis: ${kv['projectSynopsis'] || (project as any)?.metadata?.synopsis?.current || ''}\nchapterOrder: ${kv['chapterOrder'] || chapter.order}\nchapterTitle: ${cTitle}\nchapterAuthor: ${kv['chapterAuthor'] || project?.author || ''}\nchapterCreatedAt: ${kv['chapterCreatedAt'] || new Date(chapter.createdAt).toLocaleDateString()}\nchapterUpdatedAt: ${kv['chapterUpdatedAt']}\nchapterSynopsis: ${kv['chapterSynopsis'] || (chapter as any)?.summary || ''}\n---\n`
+        contentToSave = contentToSave.replace(fmMatch[0], header)
+      }
+
       await updateChapterAndProject(chapter.id, {
         content: contentToSave,
         wordCount: newWordCount
@@ -277,9 +316,6 @@ const EnhancedEditorPageContent: React.FC = () => {
           {/* 写作模式指示器 */}
           <ModeIndicator showDropdown={false} />
           
-          {/* 写作模式切换器（仅显示规划/写作） */}
-          <ModeSwitcher variant="tabs" size="sm" />
-          
           <div className="h-5 w-px bg-gray-300"></div>
           
           <button
@@ -288,12 +324,7 @@ const EnhancedEditorPageContent: React.FC = () => {
           >
             项目元数据
           </button>
-          <button
-            onClick={() => { setProjectMetadataField('synopsis'); setShowProjectMetadata(true) }}
-            className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50"
-          >
-            编辑梗概
-          </button>
+          {/* 移除重复的编辑梗概入口，统一到项目元数据面板 */}
           {chapter && (
             <button
               onClick={() => setShowChapterMetadata(true)}
@@ -387,14 +418,7 @@ const EnhancedEditorPageContent: React.FC = () => {
         {/* 分隔线 */}
         <div className="w-1 bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 shadow-sm"></div>
         
-        {modeState.currentMode === WritingMode.PLANNING ? (
-          <PlanningPanel 
-            chapter={chapter}
-            onOutlineChange={(outline) => console.log('大纲更新:', outline)}
-            onCharactersChange={(characters) => console.log('角色更新:', characters)}
-            className="flex-shrink-0 w-80"
-          />
-        ) : null}
+        {/* 规划模块已取消，统一到项目/章节元数据与章节规划 */}
 
         {/* 章节元数据弹窗（与项目元数据一致的固定遮罩抽屉） */}
         {showChapterMetadata && (
@@ -402,8 +426,9 @@ const EnhancedEditorPageContent: React.FC = () => {
             <div className="absolute inset-0 bg-black bg-opacity-30" onClick={() => setShowChapterMetadata(false)} />
             <ChapterMetadataPanel
               chapter={chapter}
-              onUpdate={(_field, _value) => { setShowChapterMetadata(false); if (project) navigate(`/projects/${project.id}`) }}
+              onUpdate={(_field, _value) => { setShowChapterMetadata(false) }}
               onClose={() => setShowChapterMetadata(false)}
+              initialMode={'view_all'}
               className="relative ml-auto h-full w-[28rem]"
             />
           </div>
@@ -414,6 +439,7 @@ const EnhancedEditorPageContent: React.FC = () => {
           project={project}
           onClose={() => setShowProjectMetadata(false)}
           initialField={projectMetadataField}
+          initialMode={'view_all'}
         />
       )}
     </div>

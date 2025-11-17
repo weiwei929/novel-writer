@@ -8,11 +8,12 @@ interface ProjectMetadataPanelProps {
   onClose: () => void
   className?: string
   initialField?: string
+  initialMode?: 'view' | 'edit' | 'view_all'
 }
 
-const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({ project, onClose, className = '', initialField }) => {
+const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({ project, onClose, className = '', initialField, initialMode }) => {
   const [activeField, setActiveField] = useState<string>(initialField || 'synopsis')
-  const [mode, setMode] = useState<'view' | 'edit' | 'view_all'>('view')
+  const [mode, setMode] = useState<'view' | 'edit' | 'view_all'>(initialMode || 'view')
   const [preview, setPreview] = useState<{ current: string; lastModified?: string; wordCount?: number } | null>(null)
   const [loading, setLoading] = useState(false)
   const [previewsAll, setPreviewsAll] = useState<Record<string, { current: string; lastModified?: string; wordCount?: number } | null>>({})

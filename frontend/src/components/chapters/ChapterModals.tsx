@@ -4,7 +4,7 @@ import { Chapter, CreateChapterData } from '../../services/api'
 
 interface CreateChapterModalProps {
   onClose: () => void
-  onSubmit: (data: Omit<CreateChapterData, 'projectId'>) => void
+  onSubmit: (data: Omit<CreateChapterData, 'projectId'> & { summary?: string; mdSynopsis?: string }) => void
   nextOrder: number
 }
 
@@ -16,7 +16,9 @@ export const CreateChapterModal: React.FC<CreateChapterModalProps> = ({
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    notes: ''
+    notes: '',
+    summary: '',
+    mdSynopsis: ''
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -27,7 +29,9 @@ export const CreateChapterModal: React.FC<CreateChapterModalProps> = ({
       title: formData.title.trim(),
       content: formData.content,
       notes: formData.notes,
-      order: nextOrder
+      order: nextOrder,
+      summary: formData.summary?.trim() || '',
+      mdSynopsis: formData.mdSynopsis?.trim() || ''
     })
   }
 
@@ -68,6 +72,27 @@ export const CreateChapterModal: React.FC<CreateChapterModalProps> = ({
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20"
               placeholder="简要描述这一章的内容要点..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">章节梗概（必填）</label>
+            <textarea
+              value={formData.summary}
+              onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20"
+              placeholder="本章的核心推进与要点"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">初始元数据：章节梗概（synopsis）</label>
+            <textarea
+              value={formData.mdSynopsis}
+              onChange={(e) => setFormData({ ...formData, mdSynopsis: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20"
+              placeholder="元数据中的章节梗概，可与上方梗概一致或更详细"
             />
           </div>
 
@@ -115,7 +140,7 @@ export const EditChapterModal: React.FC<EditChapterModalProps> = ({
   chapter,
   onClose,
   onSubmit
-}) => {
+  }) => {
   const [formData, setFormData] = useState({
     title: chapter.title,
     notes: chapter.notes || '',

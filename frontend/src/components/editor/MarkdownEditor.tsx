@@ -119,8 +119,55 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
   // 渲染Markdown预览
   const renderPreview = (text: string) => {
+    let propsHtml = ''
+    let body = text
+    const fmMatch = body.match(/^---\n([\s\S]*?)\n---\n/)
+    if (fmMatch) {
+      const raw = fmMatch[1]
+      const lines = raw.split('\n').filter(Boolean)
+      const kv: Record<string, string> = {}
+      for (const line of lines) {
+        const i = line.indexOf(':')
+        if (i > -1) {
+          const k = line.slice(0, i).trim()
+          const v = line.slice(i + 1).trim()
+          kv[k] = v
+        }
+      }
+      const pTitle = kv['projectTitle'] || ''
+      const cTitle = kv['chapterTitle'] || ''
+      propsHtml = `
+        <div class="mb-6 rounded border bg-gray-50 p-4 text-sm">
+          <div class="font-medium text-gray-900 mb-2">文档属性</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <div class="text-xs text-gray-500 mb-1">项目</div>
+              <div class="space-y-1 text-gray-700">
+                <div>标题：${pTitle}</div>
+                <div>作者：${kv['projectAuthor'] || ''}</div>
+                <div>创建时间：${kv['projectCreatedAt'] || ''}</div>
+                <div>修改时间：${kv['projectUpdatedAt'] || ''}</div>
+                <div>梗概：${kv['projectSynopsis'] || ''}</div>
+              </div>
+            </div>
+            <div>
+              <div class="text-xs text-gray-500 mb-1">章节</div>
+              <div class="space-y-1 text-gray-700">
+                <div>序号：${kv['chapterOrder'] || ''}</div>
+                <div>标题：${cTitle}</div>
+                <div>作者：${kv['chapterAuthor'] || ''}</div>
+                <div>创建时间：${kv['chapterCreatedAt'] || ''}</div>
+                <div>修改时间：${kv['chapterUpdatedAt'] || ''}</div>
+                <div>梗概：${kv['chapterSynopsis'] || ''}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+      body = body.replace(fmMatch[0], '')
+    }
     // 增强的Markdown渲染，更好的写作预览体验
-    let html = text
+    let html = body
       // 标题 - 添加更好的间距
       .replace(/^### (.*$)/gm, '<h3 class="text-xl font-semibold text-gray-800 mt-8 mb-4 border-b border-gray-200 pb-2">$1</h3>')
       .replace(/^## (.*$)/gm, '<h2 class="text-2xl font-bold text-gray-900 mt-10 mb-6">$1</h2>')
@@ -139,7 +186,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     // 包装列表项
     html = html.replace(/(<li[^>]*>.*?<\/li>)/gs, '<ul class="list-disc ml-6 mb-6 space-y-1">$1</ul>')
     
-    return { __html: `<div class="text-gray-800 leading-relaxed"><p class="mb-6 text-gray-800 leading-relaxed">${html}</p></div>` }
+    return { __html: propsHtml + `<div class="text-gray-800 leading-relaxed"><p class="mb-6 text-gray-800 leading-relaxed">${html}</p></div>` }
   }
 
   const insertMarkdown = (before: string, after: string = '') => {

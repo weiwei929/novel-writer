@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { saveAs } from 'file-saver'
 import {
@@ -15,6 +15,7 @@ import {
   Info as InfoIcon,
   Loader2 as LoaderIcon
 } from 'lucide-react'
+import { collectionsApi, Collection } from '../../services/api'
 
 interface FileImportExportProps {
   projectId?: string
@@ -67,6 +68,19 @@ const FileImportExport: React.FC<FileImportExportProps> = ({
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [exportFormat, setExportFormat] = useState<string>('word')
   const [showFormatDialog, setShowFormatDialog] = useState(false)
+  const [availableCollections, setAvailableCollections] = useState<Collection[]>([])
+  const [targetCollectionId, setTargetCollectionId] = useState<string>(collectionId || '')
+  const [createNewCollection, setCreateNewCollection] = useState<boolean>(false)
+  const [mergeStrategy, setMergeStrategy] = useState<'replace'|'merge'|'skip'>('merge')
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const cols = await collectionsApi.getAll()
+        setAvailableCollections(cols)
+      } catch {}
+    })()
+  }, [])
 
   // 文件拖拽处理
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -75,9 +89,10 @@ const FileImportExport: React.FC<FileImportExportProps> = ({
     const file = acceptedFiles[0]
     const formData = new FormData()
     formData.append('file', file)
-    if (collectionId) {
-      formData.append('collectionId', collectionId)
-    }
+    const cid = targetCollectionId || collectionId || ''
+    if (cid) formData.append('collectionId', cid)
+    formData.append('createNewCollection', String(createNewCollection))
+    formData.append('mergeStrategy', mergeStrategy)
 
     setImporting(true)
     setImportResult(null)
@@ -180,8 +195,40 @@ const FileImportExport: React.FC<FileImportExportProps> = ({
               <h2 className="text-xl font-semibold text-gray-900">文件导入</h2>
             </div>
           </div>
-          
+
           <div className="p-6">
+            {/* 目标文集与合并策略 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">导入到文集</label>
+                <select
+                  value={targetCollectionId}
+                  onChange={(e)=>setTargetCollectionId(e.target.value)}
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">未选择（允许创建新文集）</option>
+                  {availableCollections.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <div className="mt-2 flex items-center gap-2">
+                  <input id="createNewCollection" type="checkbox" checked={createNewCollection} onChange={(e)=>setCreateNewCollection(e.target.checked)} />
+                  <label htmlFor="createNewCollection" className="text-sm text-gray-700">若未选择现有文集，则创建新文集</label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">合并策略</label>
+                <select
+                  value={mergeStrategy}
+                  onChange={(e)=>setMergeStrategy(e.target.value as any)}
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="replace">替换</option>
+                  <option value="merge">合并</option>
+                  <option value="skip">跳过</option>
+                </select>
+              </div>
+            </div>
             {/* 拖拽区域 */}
             <div
               {...getRootProps()}

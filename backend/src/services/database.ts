@@ -1,4 +1,4 @@
-﻿import { Low } from 'lowdb'
+import { Low } from 'lowdb'
 import { JSONFile } from 'lowdb/node'
 import { join } from 'path'
 import { existsSync } from 'fs'
@@ -585,6 +585,94 @@ class DatabaseService {
 
     await this.db!.write()
     return item
+  }
+
+  // ===== 章节元数据（Chapter级） =====
+  async updateChapterMetadataField(chapterId: string, field: string, content: string) {
+    await this.init()
+    await this.db!.read()
+
+    if (!this.isAllowedField(field)) {
+      throw new Error('Unsupported metadata field')
+    }
+
+    const chapter = this.db!.data.chapters.find(c => c.id === chapterId) as any
+    if (!chapter) throw new Error('Chapter not found')
+
+    this.ensureChapterMetadata(chapter)
+
+    const now = new Date().toISOString()
+    const item: MetadataItem = chapter.metadata[field] || this.createDefaultMetadataItem()
+    item.current = content || ''
+    item.wordCount = item.current ? item.current.trim().split(/\s+/).length : 0
+    item.lastModified = now
+    chapter.metadata[field] = item
+
+    await this.db!.write()
+    return item
+  }
+
+  async getChapterMetadataField(chapterId: string, field: string) {
+    await this.init()
+    await this.db!.read()
+
+    if (!this.isAllowedField(field)) {
+      throw new Error('Unsupported metadata field')
+    }
+
+    const chapter = this.db!.data.chapters.find(c => c.id === chapterId) as any
+    if (!chapter) throw new Error('Chapter not found')
+
+    this.ensureChapterMetadata(chapter)
+    const item: MetadataItem = chapter.metadata[field] || this.createDefaultMetadataItem()
+    return item
+  }
+
+  async getChapterMetadataVersions(chapterId: string, field: string) {
+    await this.init()
+    await this.db!.read()
+
+    if (!this.isAllowedField(field)) {
+      throw new Error('Unsupported metadata field')
+    }
+
+    const chapter = this.db!.data.chapters.find(c => c.id === chapterId) as any
+    if (!chapter) throw new Error('Chapter not found')
+
+    this.ensureChapterMetadata(chapter)
+    const item: MetadataItem = chapter.metadata[field] || this.createDefaultMetadataItem()
+    return item.versions
+  }
+
+  async saveChapterMetadataVersion(chapterId: string, field: string, content: string, userNote = '', autoSaved = false) {
+    await this.init()
+    await this.db!.read()
+
+    if (!this.isAllowedField(field)) {
+      throw new Error('Unsupported metadata field')
+    }
+
+    const chapter = this.db!.data.chapters.find(c => c.id === chapterId) as any
+    if (!chapter) throw new Error('Chapter not found')
+
+    this.ensureChapterMetadata(chapter)
+
+    const now = new Date().toISOString()
+    const version: SavedVersion = {
+      id: uuidv4(),
+      content: content || '',
+      timestamp: now,
+      userNote: userNote || '',
+      autoSaved: !!autoSaved
+    }
+
+    const item: MetadataItem = chapter.metadata[field] || this.createDefaultMetadataItem()
+    item.versions.push(version)
+    item.lastModified = now
+    chapter.metadata[field] = item
+
+    await this.db!.write()
+    return version
   }
 
   async getChapterMetadataVersions(chapterId: string, field: string) {
