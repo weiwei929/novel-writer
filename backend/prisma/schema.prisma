@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------
+// Core Hierarchy (核心层级)
+// ---------------------------------------------------------
+
+model Collection {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  projects    Project[]
+}
+
+model Project {
+  id           String   @id @default(uuid())
+  title        String
+  description  String?
+  author       String?
+  coverImage   String?
+  status       String   @default("draft") // draft, writing, completed, archived
+  
+  // Stats
+  wordCount    Int      @default(0)
+  
+  // Flexible Metadata (For Living Guidebook / Synopsis etc.)
+  // Flexible Metadata (For Living Guidebook / Synopsis etc.)
+  metadata     String?  // JSON string: { "synopsis": "...", "outline": ... }
+  
+  // The "Deep Line" (暗线) - AI Guidance
+  masterPrompt String?  // The distilled prompt from Socratic dialogue
+  
+  // Collection Management
+  tags         String?  // JSON string: ["玄幻", "大女主"]
+  
+  
+  // Relations
+  collectionId String?
+  collection   Collection? @relation(fields: [collectionId], references: [id])
+  
+  chapters     Chapter[]
+  characters   Character[]
+  locations    Location[]
+  scraps       Scrap[]
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Chapter {
+  id        String   @id @default(uuid())
+  title     String
+  content   String   // Markdown content
+  order     Int      // Display order
+  status    String   @default("draft")
+  
+  wordCount Int      @default(0)
+  summary   String?  // Chapter synopsis
+  metadata  String?  // JSON string for extra data
+  
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  // Snapshot/History references can be added here if needed, 
+  // but we primarily use Scrapbook for discarded ideas.
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------
+// The Writer's Scrapbook (灵感剪贴簿) - Replaces Git-style Versioning
+// ---------------------------------------------------------
+
+model Scrap {
+  id        String   @id @default(uuid())
+  content   String
+  note      String?  // User's note on why they clipped this
+  tags      String?  // JSON string or comma-separated tags
+  
+  // Where did this come from?
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  // Optional linkage to original chapter context
+  originalChapterId String?
+  
+  createdAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------
+// The Living Guidebook (“活体”设定集)
+// ---------------------------------------------------------
+
+model Character {
+  id          String  @id @default(uuid())
+  name        String
+  role        String? // Protagonist, Antagonist, Supporting
+  description String?
+  
+  // Detailed traits stored as JSON for flexibility
+  profile     String? // JSON: { "age": 20, "appearance": "...", "relationships": [] }
+  
+  projectId   String
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Location {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  
+  projectId   String
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

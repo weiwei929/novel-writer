@@ -28,11 +28,11 @@ const EditorPage: React.FC = () => {
     try {
       setLoading(true)
       setError(null)
-      
+
       // 加载项目信息
       const projectData = await projectsApi.getById(projectId)
       setProject(projectData)
-      
+
       // 如果指定了章节ID，加载章节内容
       if (chapterId) {
         try {
@@ -46,7 +46,9 @@ const EditorPage: React.FC = () => {
       } else {
         // 如果没有指定章节，显示项目信息或创建新章节提示
         setChapter(null)
-        setContent(`# ${projectData.title}\n\n*项目描述：${projectData.description || '暂无描述'}*\n\n---\n\n## 开始创作\n\n选择一个章节开始编辑，或者创建新章节。`)
+        setContent(
+          `# ${projectData.title}\n\n*项目描述：${projectData.description || '暂无描述'}*\n\n---\n\n## 开始创作\n\n选择一个章节开始编辑，或者创建新章节。`
+        )
       }
     } catch (err) {
       setError('加载项目失败')
@@ -66,7 +68,7 @@ const EditorPage: React.FC = () => {
       setSaving(true)
       await chaptersApi.update(chapterId, { content })
       console.log('章节内容已保存')
-      
+
       // 更新本地章节数据
       setChapter({ ...chapter, content })
     } catch (err) {
@@ -101,10 +103,7 @@ const EditorPage: React.FC = () => {
     return (
       <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
         {error}
-        <button
-          onClick={handleGoBack}
-          className="ml-4 text-blue-600 hover:underline"
-        >
+        <button onClick={handleGoBack} className="ml-4 text-blue-600 hover:underline">
           返回
         </button>
       </div>
@@ -124,12 +123,12 @@ const EditorPage: React.FC = () => {
               <ArrowLeft size={20} />
               <span>返回</span>
             </button>
-            
+
             <div className="flex items-center space-x-2">
               <BookOpen size={20} className="text-gray-400" />
               <div>
                 <h1 className="font-semibold">
-                  {chapter ? chapter.title : (project ? project.title : '写作编辑器')}
+                  {chapter ? chapter.title : project ? project.title : '写作编辑器'}
                 </h1>
                 {project && (
                   <p className="text-sm text-gray-500">

@@ -52,7 +52,7 @@ export function handleApiResponse<T>(response: any): T {
       throw new ApiError(error.code, error.message, error.details)
     }
   }
-  
+
   // 兼容旧格式，直接返回数据
   return response as T
 }
@@ -62,29 +62,31 @@ export function handleApiResponse<T>(response: any): T {
  */
 export function handleApiError(error: any): Promise<never> {
   console.error('API Error:', error)
-  
+
   if (error instanceof ApiError) {
     return Promise.reject(error)
   }
-  
+
   // 处理网络错误
   if (error.code === 'NETWORK_ERROR' || error.code === 'ECONNABORTED' || !error.response) {
     return Promise.reject(new ApiError('NETWORK_ERROR', '网络连接失败，请检查网络设置'))
   }
-  
+
   // 处理HTTP错误
   if (error.response) {
     const { status, data } = error.response
-    
+
     // 如果后端返回的是ApiResponse格式
     if (data && typeof data === 'object' && 'error' in data) {
-      return Promise.reject(new ApiError(
-        data.error.code || 'HTTP_ERROR',
-        data.error.message || `HTTP ${status} 错误`,
-        data.error.details
-      ))
+      return Promise.reject(
+        new ApiError(
+          data.error.code || 'HTTP_ERROR',
+          data.error.message || `HTTP ${status} 错误`,
+          data.error.details
+        )
+      )
     }
-    
+
     // 处理标准HTTP错误
     const httpErrors: Record<number, string> = {
       400: '请求参数错误',
@@ -94,18 +96,15 @@ export function handleApiError(error: any): Promise<never> {
       409: '资源冲突',
       500: '服务器内部错误',
       502: '网关错误',
-      503: '服务不可用'
+      503: '服务不可用',
     }
-    
+
     const message = httpErrors[status] || `HTTP ${status} 错误`
     return Promise.reject(new ApiError(`HTTP_${status}`, message, { status, data }))
   }
-  
+
   // 处理其他错误
-  return Promise.reject(new ApiError(
-    'UNKNOWN_ERROR',
-    error.message || '未知错误发生'
-  ))
+  return Promise.reject(new ApiError('UNKNOWN_ERROR', error.message || '未知错误发生'))
 }
 
 /**
@@ -123,7 +122,7 @@ export interface ApiRequestConfig {
 export const DEFAULT_API_CONFIG: ApiRequestConfig = {
   timeout: 10000,
   retries: 3,
-  retryDelay: 1000
+  retryDelay: 1000,
 }
 
 /**
@@ -135,29 +134,31 @@ export async function withRetry<T>(
 ): Promise<T> {
   const { retries = 3, retryDelay = 1000 } = config
   let lastError: Error
-  
+
   for (let i = 0; i <= retries; i++) {
     try {
       return await fn()
     } catch (error: any) {
       lastError = error
-      
+
       // 如果是最后一次重试，直接抛出错误
       if (i === retries) {
         break
       }
-      
+
       // 某些错误不需要重试
-      if (error instanceof ApiError && 
-          ['VALIDATION_ERROR', 'UNAUTHORIZED', 'FORBIDDEN', 'NOT_FOUND'].includes(error.code)) {
+      if (
+        error instanceof ApiError &&
+        ['VALIDATION_ERROR', 'UNAUTHORIZED', 'FORBIDDEN', 'NOT_FOUND'].includes(error.code)
+      ) {
         break
       }
-      
+
       // 等待后重试
       await new Promise(resolve => setTimeout(resolve, retryDelay))
     }
   }
-  
+
   throw lastError!
 }
 
@@ -166,7 +167,7 @@ export async function withRetry<T>(
  */
 export function createApiClient(baseURL: string, config?: ApiRequestConfig) {
   const finalConfig = { ...DEFAULT_API_CONFIG, ...config }
-  
+
   return {
     async request<T>(method: string, url: string, data?: any): Promise<T> {
       return withRetry(async () => {
@@ -176,38 +177,38 @@ export function createApiClient(baseURL: string, config?: ApiRequestConfig) {
             'Content-Type': 'application/json',
           },
           body: data ? JSON.stringify(data) : undefined,
-          signal: AbortSignal.timeout(finalConfig.timeout!)
+          signal: AbortSignal.timeout(finalConfig.timeout!),
         })
-        
+
         const responseData = await response.json()
-        
+
         if (!response.ok) {
-          handleApiError({ 
-            response: { 
-              status: response.status, 
-              data: responseData 
-            } 
+          handleApiError({
+            response: {
+              status: response.status,
+              data: responseData,
+            },
           })
         }
-        
+
         return handleApiResponse<T>(responseData)
       }, finalConfig)
     },
-    
+
     get<T>(url: string): Promise<T> {
       return this.request<T>('GET', url)
     },
-    
+
     post<T>(url: string, data?: any): Promise<T> {
       return this.request<T>('POST', url, data)
     },
-    
+
     put<T>(url: string, data?: any): Promise<T> {
       return this.request<T>('PUT', url, data)
     },
-    
+
     delete<T>(url: string): Promise<T> {
       return this.request<T>('DELETE', url)
-    }
+    },
   }
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { projectsApi, chaptersApi } from '../../services/api'
-import { useNotifications } from '../../contexts/UIContext'
+import { useNotifications } from '../../hooks/useNotifications'
 
 interface MetadataEditorProps {
   type: 'project' | 'chapter'
@@ -27,7 +27,7 @@ const MetadataEditor: React.FC<MetadataEditorProps> = ({
   initialValue = '',
   required = false,
   onSave,
-  className = ''
+  className = '',
 }) => {
   const { success: notifySuccess, error: notifyError, warning: notifyWarning } = useNotifications()
   const [content, setContent] = useState(initialValue)
@@ -69,7 +69,9 @@ const MetadataEditor: React.FC<MetadataEditorProps> = ({
       }
     }
     loadCurrent()
-    return () => { canceled = true }
+    return () => {
+      canceled = true
+    }
   }, [type, entityId, field])
 
   // 加载版本历史
@@ -134,7 +136,7 @@ const MetadataEditor: React.FC<MetadataEditorProps> = ({
   const handleRestoreVersion = (version: SavedVersion) => {
     setContent(version.content)
     setShowVersions(false)
-    notifySuccess('已恢复版本', `恢复到 ${new Date(version.timestamp).toLocaleString()} 的版本`) 
+    notifySuccess('已恢复版本', `恢复到 ${new Date(version.timestamp).toLocaleString()} 的版本`)
   }
 
   // 格式化时间
@@ -150,9 +152,7 @@ const MetadataEditor: React.FC<MetadataEditorProps> = ({
           <span className="text-sm font-medium text-gray-700">
             {field} {required && <span className="text-red-500">*</span>}
           </span>
-          <span className="text-xs text-gray-500">
-            {wordCount} 字
-          </span>
+          <span className="text-xs text-gray-500">{wordCount} 字</span>
           {lastSaved && (
             <span className="text-xs text-gray-400">
               最后保存: {formatTime(lastSaved.toISOString())}
@@ -189,7 +189,7 @@ const MetadataEditor: React.FC<MetadataEditorProps> = ({
       <div className="flex-1 flex overflow-hidden">
         <textarea
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={e => setContent(e.target.value)}
           placeholder={`请输入${field}内容...`}
           className="flex-1 p-4 font-mono text-sm resize-none focus:outline-none"
           style={{ minHeight: '200px' }}
@@ -204,21 +204,15 @@ const MetadataEditor: React.FC<MetadataEditorProps> = ({
             </div>
             <div className="divide-y">
               {versions.length === 0 ? (
-                <div className="p-4 text-center text-gray-400 text-sm">
-                  暂无保存的版本
-                </div>
+                <div className="p-4 text-center text-gray-400 text-sm">暂无保存的版本</div>
               ) : (
-                versions.map((version) => (
+                versions.map(version => (
                   <div key={version.id} className="p-3 hover:bg-gray-100">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="text-xs text-gray-500">
-                          {formatTime(version.timestamp)}
-                        </div>
+                        <div className="text-xs text-gray-500">{formatTime(version.timestamp)}</div>
                         {version.userNote && (
-                          <div className="text-sm text-gray-700 mt-1">
-                            {version.userNote}
-                          </div>
+                          <div className="text-sm text-gray-700 mt-1">{version.userNote}</div>
                         )}
                         <div className="text-xs text-gray-400 mt-1">
                           {version.content.trim().split(/\s+/).length} 字
@@ -245,19 +239,15 @@ const MetadataEditor: React.FC<MetadataEditorProps> = ({
           <div className="bg-white rounded-lg shadow-xl p-6 w-96">
             <h3 className="text-lg font-medium mb-4">保存版本</h3>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                版本说明
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">版本说明</label>
               <input
                 type="text"
                 value={versionNote}
-                onChange={(e) => setVersionNote(e.target.value)}
+                onChange={e => setVersionNote(e.target.value)}
                 placeholder="例如: 调整主线情节走向"
                 className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                建议填写版本说明，方便后续查找和恢复
-              </p>
+              <p className="text-xs text-gray-500 mt-1">建议填写版本说明，方便后续查找和恢复</p>
             </div>
             <div className="flex justify-end gap-2">
               <button

@@ -11,12 +11,24 @@ interface ProjectMetadataPanelProps {
   initialMode?: 'view' | 'edit' | 'view_all'
 }
 
-const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({ project, onClose, className = '', initialField, initialMode }) => {
+const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({
+  project,
+  onClose,
+  className = '',
+  initialField,
+  initialMode,
+}) => {
   const [activeField, setActiveField] = useState<string>(initialField || 'synopsis')
   const [mode, setMode] = useState<'view' | 'edit' | 'view_all'>(initialMode || 'view')
-  const [preview, setPreview] = useState<{ current: string; lastModified?: string; wordCount?: number } | null>(null)
+  const [preview, setPreview] = useState<{
+    current: string
+    lastModified?: string
+    wordCount?: number
+  } | null>(null)
   const [loading, setLoading] = useState(false)
-  const [previewsAll, setPreviewsAll] = useState<Record<string, { current: string; lastModified?: string; wordCount?: number } | null>>({})
+  const [previewsAll, setPreviewsAll] = useState<
+    Record<string, { current: string; lastModified?: string; wordCount?: number } | null>
+  >({})
 
   // 项目元数据字段定义（与后端白名单一致；章节规划使用单独入口）
   const metadataFields = [
@@ -31,8 +43,15 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({ project, on
   useEffect(() => {
     if (mode === 'view' && activeField) {
       setLoading(true)
-      projectsApi.getMetadata(project.id, activeField)
-        .then((res) => setPreview({ current: res.current || '', lastModified: res.lastModified, wordCount: res.wordCount }))
+      projectsApi
+        .getMetadata(project.id, activeField)
+        .then(res =>
+          setPreview({
+            current: res.current || '',
+            lastModified: res.lastModified,
+            wordCount: res.wordCount,
+          })
+        )
         .catch(() => setPreview(null))
         .finally(() => setLoading(false))
     }
@@ -42,19 +61,33 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({ project, on
     if (mode === 'view_all') {
       setLoading(true)
       Promise.all(
-        metadataFields.map(async (f) => {
+        metadataFields.map(async f => {
           try {
             const res = await projectsApi.getMetadata(project.id, f.key)
-            return { key: f.key, value: { current: res.current || '', lastModified: res.lastModified, wordCount: res.wordCount } }
+            return {
+              key: f.key,
+              value: {
+                current: res.current || '',
+                lastModified: res.lastModified,
+                wordCount: res.wordCount,
+              },
+            }
           } catch {
             return { key: f.key, value: null }
           }
         })
-      ).then((arr) => {
-        const map: Record<string, { current: string; lastModified?: string; wordCount?: number } | null> = {}
-        arr.forEach(({ key, value }) => { map[key] = value })
-        setPreviewsAll(map)
-      }).finally(() => setLoading(false))
+      )
+        .then(arr => {
+          const map: Record<
+            string,
+            { current: string; lastModified?: string; wordCount?: number } | null
+          > = {}
+          arr.forEach(({ key, value }) => {
+            map[key] = value
+          })
+          setPreviewsAll(map)
+        })
+        .finally(() => setLoading(false))
     }
   }, [project.id, mode])
 
@@ -72,14 +105,25 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({ project, on
             <div className="text-xs text-gray-500 truncate">{project.title}</div>
           </div>
           <div className="flex items-center gap-2">
-            <button className={`px-2 py-1 text-xs border rounded ${mode === 'view' ? 'bg-gray-50' : ''}`} onClick={() => setMode('view')}>预览</button>
-            <button className={`px-2 py-1 text-xs border rounded ${mode === 'view_all' ? 'bg-gray-50' : ''}`} onClick={() => setMode('view_all')}>预览全部</button>
-            <button className={`px-2 py-1 text-xs border rounded ${mode === 'edit' ? 'bg-gray-50' : ''}`} onClick={() => setMode('edit')}>编辑</button>
             <button
-              onClick={onClose}
-              className="p-1.5 hover:bg-gray-100 rounded"
-              title="关闭"
+              className={`px-2 py-1 text-xs border rounded ${mode === 'view' ? 'bg-gray-50' : ''}`}
+              onClick={() => setMode('view')}
             >
+              预览
+            </button>
+            <button
+              className={`px-2 py-1 text-xs border rounded ${mode === 'view_all' ? 'bg-gray-50' : ''}`}
+              onClick={() => setMode('view_all')}
+            >
+              预览全部
+            </button>
+            <button
+              className={`px-2 py-1 text-xs border rounded ${mode === 'edit' ? 'bg-gray-50' : ''}`}
+              onClick={() => setMode('edit')}
+            >
+              编辑
+            </button>
+            <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded" title="关闭">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -88,7 +132,7 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({ project, on
         {/* 元数据字段导航 */}
         <div className="border-b bg-white">
           <div className="flex flex-wrap gap-1 p-2">
-            {metadataFields.map((field) => (
+            {metadataFields.map(field => (
               <button
                 key={field.key}
                 onClick={() => setActiveField(field.key)}
@@ -102,7 +146,6 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({ project, on
                 {field.required && <span className="text-red-500 ml-1">*</span>}
               </button>
             ))}
-            
           </div>
         </div>
 
@@ -111,8 +154,15 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({ project, on
           {mode === 'view' ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="font-medium text-gray-900">{metadataFields.find(f => f.key === activeField)?.label}</h3>
-                <button className="px-2 py-1 text-sm border rounded hover:bg-gray-50" onClick={() => setMode('edit')}>编辑此字段</button>
+                <h3 className="font-medium text-gray-900">
+                  {metadataFields.find(f => f.key === activeField)?.label}
+                </h3>
+                <button
+                  className="px-2 py-1 text-sm border rounded hover:bg-gray-50"
+                  onClick={() => setMode('edit')}
+                >
+                  编辑此字段
+                </button>
               </div>
               {loading ? (
                 <div className="text-gray-500 text-sm">加载中...</div>
@@ -122,8 +172,12 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({ project, on
                 </div>
               )}
               <div className="text-xs text-gray-500">
-                {preview?.wordCount !== undefined && <span className="mr-3">字数：{preview.wordCount}</span>}
-                {preview?.lastModified && <span>更新于：{new Date(preview.lastModified).toLocaleString('zh-CN')}</span>}
+                {preview?.wordCount !== undefined && (
+                  <span className="mr-3">字数：{preview.wordCount}</span>
+                )}
+                {preview?.lastModified && (
+                  <span>更新于：{new Date(preview.lastModified).toLocaleString('zh-CN')}</span>
+                )}
               </div>
             </div>
           ) : mode === 'view_all' ? (
@@ -131,30 +185,48 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({ project, on
               {loading ? (
                 <div className="text-gray-500 text-sm">加载中...</div>
               ) : (
-                metadataFields.map((f) => (
+                metadataFields.map(f => (
                   <div key={f.key} className="p-3 bg-white border rounded">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium text-gray-900">{f.label}{f.required && <span className="text-red-500 ml-1">*</span>}</h4>
-                      <button className="px-2 py-1 text-xs border rounded hover:bg-gray-50" onClick={() => { setActiveField(f.key); setMode('edit') }}>编辑</button>
+                      <h4 className="text-sm font-medium text-gray-900">
+                        {f.label}
+                        {f.required && <span className="text-red-500 ml-1">*</span>}
+                      </h4>
+                      <button
+                        className="px-2 py-1 text-xs border rounded hover:bg-gray-50"
+                        onClick={() => {
+                          setActiveField(f.key)
+                          setMode('edit')
+                        }}
+                      >
+                        编辑
+                      </button>
                     </div>
                     <div className="mt-2 text-sm text-gray-800 whitespace-pre-wrap min-h-[80px]">
                       {previewsAll[f.key]?.current || '暂无内容'}
                     </div>
                     <div className="mt-1 text-xs text-gray-500">
-                      {previewsAll[f.key]?.wordCount !== undefined && <span className="mr-3">字数：{previewsAll[f.key]?.wordCount}</span>}
-                      {previewsAll[f.key]?.lastModified && <span>更新于：{new Date(previewsAll[f.key]!.lastModified!).toLocaleString('zh-CN')}</span>}
+                      {previewsAll[f.key]?.wordCount !== undefined && (
+                        <span className="mr-3">字数：{previewsAll[f.key]?.wordCount}</span>
+                      )}
+                      {previewsAll[f.key]?.lastModified && (
+                        <span>
+                          更新于：
+                          {new Date(previewsAll[f.key]!.lastModified!).toLocaleString('zh-CN')}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))
               )}
             </div>
           ) : (
-            metadataFields.find((f) => f.key === activeField) && (
+            metadataFields.find(f => f.key === activeField) && (
               <MetadataEditor
                 type="project"
                 entityId={project.id}
                 field={activeField}
-                required={metadataFields.find((f) => f.key === activeField)?.required}
+                required={metadataFields.find(f => f.key === activeField)?.required}
                 className="h-full"
               />
             )

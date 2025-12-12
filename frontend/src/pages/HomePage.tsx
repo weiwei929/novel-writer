@@ -8,9 +8,7 @@ const HomePage: React.FC = () => {
       {/* 欢迎区域 */}
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">欢迎使用小说创作器</h1>
-        <p className="text-xl text-gray-600 mb-8">
-          专业的小说写作工具，让创作更简单、更高效
-        </p>
+        <p className="text-xl text-gray-600 mb-8">专业的小说写作工具，让创作更简单、更高效</p>
         <Link
           to="/collections"
           className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
@@ -123,7 +121,9 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, lin
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
-      <div className={`w-12 h-12 ${iconClasses[color]} rounded-lg flex items-center justify-center mb-4`}>
+      <div
+        className={`w-12 h-12 ${iconClasses[color]} rounded-lg flex items-center justify-center mb-4`}
+      >
         {icon}
       </div>
       <h3 className="text-lg font-semibold mb-2">{title}</h3>

@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react'
-import { 
-  BookOpen, 
-  Edit3, 
-  Save, 
-  X, 
-  Target, 
-  TrendingUp, 
+import {
+  BookOpen,
+  Edit3,
+  Save,
+  X,
+  Target,
+  TrendingUp,
   Clock,
   FileText,
   Calendar,
   Award,
-  BarChart3
+  BarChart3,
 } from 'lucide-react'
 import { Project, Chapter, projectsApi } from '../../services/api'
 
@@ -25,7 +25,7 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
   project,
   chapters,
   onProjectUpdate,
-  className = ''
+  className = '',
 }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [editedProject, setEditedProject] = useState<Partial<Project>>(project)
@@ -46,7 +46,7 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
     const avgWordsPerChapter = chapters.length > 0 ? Math.round(totalWords / chapters.length) : 0
     const progress = writingGoal > 0 ? Math.round((totalWords / writingGoal) * 100) : 0
     const estimatedReadingTime = Math.ceil(totalWords / 250) // 按每分钟250字计算
-    
+
     return {
       totalWords,
       completedChapters,
@@ -54,7 +54,7 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
       publishedChapters,
       avgWordsPerChapter,
       progress,
-      estimatedReadingTime
+      estimatedReadingTime,
     }
   }, [chapters, writingGoal])
 
@@ -82,7 +82,7 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
     return new Date(dateString).toLocaleDateString('zh-CN', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     })
   }
 
@@ -103,20 +103,22 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
                 <input
                   type="text"
                   value={editedProject.title || ''}
-                  onChange={(e) => setEditedProject({...editedProject, title: e.target.value})}
+                  onChange={e => setEditedProject({ ...editedProject, title: e.target.value })}
                   className="text-2xl font-bold w-full border-b-2 border-blue-500 focus:outline-none"
                   placeholder="项目标题"
                 />
                 <input
                   type="text"
                   value={editedProject.author || ''}
-                  onChange={(e) => setEditedProject({...editedProject, author: e.target.value})}
+                  onChange={e => setEditedProject({ ...editedProject, author: e.target.value })}
                   className="text-lg text-gray-600 w-full border-b border-gray-300 focus:outline-none"
                   placeholder="作者"
                 />
                 <textarea
                   value={editedProject.description || ''}
-                  onChange={(e) => setEditedProject({...editedProject, description: e.target.value})}
+                  onChange={e =>
+                    setEditedProject({ ...editedProject, description: e.target.value })
+                  }
                   className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-blue-500"
                   rows={3}
                   placeholder="项目描述..."
@@ -171,7 +173,7 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
           <BarChart3 size={20} />
           创作统计
         </h3>
-        
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-blue-50 p-4 rounded-lg">
             <div className="flex items-center gap-2 text-blue-600 mb-1">
@@ -182,17 +184,15 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
               {statistics.totalWords.toLocaleString()}
             </div>
           </div>
-          
+
           <div className="bg-green-50 p-4 rounded-lg">
             <div className="flex items-center gap-2 text-green-600 mb-1">
               <BookOpen size={16} />
               <span className="text-sm font-medium">章节数</span>
             </div>
-            <div className="text-2xl font-bold text-green-700">
-              {chapters.length}
-            </div>
+            <div className="text-2xl font-bold text-green-700">{chapters.length}</div>
           </div>
-          
+
           <div className="bg-purple-50 p-4 rounded-lg">
             <div className="flex items-center gap-2 text-purple-600 mb-1">
               <Clock size={16} />
@@ -202,7 +202,7 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
               {statistics.estimatedReadingTime}分钟
             </div>
           </div>
-          
+
           <div className="bg-orange-50 p-4 rounded-lg">
             <div className="flex items-center gap-2 text-orange-600 mb-1">
               <Award size={16} />
@@ -229,9 +229,7 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
                 style={{ width: `${Math.min(statistics.progress, 100)}%` }}
               ></div>
             </div>
-            <div className="text-right text-sm text-gray-500 mt-1">
-              {statistics.progress}% 完成
-            </div>
+            <div className="text-right text-sm text-gray-500 mt-1">{statistics.progress}% 完成</div>
           </div>
         </div>
       </div>
@@ -242,30 +240,26 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
           <Target size={20} />
           写作目标
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              总字数目标
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">总字数目标</label>
             <input
               type="number"
               value={writingGoal}
-              onChange={(e) => setWritingGoal(Number(e.target.value))}
+              onChange={e => setWritingGoal(Number(e.target.value))}
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
               min="1000"
               step="1000"
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              每日字数目标
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">每日字数目标</label>
             <input
               type="number"
               value={dailyGoal}
-              onChange={(e) => setDailyGoal(Number(e.target.value))}
+              onChange={e => setDailyGoal(Number(e.target.value))}
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
               min="100"
               step="100"
@@ -280,22 +274,20 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
           <TrendingUp size={20} />
           章节状态
         </h3>
-        
+
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <div className="text-2xl font-bold text-gray-700 mb-1">
-              {statistics.draftChapters}
-            </div>
+            <div className="text-2xl font-bold text-gray-700 mb-1">{statistics.draftChapters}</div>
             <div className="text-sm text-gray-600">草稿</div>
           </div>
-          
+
           <div className="text-center p-4 bg-yellow-50 rounded-lg">
             <div className="text-2xl font-bold text-yellow-700 mb-1">
               {statistics.completedChapters}
             </div>
             <div className="text-sm text-yellow-600">已完成</div>
           </div>
-          
+
           <div className="text-center p-4 bg-green-50 rounded-lg">
             <div className="text-2xl font-bold text-green-700 mb-1">
               {statistics.publishedChapters}
@@ -303,7 +295,7 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
             <div className="text-sm text-green-600">已发布</div>
           </div>
         </div>
-        
+
         {/* 项目元信息 */}
         <div className="mt-6 pt-6 border-t grid grid-cols-2 gap-4 text-sm text-gray-500">
           <div className="flex items-center gap-2">

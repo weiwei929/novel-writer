@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react'
 import { X, CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-react'
-import { useUI, useNotifications, Notification } from '../../contexts/UIContext'
+import { useNotifications, Notification, useUIStore } from '../../stores/uiStore'
 
 const NotificationContainer: React.FC = () => {
-  const { state } = useUI()
-  
+  const notifications = useNotifications()
+
   return (
     <div className="fixed top-4 right-4 z-50 space-y-2">
-      {state.notifications.map(notification => (
+      {notifications.map(notification => (
         <NotificationItem key={notification.id} notification={notification} />
       ))}
     </div>
@@ -19,7 +19,7 @@ interface NotificationItemProps {
 }
 
 const NotificationItem: React.FC<NotificationItemProps> = ({ notification }) => {
-  const { removeNotification } = useNotifications()
+  const removeNotification = useUIStore(state => state.removeNotification)
 
   useEffect(() => {
     if (notification.duration && notification.duration > 0) {
@@ -70,21 +70,15 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification }) => 
       `}
     >
       <div className="flex items-start space-x-3">
-        <div className="flex-shrink-0 mt-0.5">
-          {getIcon()}
-        </div>
-        
+        <div className="flex-shrink-0 mt-0.5">{getIcon()}</div>
+
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-medium">
-            {notification.title}
-          </h4>
-          
+          <h4 className="text-sm font-medium">{notification.title}</h4>
+
           {notification.message && (
-            <p className="mt-1 text-sm opacity-90">
-              {notification.message}
-            </p>
+            <p className="mt-1 text-sm opacity-90">{notification.message}</p>
           )}
-          
+
           {notification.actions && notification.actions.length > 0 && (
             <div className="mt-3 flex space-x-2">
               {notification.actions.map((action, index) => (
@@ -99,7 +93,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification }) => 
             </div>
           )}
         </div>
-        
+
         <button
           onClick={() => removeNotification(notification.id)}
           className="flex-shrink-0 p-0.5 rounded hover:bg-black hover:bg-opacity-10"
@@ -107,14 +101,14 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification }) => 
           <X className="w-4 h-4" />
         </button>
       </div>
-      
+
       {notification.duration && notification.duration > 0 && (
         <div className="mt-3 h-1 bg-black bg-opacity-10 rounded-full overflow-hidden">
           <div
             className="h-full bg-current rounded-full animate-progress"
             style={{
               animationDuration: `${notification.duration}ms`,
-              animationTimingFunction: 'linear'
+              animationTimingFunction: 'linear',
             }}
           />
         </div>

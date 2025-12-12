@@ -1,418 +1,137 @@
-import express from 'express'
-import { db } from '../services/database.js'
-import { Chapter } from '../types/index.js'
-import { ApiResponse, ApiErrorCode, createSuccessResponse, createErrorResponse, ErrorCodeToHttpStatus } from '../types/api.js'
+import { FastifyInstance } from 'fastify'
+import { z } from 'zod'
+import { prisma } from '../utils/db'
 
-const router = express.Router()
+const CreateChapterSchema = z.object({
+  title: z.string().min(1, "标题不能为空"),
+  projectId: z.string().uuid(),
+  order: z.number().int().optional(),
+  content: z.string().optional(),
+  summary: z.string().optional(),
+  metadata: z.string().optional(),
+})
 
-/**
- * 获取项目的所有章节 (向后兼容)
- * GET /api/v1/chapters?projectId=xxx
- * 注意: 推荐使用 GET /api/v1/projects/:id/chapters
- */
-router.get('/', async (req: express.Request, res: express.Response) => {
-  try {
-    const { projectId } = req.query
-    
-    if (!projectId || typeof projectId !== 'string') {
-      const response = createErrorResponse(
-        ApiErrorCode.VALIDATION_ERROR,
-        'Project ID is required'
-      )
-      return res.status(ErrorCodeToHttpStatus[ApiErrorCode.VALIDATION_ERROR]).json(response)
-    }
-    
-    const chapters = await db.getChapters(projectId)
-    
-    const response = createSuccessResponse(chapters, {
-      projectId,
-      note: 'This endpoint is deprecated. Please use GET /api/v1/projects/:id/chapters'
+const UpdateChapterSchema = z.object({
+  title: z.string().optional(),
+  content: z.string().optional(),
+  order: z.number().int().optional(),
+  status: z.enum(['draft', 'writing', 'completed']).optional(),
+  wordCount: z.number().int().optional(),
+  summary: z.string().optional(),
+  metadata: z.string().optional(),
+})
+
+function countWords(text: string): number {
+  // Simple word count logic (compatible with CJK)
+  const cjk = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+  const nonCjk = (text.match(/[a-zA-Z0-9_\u0392-\u03c9\u0400-\u04FF]+|[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff\u3040-\u309f\uac00-\ud7af\u0400-\u04FF]+|[\u00E0-\u00FC]+/g) || []).length;
+  return cjk + nonCjk; // Approximate mix
+}
+
+export async function chapterRoutes(app: FastifyInstance) {
+  // GET /chapters/project/:projectId
+  app.get('/project/:projectId', async (req: any, reply) => {
+    const chapters = await prisma.chapter.findMany({
+      where: { projectId: req.params.projectId },
+      orderBy: { order: 'asc' },
     })
-    
-    res.json(response)
-  } catch (error) {
-    const response = createErrorResponse(
-      ApiErrorCode.DATABASE_ERROR,
-      error instanceof Error ? error.message : 'Failed to fetch chapters'
-    )
-    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
-  }
-})
+    return { success: true, data: chapters }
+  })
 
-/**
- * 根据ID获取章节
- * GET /api/v1/chapters/:id
- */
-router.get('/:id', async (req: express.Request, res: express.Response) => {
-  try {
-    const { id } = req.params
-    const chapter = await db.getChapterById(id)
-    
-    if (!chapter) {
-      const response: ApiResponse = {
-        success: false,
-        error: {
-          code: 'NOT_FOUND',
-          message: 'Chapter not found'
-        }
-      }
-      return res.status(404).json(response)
-    }
-    
-    const response: ApiResponse<Chapter> = {
-      success: true,
-      data: chapter
-    }
-    
-    res.json(response)
-  } catch (error) {
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: 'DATABASE_ERROR',
-        message: error instanceof Error ? error.message : 'Failed to fetch chapter'
-      }
-    }
-    res.status(500).json(response)
-  }
-})
-
-/**
- * 创建章节
- * POST /api/v1/chapters
- */
-router.post('/', async (req: express.Request, res: express.Response) => {
-  try {
-    const { projectId, title, content = '', order, notes } = req.body
-    
-    // 验证必需字段
-    if (!projectId || !title) {
-      const response: ApiResponse = {
-        success: false,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Project ID and title are required'
-        }
-      }
-      return res.status(400).json(response)
-    }
-    
-    // 验证项目是否存在
-    const project = await db.getProjectById(projectId)
-    if (!project) {
-      const response: ApiResponse = {
-        success: false,
-        error: {
-          code: 'NOT_FOUND',
-          message: 'Project not found'
-        }
-      }
-      return res.status(404).json(response)
-    }
-    
-    const chapter = await db.createChapter({
-      projectId,
-      title: title.trim(),
-      content: content.trim(),
-      order
+  // GET /chapters/:id
+  app.get('/:id', async (req: any, reply) => {
+    const chapter = await prisma.chapter.findUnique({
+      where: { id: req.params.id }
     })
-    
-    const response: ApiResponse<Chapter> = {
-      success: true,
-      data: chapter
-    }
-    
-    res.status(201).json(response)
-  } catch (error) {
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: 'DATABASE_ERROR',
-        message: error instanceof Error ? error.message : 'Failed to create chapter'
-      }
-    }
-    res.status(500).json(response)
-  }
-})
+    if (!chapter) return reply.status(404).send({ success: false, error: 'Chapter not found' })
+    return { success: true, data: chapter }
+  })
 
-/**
- * 更新章节
- * PUT /api/v1/chapters/:id
- */
-router.put('/:id', async (req: express.Request, res: express.Response) => {
-  try {
-    const { id } = req.params
-    const updates = req.body
-    
-    // 验证章节是否存在
-    const existingChapter = await db.getChapterById(id)
-    if (!existingChapter) {
-      const response: ApiResponse = {
-        success: false,
-        error: {
-          code: 'NOT_FOUND',
-          message: 'Chapter not found'
-        }
-      }
-      return res.status(404).json(response)
+  // POST /chapters
+  app.post('/', async (req: any, reply) => {
+    const result = CreateChapterSchema.safeParse(req.body)
+    if (!result.success) {
+      return reply.status(400).send({ success: false, error: result.error.format() })
     }
-    
-    // 过滤掉不应该更新的字段
-    const allowedUpdates = {
-      title: updates.title,
-      content: updates.content,
-      order: updates.order,
-      status: updates.status,
-      notes: updates.notes,
-      tags: updates.tags,
-      summary: updates.summary
+
+    // Default order: Put it at the end
+    let order = result.data.order;
+    if (order === undefined) {
+      const lastChapter = await prisma.chapter.findFirst({
+        where: { projectId: result.data.projectId },
+        orderBy: { order: 'desc' }
+      })
+      order = (lastChapter?.order || 0) + 1
     }
-    
-    // 移除 undefined 值
-    Object.keys(allowedUpdates).forEach(key => {
-      if (allowedUpdates[key as keyof typeof allowedUpdates] === undefined) {
-        delete allowedUpdates[key as keyof typeof allowedUpdates]
+
+    const chapter = await prisma.chapter.create({
+      data: {
+        title: result.data.title,
+        projectId: result.data.projectId,
+        content: result.data.content || '',
+        order: order,
+        wordCount: countWords(result.data.content || '')
       }
     })
-    
-    const updatedChapter = await db.updateChapter(id, allowedUpdates)
-    
-    if (!updatedChapter) {
-      const response: ApiResponse = {
-        success: false,
-        error: {
-          code: 'DATABASE_ERROR',
-          message: 'Failed to update chapter'
-        }
-      }
-      return res.status(500).json(response)
-    }
-    
-    // 若有梗概更新，同步到章节元数据的 synopsis 字段
-    if (allowedUpdates.summary !== undefined) {
-      try {
-        await db.updateChapterMetadataField(id, 'synopsis', allowedUpdates.summary || '')
-      } catch (syncErr) {
-        console.warn('章节梗概同步到元数据失败：', syncErr)
-      }
+
+    // Update Project WordCount
+    await updateProjectStats(result.data.projectId)
+
+    return { success: true, data: chapter }
+  })
+
+  // PUT /chapters/:id
+  app.put('/:id', async (req: any, reply) => {
+    const result = UpdateChapterSchema.safeParse(req.body)
+    if (!result.success) {
+      return reply.status(400).send({ success: false, error: result.error.format() })
     }
 
-    const response: ApiResponse<Chapter> = {
-      success: true,
-      data: updatedChapter
-    }
+    const { id } = req.params;
     
-    res.json(response)
-  } catch (error) {
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: 'DATABASE_ERROR',
-        message: error instanceof Error ? error.message : 'Failed to update chapter'
-      }
+    // Auto-calculate word count if content changes
+    let updateData: any = { ...result.data };
+    if (updateData.content !== undefined) {
+        updateData.wordCount = countWords(updateData.content);
     }
-    res.status(500).json(response)
-  }
-})
 
-/**
- * 删除章节
- * DELETE /api/v1/chapters/:id
- */
-router.delete('/:id', async (req: express.Request, res: express.Response) => {
-  try {
-    const { id } = req.params
-    
-    // 验证章节是否存在
-    const existingChapter = await db.getChapterById(id)
-    if (!existingChapter) {
-      const response: ApiResponse = {
-        success: false,
-        error: {
-          code: 'NOT_FOUND',
-          message: 'Chapter not found'
-        }
-      }
-      return res.status(404).json(response)
+    try {
+      const chapter = await prisma.chapter.update({
+        where: { id },
+        data: updateData
+      })
+      
+      // Update Project Word Count
+      await updateProjectStats(chapter.projectId)
+
+      return { success: true, data: chapter }
+    } catch (e) {
+      return reply.status(404).send({ success: false, error: 'Chapter not found' })
     }
-    
-    const success = await db.deleteChapter(id)
-    
-    if (!success) {
-      const response: ApiResponse = {
-        success: false,
-        error: {
-          code: 'DATABASE_ERROR',
-          message: 'Failed to delete chapter'
-        }
-      }
-      return res.status(500).json(response)
+  })
+
+  // DELETE /chapters/:id
+  app.delete('/:id', async (req: any, reply) => {
+    try {
+      const chapter = await prisma.chapter.delete({
+        where: { id: req.params.id }
+      })
+      await updateProjectStats(chapter.projectId)
+      return { success: true, message: 'Chapter deleted' }
+    } catch (e) {
+      return reply.status(404).send({ success: false, error: 'Chapter not found' })
     }
-    
-    const response: ApiResponse = {
-      success: true,
-      data: null
-    }
-    
-    res.json(response)
-  } catch (error) {
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: 'DATABASE_ERROR',
-        message: error instanceof Error ? error.message : 'Failed to delete chapter'
-      }
-    }
-    res.status(500).json(response)
-  }
-})
+  })
+}
 
-// ===== 章节元数据路由 =====
-router.put('/:id/metadata/:field', async (req: express.Request, res: express.Response) => {
-  try {
-    const { id, field } = req.params
-    const { content } = req.body || {}
-
-    const item = await db.updateChapterMetadataField(id, field, content || '')
-    const response = createSuccessResponse(item, { chapterId: id, field })
-    res.json(response)
-  } catch (error) {
-    const response = createErrorResponse(
-      ApiErrorCode.DATABASE_ERROR,
-      error instanceof Error ? error.message : 'Failed to update chapter metadata'
-    )
-    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
-  }
-})
-
-router.get('/:id/metadata/:field', async (req: express.Request, res: express.Response) => {
-  try {
-    const { id, field } = req.params
-    const item = await db.getChapterMetadataField(id, field)
-    const response = createSuccessResponse(item, { chapterId: id, field })
-    res.json(response)
-  } catch (error) {
-    const response = createErrorResponse(
-      ApiErrorCode.DATABASE_ERROR,
-      error instanceof Error ? error.message : 'Failed to fetch chapter metadata'
-    )
-    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
-  }
-})
-
-router.get('/:id/metadata/:field/versions', async (req: express.Request, res: express.Response) => {
-  try {
-    const { id, field } = req.params
-    const versions = await db.getChapterMetadataVersions(id, field)
-    const response = createSuccessResponse(versions, { chapterId: id, field })
-    res.json(response)
-  } catch (error) {
-    const response = createErrorResponse(
-      ApiErrorCode.DATABASE_ERROR,
-      error instanceof Error ? error.message : 'Failed to fetch chapter metadata versions'
-    )
-    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
-  }
-})
-
-router.post('/:id/metadata/:field/save-version', async (req: express.Request, res: express.Response) => {
-  try {
-    const { id, field } = req.params
-    const { content, userNote, autoSaved } = req.body || {}
-    const version = await db.saveChapterMetadataVersion(id, field, content || '', userNote || '', !!autoSaved)
-    const response = createSuccessResponse(version, { chapterId: id, field })
-    res.status(201).json(response)
-  } catch (error) {
-    const response = createErrorResponse(
-      ApiErrorCode.DATABASE_ERROR,
-      error instanceof Error ? error.message : 'Failed to save chapter metadata version'
-    )
-    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
-  }
-})
-
-
-
-/**
- * 更新章节元数据字段
- * PUT /api/v1/chapters/:id/metadata/:field
- */
-router.put('/:id/metadata/:field', async (req: express.Request, res: express.Response) => {
-  try {
-    const { id, field } = req.params
-    const { content } = req.body
-
-    const item = await db.updateChapterMetadataField(id, field, content)
-    const response = createSuccessResponse(item)
-    res.status(200).json(response)
-  } catch (error) {
-    const response = createErrorResponse(
-      ApiErrorCode.DATABASE_ERROR,
-      error instanceof Error ? error.message : 'Failed to update chapter metadata'
-    )
-    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
-  }
-})
-
-/**
- * 获取章节元数据版本历史
- * GET /api/v1/chapters/:id/metadata/:field/versions
- */
-router.get('/:id/metadata/:field/versions', async (req: express.Request, res: express.Response) => {
-  try {
-    const { id, field } = req.params
-
-    const versions = await db.getChapterMetadataVersions(id, field)
-    const response = createSuccessResponse(versions)
-    res.status(200).json(response)
-  } catch (error) {
-    const response = createErrorResponse(
-      ApiErrorCode.DATABASE_ERROR,
-      error instanceof Error ? error.message : 'Failed to fetch chapter metadata versions'
-    )
-    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
-  }
-})
-
-/**
- * 获取章节元数据当前值
- * GET /api/v1/chapters/:id/metadata/:field
- */
-router.get('/:id/metadata/:field', async (req: express.Request, res: express.Response) => {
-  try {
-    const { id, field } = req.params
-
-    const item = await db.getChapterMetadataField(id, field)
-    const response = createSuccessResponse(item)
-    res.status(200).json(response)
-  } catch (error) {
-    const response = createErrorResponse(
-      ApiErrorCode.DATABASE_ERROR,
-      error instanceof Error ? error.message : 'Failed to fetch chapter metadata'
-    )
-    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
-  }
-})
-
-/**
- * 保存章节元数据版本
- * POST /api/v1/chapters/:id/metadata/:field/save-version
- */
-router.post('/:id/metadata/:field/save-version', async (req: express.Request, res: express.Response) => {
-  try {
-    const { id, field } = req.params
-    const { content, userNote, autoSaved } = req.body
-
-    const version = await db.saveChapterMetadataVersion(id, field, content, userNote, autoSaved)
-    const response = createSuccessResponse(version)
-    res.status(201).json(response)
-  } catch (error) {
-    const response = createErrorResponse(
-      ApiErrorCode.DATABASE_ERROR,
-      error instanceof Error ? error.message : 'Failed to save chapter metadata version'
-    )
-    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
-  }
-})
-
-export default router
+async function updateProjectStats(projectId: string) {
+  const aggregations = await prisma.chapter.aggregate({
+    where: { projectId },
+    _sum: { wordCount: true }
+  })
+  
+  await prisma.project.update({
+    where: { id: projectId },
+    data: { wordCount: aggregations._sum.wordCount || 0 }
+  })
+}

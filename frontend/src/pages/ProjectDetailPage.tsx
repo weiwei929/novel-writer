@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
 import ChapterPlanningEditor from '../components/editor/ChapterPlanningEditor'
-import { useNotifications } from '../contexts/UIContext'
+import { useNotifications } from '../hooks/useNotifications'
 import { ArrowLeft, FileText, Play } from 'lucide-react'
 
 const ProjectDetailPage: React.FC = () => {
@@ -21,10 +21,7 @@ const ProjectDetailPage: React.FC = () => {
     try {
       setLoading(true)
       setError(null)
-      const [p, list] = await Promise.all([
-        projectsApi.getById(id),
-        chaptersApi.getByProjectId(id)
-      ])
+      const [p, list] = await Promise.all([projectsApi.getById(id), chaptersApi.getByProjectId(id)])
       setProject(p)
       setChapters(list.sort((a, b) => a.order - b.order))
     } catch (e) {
@@ -35,7 +32,9 @@ const ProjectDetailPage: React.FC = () => {
     }
   }
 
-  useEffect(() => { load() }, [id])
+  useEffect(() => {
+    load()
+  }, [id])
 
   if (loading) {
     return (
@@ -48,8 +47,15 @@ const ProjectDetailPage: React.FC = () => {
   if (error) {
     return (
       <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 text-red-700">{error}</div>
-        <button onClick={() => navigate('/projects')} className="px-4 py-2 bg-gray-600 text-white rounded">返回项目列表</button>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 text-red-700">
+          {error}
+        </div>
+        <button
+          onClick={() => navigate('/projects')}
+          className="px-4 py-2 bg-gray-600 text-white rounded"
+        >
+          返回项目列表
+        </button>
       </div>
     )
   }
@@ -58,7 +64,10 @@ const ProjectDetailPage: React.FC = () => {
     <div className="p-6 space-y-6">
       {/* 顶部栏 */}
       <div className="flex items-center justify-between">
-        <button onClick={() => navigate('/projects')} className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
+        <button
+          onClick={() => navigate('/projects')}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+        >
           <ArrowLeft className="w-5 h-5" /> 返回项目列表
         </button>
         <button
@@ -74,11 +83,15 @@ const ProjectDetailPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm border p-4">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold">{project.title}</h1>
-            <div className="text-sm text-gray-600">共 {chapters.length} 章 · {project.wordCount.toLocaleString()} 字</div>
+            <div className="text-sm text-gray-600">
+              共 {chapters.length} 章 · {project.wordCount.toLocaleString()} 字
+            </div>
           </div>
           {project.metadata?.synopsis?.current && (
             <div className="mt-2 text-sm text-gray-700">
-              <span className="px-2 py-0.5 mr-2 rounded bg-blue-100 text-blue-700 border border-blue-200 text-xs">作品梗概</span>
+              <span className="px-2 py-0.5 mr-2 rounded bg-blue-100 text-blue-700 border border-blue-200 text-xs">
+                作品梗概
+              </span>
               <span>{project.metadata.synopsis.current}</span>
             </div>
           )}
@@ -99,11 +112,13 @@ const ProjectDetailPage: React.FC = () => {
           </div>
         ) : (
           <div className="divide-y">
-            {chapters.map((c) => (
+            {chapters.map(c => (
               <div key={c.id} className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="text-xs px-2 py-0.5 bg-gray-100 rounded">第 {c.order} 章</span>
-                  <span className="font-medium truncate max-w-[40rem]">{c.title || `第${c.order}章`}</span>
+                  <span className="font-medium truncate max-w-[40rem]">
+                    {c.title || `第${c.order}章`}
+                  </span>
                 </div>
                 <button
                   onClick={() => navigate(`/editor/${c.id}`)}

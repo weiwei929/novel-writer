@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { Lock, Eye, EyeOff, AlertCircle } from 'lucide-react'
+import api from '../../services/api'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -26,27 +27,16 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   // 检查认证状态
   const checkAuthStatus = async () => {
     try {
-      const token = localStorage.getItem('novel_auth_token')
-      const response = await fetch('/auth/status', {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-      })
-      const contentType = response.headers.get('content-type') || ''
-      if (!response.ok || !contentType.includes('application/json')) {
-        setAuthStatus({ requireAuth: true, authenticated: false, message: '需要认证' })
-        return
-      }
-      const result = await response.json()
-      if (result?.success && result?.data) {
-        setAuthStatus(result.data)
-      } else {
-        setAuthStatus({ requireAuth: true, authenticated: false, message: '需要认证' })
+      const response = await api.get<AuthStatus>('/auth/status')
+      if (response.data) {
+        setAuthStatus(response.data)
       }
     } catch (error) {
       console.error('认证状态检查失败:', error)
       setAuthStatus({
         requireAuth: true,
         authenticated: false,
-        message: '连接失败'
+        message: '需要认证',
       })
     }
   }
@@ -58,34 +48,22 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     setError(null)
 
     try {
-      const response = await fetch('/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ password })
+      // response.data will be { sessionId: string, message: string }
+      const response = await api.post<{ sessionId: string; message: string }>('/auth/login', { password })
+      
+      const result = response.data
+      
+      localStorage.setItem('novel_auth_token', result.sessionId)
+
+      setAuthStatus({
+        requireAuth: true,
+        authenticated: true,
+        message: result.message,
       })
-
-      const result = await response.json()
-
-      if (result.success) {
-        // 保存认证令牌
-        localStorage.setItem('novel_auth_token', result.data.sessionId)
-        
-        // 更新认证状态
-        setAuthStatus({
-          requireAuth: true,
-          authenticated: true,
-          message: result.data.message
-        })
-        
-        setPassword('')
-      } else {
-        setError(result.error?.message || '登录失败')
-      }
-    } catch (error) {
+      setPassword('')
+    } catch (error: any) {
       console.error('登录失败:', error)
-      setError('网络连接失败，请检查后端服务')
+      setError(error.message || '网络连接失败，请检查后端服务')
     } finally {
       setIsLoading(false)
     }
@@ -95,14 +73,14 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem('novel_auth_token')
-      
+
       await fetch('/auth/logout', {
         method: 'POST',
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
-      
+
       localStorage.removeItem('novel_auth_token')
-      setAuthStatus(prev => prev ? { ...prev, authenticated: false } : null)
+      setAuthStatus(prev => (prev ? { ...prev, authenticated: false } : null))
     } catch (error) {
       console.error('登出失败:', error)
     }
@@ -156,12 +134,8 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
           <div className="mx-auto h-20 w-20 bg-blue-100 rounded-full flex items-center justify-center">
             <Lock className="h-10 w-10 text-blue-600" />
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            小说创作器
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            请输入应用密码以继续使用
-          </p>
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">小说创作器</h2>
+          <p className="mt-2 text-sm text-gray-600">请输入应用密码以继续使用</p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
@@ -174,11 +148,12 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
                 id="password"
                 name="password"
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
                 required
                 className="appearance-none relative block w-full px-3 py-2 pl-10 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="输入应用密码"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 disabled={isLoading}
               />
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center">

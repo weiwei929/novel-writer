@@ -12,7 +12,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 'md',
   message,
   variant = 'spinner',
-  className = ''
+  className = '',
 }) => {
   const getSizeClasses = () => {
     switch (size) {
@@ -30,15 +30,22 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       case 'dots':
         return (
           <div className="flex space-x-1">
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            <div
+              className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+              style={{ animationDelay: '0ms' }}
+            />
+            <div
+              className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+              style={{ animationDelay: '150ms' }}
+            />
+            <div
+              className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+              style={{ animationDelay: '300ms' }}
+            />
           </div>
         )
       case 'pulse':
-        return (
-          <div className={`${getSizeClasses()} bg-blue-500 rounded-full animate-pulse`} />
-        )
+        return <div className={`${getSizeClasses()} bg-blue-500 rounded-full animate-pulse`} />
       default:
         return <Loader className={`${getSizeClasses()} animate-spin text-blue-500`} />
     }
@@ -47,11 +54,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   return (
     <div className={`flex items-center justify-center space-x-2 ${className}`}>
       {renderSpinner()}
-      {message && (
-        <span className="text-sm text-gray-600">
-          {message}
-        </span>
-      )}
+      {message && <span className="text-sm text-gray-600">{message}</span>}
     </div>
   )
 }
@@ -75,7 +78,7 @@ const LoadingState: React.FC<LoadingStateProps> = ({
   emptyMessage = '暂无数据',
   className = '',
   minHeight = 'h-32',
-  onRetry
+  onRetry,
 }) => {
   if (loading) {
     return (
@@ -92,12 +95,8 @@ const LoadingState: React.FC<LoadingStateProps> = ({
           <div className="text-red-500 mb-2">
             <XCircle className="w-8 h-8 mx-auto" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-1">
-            加载失败
-          </h3>
-          <p className="text-sm text-gray-600 mb-4">
-            {error}
-          </p>
+          <h3 className="text-lg font-medium text-gray-900 mb-1">加载失败</h3>
+          <p className="text-sm text-gray-600 mb-4">{error}</p>
           {onRetry && (
             <button
               onClick={onRetry}
@@ -119,9 +118,7 @@ const LoadingState: React.FC<LoadingStateProps> = ({
           <div className="text-gray-400 mb-2">
             <FileText className="w-8 h-8 mx-auto" />
           </div>
-          <p className="text-sm text-gray-600">
-            {emptyMessage}
-          </p>
+          <p className="text-sm text-gray-600">{emptyMessage}</p>
         </div>
       </div>
     )
@@ -142,7 +139,7 @@ const Skeleton: React.FC<SkeletonProps> = ({
   className = '',
   width = 'w-full',
   height = 'h-4',
-  rounded = false
+  rounded = false,
 }) => {
   return (
     <div

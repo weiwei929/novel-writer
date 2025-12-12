@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Project, Chapter } from '../../services/api'
 import { ChevronRight, FileText, Settings } from 'lucide-react'
-import { useNotifications } from '../../contexts/UIContext'
+import { useNotifications } from '../../hooks/useNotifications'
 import ChapterPlanningEditor from './ChapterPlanningEditor'
 
 interface ProjectNavigationPanelProps {
@@ -21,7 +21,7 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
   onChapterSelect,
   onProjectSettings,
   onChaptersRefresh,
-  className = ''
+  className = '',
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const { success: notifySuccess } = useNotifications()
@@ -39,7 +39,7 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
       writing: '创作中',
       completed: '已完成',
       published: '已发布',
-      archived: '已归档'
+      archived: '已归档',
     }
     return statusMap[status] || status
   }
@@ -140,7 +140,7 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
               {/* 取消空状态下的新建按钮入口 */}
             </div>
           ) : (
-            chapters.map((chapter) => {
+            chapters.map(chapter => {
               const isActive = currentChapter?.id === chapter.id
               return (
                 <button
@@ -162,7 +162,9 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
                           </span>
                         )}
                       </div>
-                      <h5 className={`font-medium truncate ${isActive ? 'text-blue-700' : 'text-gray-900'}`}>
+                      <h5
+                        className={`font-medium truncate ${isActive ? 'text-blue-700' : 'text-gray-900'}`}
+                      >
                         {chapter.title}
                       </h5>
                       <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">

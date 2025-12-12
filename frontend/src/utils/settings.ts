@@ -14,7 +14,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   theme: 'light',
   autoSave: true,
   autoSaveInterval: 2000,
-  language: 'zh-CN'
+  language: 'zh-CN',
 }
 
 class SettingsManager {
@@ -52,11 +52,13 @@ class SettingsManager {
   set<K extends keyof AppSettings>(key: K, value: AppSettings[K]): void {
     this.settings[key] = value
     this.saveSettings()
-    
+
     // 触发设置更新事件
-    window.dispatchEvent(new CustomEvent('settings-updated', { 
-      detail: { key, value } 
-    }))
+    window.dispatchEvent(
+      new CustomEvent('settings-updated', {
+        detail: { key, value },
+      })
+    )
   }
 
   getAll(): AppSettings {
@@ -66,9 +68,11 @@ class SettingsManager {
   reset(): void {
     this.settings = { ...DEFAULT_SETTINGS }
     this.saveSettings()
-    window.dispatchEvent(new CustomEvent('settings-updated', { 
-      detail: { reset: true } 
-    }))
+    window.dispatchEvent(
+      new CustomEvent('settings-updated', {
+        detail: { reset: true },
+      })
+    )
   }
 
   // AI 功能相关方法

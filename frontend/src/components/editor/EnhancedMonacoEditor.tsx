@@ -1,6 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
 import Editor, { Monaco } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
+
+export interface EnhancedMonacoEditorRef {
+  insertContent: (text: string) => void
+}
 
 interface EnhancedMonacoEditorProps {
   value: string
@@ -15,7 +19,7 @@ interface EnhancedMonacoEditorProps {
   readOnly?: boolean
 }
 
-const EnhancedMonacoEditor: React.FC<EnhancedMonacoEditorProps> = ({
+const EnhancedMonacoEditor = forwardRef<EnhancedMonacoEditorRef, EnhancedMonacoEditorProps>(({
   value,
   onChange,
   onSave,
@@ -25,8 +29,8 @@ const EnhancedMonacoEditor: React.FC<EnhancedMonacoEditorProps> = ({
   autoSave = false,
   autoSaveDelay = 3000,
   showWordCount = true,
-  readOnly = false
-}) => {
+  readOnly = false,
+}, ref) => {
   const [wordCount, setWordCount] = useState(0)
   const [charCount, setCharCount] = useState(0)
   const [readingTime, setReadingTime] = useState(0)
@@ -35,9 +39,33 @@ const EnhancedMonacoEditor: React.FC<EnhancedMonacoEditorProps> = ({
   const onSaveRef = useRef<typeof onSave>()
   onSaveRef.current = onSave
 
+  useImperativeHandle(ref, () => ({
+    insertContent: (text: string) => {
+      const editor = editorRef.current
+      if (!editor) return
+
+      const selection = editor.getSelection()
+      if (!selection) return
+
+      const op = {
+        range: selection,
+        text: text,
+        forceMoveMarkers: true
+      }
+      editor.executeEdits("ai-insert", [op])
+      editor.focus()
+      // Trigger change event manually since executeEdits doesn't always trigger model content change event handled by @monaco-editor/react in the same way? 
+      // Actually @monaco-editor/react handles onChange via model event. keybinding isn't triggered but model change is.
+    }
+  }))
+
   const updateStatistics = (text: string) => {
+    // ... existing logic ...
     const chars = text.length
-    const words = text.trim().split(/\s+/).filter(word => word.length > 0).length
+    const words = text
+      .trim()
+      .split(/\s+/)
+      .filter(word => word.length > 0).length
     const reading = Math.ceil(words / 200)
 
     setCharCount(chars)
@@ -45,6 +73,7 @@ const EnhancedMonacoEditor: React.FC<EnhancedMonacoEditorProps> = ({
     setReadingTime(reading)
   }
 
+  // ... useEffects ...
   // 仅在 value 变化时调度自动保存，使用稳定回调引用避免重复定时
   useEffect(() => {
     if (autoSave && value && onSaveRef.current) {
@@ -75,10 +104,10 @@ const EnhancedMonacoEditor: React.FC<EnhancedMonacoEditorProps> = ({
       colors: {
         'editor.background': '#FFFFFF',
         'editor.foreground': '#000000',
-        'editor.lineHighlightBackground': '#F0F0F0'
-      }
-    });
-    
+        'editor.lineHighlightBackground': '#F0F0F0',
+      },
+    })
+
     monaco.editor.defineTheme('novel-dark', {
       base: 'vs-dark',
       inherit: true,
@@ -86,10 +115,10 @@ const EnhancedMonacoEditor: React.FC<EnhancedMonacoEditorProps> = ({
       colors: {
         'editor.background': '#1E1E1E',
         'editor.foreground': '#D4D4D4',
-        'editor.lineHighlightBackground': '#2D2D2D'
-      }
-    });
-    
+        'editor.lineHighlightBackground': '#2D2D2D',
+      },
+    })
+
     monaco.editor.defineTheme('novel-sepia', {
       base: 'vs',
       inherit: true,
@@ -97,18 +126,19 @@ const EnhancedMonacoEditor: React.FC<EnhancedMonacoEditorProps> = ({
       colors: {
         'editor.background': '#FBF0D9',
         'editor.foreground': '#5C3D2E',
-        'editor.lineHighlightBackground': '#F0E4C9'
-      }
-    });
-  
+        'editor.lineHighlightBackground': '#F0E4C9',
+      },
+    })
+
     editorRef.current = editorInstance
-  
+
     editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
       if (onSave) {
         onSave(editorInstance.getValue())
       }
     })
-  
+    
+    // Initial stats
     updateStatistics(value)
   }
 
@@ -156,12 +186,12 @@ const EnhancedMonacoEditor: React.FC<EnhancedMonacoEditorProps> = ({
           codeLens: false,
           links: false,
           colorDecorators: false,
-          acceptSuggestionOnEnter: 'off'
+          acceptSuggestionOnEnter: 'off',
         }}
       />
-      
+
       {showWordCount && (
-        <div className="absolute bottom-2 right-2 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded text-sm text-gray-600 dark:text-gray-300">
+        <div className="absolute bottom-2 right-2 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded text-sm text-gray-600 dark:text-gray-300 pointer-events-none opacity-80 z-10 block">
           <span className="mr-4">字符数: {charCount}</span>
           <span className="mr-4">词数: {wordCount}</span>
           <span>预计阅读: {readingTime}分钟</span>
@@ -169,6 +199,8 @@ const EnhancedMonacoEditor: React.FC<EnhancedMonacoEditorProps> = ({
       )}
     </div>
   )
-}
+})
+
+EnhancedMonacoEditor.displayName = 'EnhancedMonacoEditor'
 
 export default EnhancedMonacoEditor

@@ -6,20 +6,20 @@ const breakpoints = {
   md: 768,
   lg: 1024,
   xl: 1280,
-  '2xl': 1536
+  '2xl': 1536,
 }
 
 export const useResponsive = () => {
   const [windowSize, setWindowSize] = useState({
     width: typeof window !== 'undefined' ? window.innerWidth : 0,
-    height: typeof window !== 'undefined' ? window.innerHeight : 0
+    height: typeof window !== 'undefined' ? window.innerHeight : 0,
   })
 
   useEffect(() => {
     const handleResize = () => {
       setWindowSize({
         width: window.innerWidth,
-        height: window.innerHeight
+        height: window.innerHeight,
       })
     }
 
@@ -43,7 +43,7 @@ export const useResponsive = () => {
         sidebarWidth: '100%',
         showPreviewPanel: false,
         stackLayout: true,
-        compactHeader: true
+        compactHeader: true,
       }
     }
 
@@ -53,7 +53,7 @@ export const useResponsive = () => {
         sidebarWidth: '300px',
         showPreviewPanel: true,
         stackLayout: false,
-        compactHeader: false
+        compactHeader: false,
       }
     }
 
@@ -62,7 +62,7 @@ export const useResponsive = () => {
       sidebarWidth: '320px',
       showPreviewPanel: true,
       stackLayout: false,
-      compactHeader: false
+      compactHeader: false,
     }
   }
 
@@ -73,7 +73,7 @@ export const useResponsive = () => {
     isDesktop,
     isSmallScreen,
     layoutConfig: getLayoutConfig(),
-    breakpoints
+    breakpoints,
   }
 }
 
@@ -83,13 +83,13 @@ export const useMediaQuery = (query: string): boolean => {
 
   useEffect(() => {
     const media = window.matchMedia(query)
-    
+
     if (media.matches !== matches) {
       setMatches(media.matches)
     }
 
     const listener = () => setMatches(media.matches)
-    
+
     // 使用新的API或回退到旧的API
     if (media.addEventListener) {
       media.addEventListener('change', listener)
@@ -112,19 +112,19 @@ export const useTouchDevice = () => {
     const checkTouchDevice = () => {
       setIsTouch(
         'ontouchstart' in window ||
-        navigator.maxTouchPoints > 0 ||
-        // @ts-ignore
-        navigator.msMaxTouchPoints > 0
+          navigator.maxTouchPoints > 0 ||
+          // @ts-ignore
+          navigator.msMaxTouchPoints > 0
       )
     }
 
     checkTouchDevice()
-    
+
     // 监听触摸事件来确认设备支持触摸
     const handleTouchStart = () => setIsTouch(true)
-    
+
     window.addEventListener('touchstart', handleTouchStart, { once: true })
-    
+
     return () => window.removeEventListener('touchstart', handleTouchStart)
   }, [])
 
@@ -141,7 +141,7 @@ export const useOrientation = () => {
     }
 
     handleOrientationChange() // 初始检测
-    
+
     window.addEventListener('resize', handleOrientationChange)
     window.addEventListener('orientationchange', handleOrientationChange)
 

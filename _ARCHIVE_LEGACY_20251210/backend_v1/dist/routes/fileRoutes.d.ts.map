@@ -1,0 +1,1 @@
+{"version":3,"file":"fileRoutes.d.ts","sourceRoot":"","sources":["../../src/routes/fileRoutes.ts"],"names":[],"mappings":"AAIA,OAAO,UAAU,MAAM,oBAAoB,CAAA;AAS3C,OAAO,CAAC,MAAM,CAAC;IACb,UAAU,OAAO,CAAC;QAChB,UAAU,OAAO;YACf,KAAK,CAAC,EAAE,UAAU,CAAC,SAAS,CAAA;SAC7B;KACF;CACF;AAED,QAAA,MAAM,MAAM,4CAAmB,CAAA;AAkN/B,eAAe,MAAM,CAAA"}

@@ -27,7 +27,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionA
     const handleSettingsUpdate = () => {
       setAiEnabled(settingsManager.isAIEnabled())
     }
-    
+
     window.addEventListener('settings-updated', handleSettingsUpdate)
     return () => window.removeEventListener('settings-updated', handleSettingsUpdate)
   }, [])
@@ -54,7 +54,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionA
     try {
       const response = await aiApi.getWritingSuggestion({
         content: currentContent,
-        type
+        type,
       })
 
       if (response.success) {
@@ -112,7 +112,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionA
         context: currentContent,
         systemPrompt: customSystemPrompt || undefined,
         maxTokens: 1500,
-        temperature: 0.7
+        temperature: 0.7,
       })
 
       if (response.success) {
@@ -157,10 +157,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionA
             <Bot size={20} />
             <span className="font-semibold">AI 写作助手</span>
           </div>
-          <button
-            onClick={() => setIsOpen(false)}
-            className="text-white hover:text-gray-200"
-          >
+          <button onClick={() => setIsOpen(false)} className="text-white hover:text-gray-200">
             ×
           </button>
         </div>
@@ -173,7 +170,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionA
               请在设置中启用 AI 功能并配置 API Key 来使用写作助手
             </p>
           </div>
-          
+
           <div className="space-y-3">
             <button
               onClick={() => {
@@ -224,10 +221,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionA
         <div className="flex items-center space-x-2">
           {apiStatus === 'connected' && <CheckCircle size={16} className="text-green-300" />}
           {apiStatus === 'error' && <XCircle size={16} className="text-red-300" />}
-          <button
-            onClick={() => setIsOpen(false)}
-            className="text-white hover:text-gray-200"
-          >
+          <button onClick={() => setIsOpen(false)} className="text-white hover:text-gray-200">
             ×
           </button>
         </div>
@@ -236,10 +230,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionA
       {apiStatus === 'error' && (
         <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4">
           <p className="text-sm">AI 服务未配置或连接失败</p>
-          <button
-            onClick={checkApiStatus}
-            className="text-xs text-red-600 hover:underline mt-1"
-          >
+          <button onClick={checkApiStatus} className="text-xs text-red-600 hover:underline mt-1">
             重新检测
           </button>
         </div>
@@ -286,9 +277,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionA
       <div className="p-4 max-h-80 overflow-y-auto">
         {activeTab === 'suggestions' && (
           <div className="space-y-3">
-            <p className="text-sm text-gray-600 mb-4">
-              基于当前内容生成写作建议
-            </p>
+            <p className="text-sm text-gray-600 mb-4">基于当前内容生成写作建议</p>
             <div className="space-y-2">
               <button
                 onClick={() => handleWritingSuggestion('continue')}
@@ -320,12 +309,10 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionA
 
         {activeTab === 'character' && (
           <div className="space-y-3">
-            <p className="text-sm text-gray-600 mb-4">
-              描述角色特征，AI 将生成详细设定
-            </p>
+            <p className="text-sm text-gray-600 mb-4">描述角色特征，AI 将生成详细设定</p>
             <textarea
               value={characterDescription}
-              onChange={(e) => setCharacterDescription(e.target.value)}
+              onChange={e => setCharacterDescription(e.target.value)}
               placeholder="例如：年轻的剑客，冷静沉着，有着神秘的过去..."
               className="w-full p-2 border rounded text-sm"
               rows={3}
@@ -342,20 +329,18 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionA
 
         {activeTab === 'custom' && (
           <div className="space-y-3">
-            <p className="text-sm text-gray-600 mb-4">
-              自定义 AI 生成请求
-            </p>
+            <p className="text-sm text-gray-600 mb-4">自定义 AI 生成请求</p>
             <div className="space-y-2">
               <textarea
                 value={customPrompt}
-                onChange={(e) => setCustomPrompt(e.target.value)}
+                onChange={e => setCustomPrompt(e.target.value)}
                 placeholder="输入你的生成提示..."
                 className="w-full p-2 border rounded text-sm"
                 rows={2}
               />
               <textarea
                 value={customSystemPrompt}
-                onChange={(e) => setCustomSystemPrompt(e.target.value)}
+                onChange={e => setCustomSystemPrompt(e.target.value)}
                 placeholder="系统提示（可选）..."
                 className="w-full p-2 border rounded text-sm"
                 rows={2}

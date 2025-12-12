@@ -1,0 +1,352 @@
+import { Router, Request, Response } from 'express'
+import { db } from '../services/database.js'
+import { Chapter } from '../types/index.js'
+import {
+  ApiErrorCode,
+  createSuccessResponse,
+  createErrorResponse,
+  ErrorCodeToHttpStatus,
+} from '../types/api.js'
+import { log } from '../utils/logger.js'
+import { validate } from '../middleware/validation.js'
+import { chapterSchemas } from '../validators/chapterSchemas.js'
+
+const router = Router()
+
+/**
+ * 获取项目的所有章节 (向后兼容)
+ * GET /api/v1/chapters?projectId=xxx
+ * 注意: 推荐使用 GET /api/v1/projects/:id/chapters
+ */
+router.get('/', async (req: Request, res: Response) => {
+  try {
+    const { projectId } = req.query
+
+    if (!projectId || typeof projectId !== 'string') {
+      const response = createErrorResponse(ApiErrorCode.VALIDATION_ERROR, 'Project ID is required')
+      return res.status(ErrorCodeToHttpStatus[ApiErrorCode.VALIDATION_ERROR]).json(response)
+    }
+
+    const chapters = await db.getChapters(projectId)
+
+    const response = createSuccessResponse(chapters, {
+      projectId,
+      note: 'This endpoint is deprecated. Please use GET /api/v1/projects/:id/chapters',
+    })
+
+    res.json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to fetch chapters'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+/**
+ * 根据ID获取章节
+ * GET /api/v1/chapters/:id
+ */
+router.get('/:id', validate(chapterSchemas.id, 'params'), async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params
+    const chapter = await db.getChapterById(id)
+
+    if (!chapter) {
+      const response = createErrorResponse(ApiErrorCode.NOT_FOUND, 'Chapter not found')
+      return res.status(ErrorCodeToHttpStatus[ApiErrorCode.NOT_FOUND]).json(response)
+    }
+
+    const response = createSuccessResponse(chapter)
+    res.json(response)
+  } catch (error) {
+    log.error('Failed to fetch chapter', { error, chapterId: req.params.id })
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to fetch chapter'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+/**
+ * 创建章节
+ * POST /api/v1/chapters
+ */
+router.post('/', validate(chapterSchemas.create), async (req: Request, res: Response) => {
+  try {
+    const { projectId, title, content = '', order, notes } = req.body
+
+    // 验证项目是否存在
+    const project = await db.getProjectById(projectId)
+    if (!project) {
+      const response = createErrorResponse(ApiErrorCode.NOT_FOUND, 'Project not found')
+      return res.status(ErrorCodeToHttpStatus[ApiErrorCode.NOT_FOUND]).json(response)
+    }
+
+    const chapter = await db.createChapter({
+      projectId,
+      title,
+      content: content || '',
+      order,
+    })
+
+    const response = createSuccessResponse(chapter)
+    res.status(201).json(response)
+  } catch (error) {
+    log.error('Failed to create chapter', { error })
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to create chapter'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+/**
+ * 更新章节
+ * PUT /api/v1/chapters/:id
+ */
+router.put(
+  '/:id',
+  validate(chapterSchemas.id, 'params'),
+  validate(chapterSchemas.update),
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params
+      const updates = req.body
+
+      // 验证章节是否存在
+      const existingChapter = await db.getChapterById(id)
+      if (!existingChapter) {
+        const response = createErrorResponse(ApiErrorCode.NOT_FOUND, 'Chapter not found')
+        return res.status(ErrorCodeToHttpStatus[ApiErrorCode.NOT_FOUND]).json(response)
+      }
+
+      const updatedChapter = await db.updateChapter(id, updates)
+
+      if (!updatedChapter) {
+        const response = createErrorResponse(
+          ApiErrorCode.DATABASE_ERROR,
+          'Failed to update chapter'
+        )
+        return res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+      }
+
+      // 若有梗概更新，同步到章节元数据的 synopsis 字段
+      if (updates.summary !== undefined) {
+        try {
+          await db.updateChapterMetadataField(id, 'synopsis', updates.summary || '')
+        } catch (syncErr) {
+          log.warn('章节梗概同步到元数据失败', { error: syncErr, chapterId: id })
+        }
+      }
+
+      const response = createSuccessResponse(updatedChapter)
+      res.json(response)
+    } catch (error) {
+      log.error('Failed to update chapter', { error, chapterId: req.params.id })
+      const response = createErrorResponse(
+        ApiErrorCode.DATABASE_ERROR,
+        error instanceof Error ? error.message : 'Failed to update chapter'
+      )
+      res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+    }
+  }
+)
+
+/**
+ * 删除章节
+ * DELETE /api/v1/chapters/:id
+ */
+router.delete(
+  '/:id',
+  validate(chapterSchemas.id, 'params'),
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params
+
+      // 验证章节是否存在
+      const existingChapter = await db.getChapterById(id)
+      if (!existingChapter) {
+        const response = createErrorResponse(ApiErrorCode.NOT_FOUND, 'Chapter not found')
+        return res.status(ErrorCodeToHttpStatus[ApiErrorCode.NOT_FOUND]).json(response)
+      }
+
+      const success = await db.deleteChapter(id)
+
+      if (!success) {
+        const response = createErrorResponse(
+          ApiErrorCode.DATABASE_ERROR,
+          'Failed to delete chapter'
+        )
+        return res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+      }
+
+      const response = createSuccessResponse({ message: 'Chapter deleted successfully' })
+      res.json(response)
+    } catch (error) {
+      log.error('Failed to delete chapter', { error, chapterId: req.params.id })
+      const response = createErrorResponse(
+        ApiErrorCode.DATABASE_ERROR,
+        error instanceof Error ? error.message : 'Failed to delete chapter'
+      )
+      res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+    }
+  }
+)
+
+// ===== 章节元数据路由 =====
+router.put('/:id/metadata/:field', async (req: Request, res: Response) => {
+  try {
+    const { id, field } = req.params
+    const { content } = req.body || {}
+
+    const item = await db.updateChapterMetadataField(id, field, content || '')
+    const response = createSuccessResponse(item, { chapterId: id, field })
+    res.json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to update chapter metadata'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+router.get('/:id/metadata/:field', async (req: Request, res: Response) => {
+  try {
+    const { id, field } = req.params
+    const item = await db.getChapterMetadataField(id, field)
+    const response = createSuccessResponse(item, { chapterId: id, field })
+    res.json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to fetch chapter metadata'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+router.get('/:id/metadata/:field/versions', async (req: Request, res: Response) => {
+  try {
+    const { id, field } = req.params
+    const versions = await db.getChapterMetadataVersions(id, field)
+    const response = createSuccessResponse(versions, { chapterId: id, field })
+    res.json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to fetch chapter metadata versions'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+router.post('/:id/metadata/:field/save-version', async (req: Request, res: Response) => {
+  try {
+    const { id, field } = req.params
+    const { content, userNote, autoSaved } = req.body || {}
+    const version = await db.saveChapterMetadataVersion(
+      id,
+      field,
+      content || '',
+      userNote || '',
+      !!autoSaved
+    )
+    const response = createSuccessResponse(version, { chapterId: id, field })
+    res.status(201).json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to save chapter metadata version'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+/**
+ * 更新章节元数据字段
+ * PUT /api/v1/chapters/:id/metadata/:field
+ */
+router.put('/:id/metadata/:field', async (req: Request, res: Response) => {
+  try {
+    const { id, field } = req.params
+    const { content } = req.body
+
+    const item = await db.updateChapterMetadataField(id, field, content)
+    const response = createSuccessResponse(item)
+    res.json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to update chapter metadata'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+/**
+ * 获取章节元数据版本历史
+ * GET /api/v1/chapters/:id/metadata/:field/versions
+ */
+router.get('/:id/metadata/:field/versions', async (req: Request, res: Response) => {
+  try {
+    const { id, field } = req.params
+
+    const versions = await db.getChapterMetadataVersions(id, field)
+    const response = createSuccessResponse(versions)
+    res.json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to fetch chapter metadata versions'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+/**
+ * 获取章节元数据当前值
+ * GET /api/v1/chapters/:id/metadata/:field
+ */
+router.get('/:id/metadata/:field', async (req: Request, res: Response) => {
+  try {
+    const { id, field } = req.params
+
+    const item = await db.getChapterMetadataField(id, field)
+    const response = createSuccessResponse(item)
+    res.json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to fetch chapter metadata'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+/**
+ * 保存章节元数据版本
+ * POST /api/v1/chapters/:id/metadata/:field/save-version
+ */
+router.post('/:id/metadata/:field/save-version', async (req: Request, res: Response) => {
+  try {
+    const { id, field } = req.params
+    const { content, userNote, autoSaved } = req.body
+
+    const version = await db.saveChapterMetadataVersion(id, field, content, userNote, autoSaved)
+    const response = createSuccessResponse(version)
+    res.status(201).json(response)
+  } catch (error) {
+    const response = createErrorResponse(
+      ApiErrorCode.DATABASE_ERROR,
+      error instanceof Error ? error.message : 'Failed to save chapter metadata version'
+    )
+    res.status(ErrorCodeToHttpStatus[ApiErrorCode.DATABASE_ERROR]).json(response)
+  }
+})
+
+export default router

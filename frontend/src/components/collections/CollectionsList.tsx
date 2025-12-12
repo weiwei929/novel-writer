@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { collectionsApi, Collection, CreateCollectionData } from '../../services/api'
 import { Plus, Edit, Trash2, FolderOpen, Tag, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useNotifications, useLoading } from '../../contexts/UIContext'
+import { useNotifications } from '../../hooks/useNotifications'
+import { useLoading } from '../../hooks/useLoading'
 import { LoadingState } from '../ui/LoadingComponents'
 import ErrorBoundary from '../ui/ErrorBoundary'
 
@@ -11,7 +12,7 @@ const CollectionsList: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
-  
+
   const { success, error: showError } = useNotifications()
   const { withLoading } = useLoading()
 
@@ -42,12 +43,9 @@ const CollectionsList: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm('确定要删除这个文集吗？')) return
-    
+
     try {
-      await withLoading(
-        () => collectionsApi.delete(id),
-        '正在删除文集...'
-      )
+      await withLoading(() => collectionsApi.delete(id), '正在删除文集...')
       setCollections(collections.filter(c => c.id !== id))
       success('删除成功', '文集已成功删除')
     } catch (err) {
@@ -142,14 +140,10 @@ const CollectionCard: React.FC<CollectionCardProps> = ({ collection, onDelete, o
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-xl font-semibold">{collection.name}</h3>
         <div className="flex gap-2">
-          <button 
-            onClick={onUpdate}
-            className="text-blue-500 hover:text-blue-700"
-            title="编辑文集"
-          >
+          <button onClick={onUpdate} className="text-blue-500 hover:text-blue-700" title="编辑文集">
             <Edit size={18} />
           </button>
-          <button 
+          <button
             onClick={() => onDelete(collection.id)}
             className="text-red-500 hover:text-red-700"
             title="删除文集"
@@ -166,14 +160,10 @@ const CollectionCard: React.FC<CollectionCardProps> = ({ collection, onDelete, o
         </div>
       </div>
 
-      {collection.description && (
-        <p className="text-gray-600 mb-4">{collection.description}</p>
-      )}
+      {collection.description && <p className="text-gray-600 mb-4">{collection.description}</p>}
 
       <div className="flex items-center gap-4 mb-4">
-        <span className="text-sm text-gray-500">
-          {collection.projectCount} 个项目
-        </span>
+        <span className="text-sm text-gray-500">{collection.projectCount} 个项目</span>
         <span className="text-sm text-gray-500">
           {new Date(collection.createdAt).toLocaleDateString()}
         </span>
@@ -205,7 +195,7 @@ const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({ onClose, 
   const [formData, setFormData] = useState<CreateCollectionData & { tags: string[] }>({
     name: '',
     description: '',
-    tags: []
+    tags: [],
   })
   const [tagInput, setTagInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -236,7 +226,7 @@ const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({ onClose, 
     if (tag && !formData.tags.includes(tag)) {
       setFormData({
         ...formData,
-        tags: [...formData.tags, tag]
+        tags: [...formData.tags, tag],
       })
       setTagInput('')
     }
@@ -245,7 +235,7 @@ const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({ onClose, 
   const removeTag = (tagToRemove: string) => {
     setFormData({
       ...formData,
-      tags: formData.tags.filter(tag => tag !== tagToRemove)
+      tags: formData.tags.filter(tag => tag !== tagToRemove),
     })
   }
 
@@ -253,7 +243,7 @@ const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({ onClose, 
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
         <h2 className="text-xl font-semibold mb-4">创建新文集</h2>
-        
+
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
@@ -262,13 +252,11 @@ const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({ onClose, 
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              文集名称 *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">文集名称 *</label>
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={e => setFormData({ ...formData, name: e.target.value })}
               className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="输入文集名称"
               required
@@ -276,12 +264,10 @@ const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({ onClose, 
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              描述
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">描述</label>
             <textarea
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
               className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="输入文集描述"
               rows={3}
@@ -289,15 +275,13 @@ const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({ onClose, 
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              标签
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">标签</label>
             <div className="flex gap-2 mb-2">
               <input
                 type="text"
                 value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                onChange={e => setTagInput(e.target.value)}
+                onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), addTag())}
                 className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="输入标签"
               />

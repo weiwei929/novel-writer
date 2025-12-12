@@ -42,9 +42,7 @@ const StatsPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-        {error}
-      </div>
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">{error}</div>
     )
   }
 
@@ -58,29 +56,29 @@ const StatsPage: React.FC = () => {
       value: stats.collections,
       icon: FolderOpen,
       color: 'blue',
-      description: '已创建的文集数量'
+      description: '已创建的文集数量',
     },
     {
       title: '项目总数',
       value: stats.projects,
       icon: FileText,
       color: 'green',
-      description: '正在进行的创作项目'
+      description: '正在进行的创作项目',
     },
     {
       title: '章节总数',
       value: stats.chapters,
       icon: BarChart3,
       color: 'purple',
-      description: '已创作的章节数量'
+      description: '已创作的章节数量',
     },
     {
       title: '总字数',
       value: stats.totalWords.toLocaleString(),
       icon: TrendingUp,
       color: 'orange',
-      description: '累计创作字数'
-    }
+      description: '累计创作字数',
+    },
   ]
 
   const getColorClasses = (color: string) => {
@@ -88,23 +86,23 @@ const StatsPage: React.FC = () => {
       blue: {
         bg: 'bg-blue-100',
         text: 'text-blue-600',
-        border: 'border-blue-200'
+        border: 'border-blue-200',
       },
       green: {
         bg: 'bg-green-100',
         text: 'text-green-600',
-        border: 'border-green-200'
+        border: 'border-green-200',
       },
       purple: {
         bg: 'bg-purple-100',
         text: 'text-purple-600',
-        border: 'border-purple-200'
+        border: 'border-purple-200',
       },
       orange: {
         bg: 'bg-orange-100',
         text: 'text-orange-600',
-        border: 'border-orange-200'
-      }
+        border: 'border-orange-200',
+      },
     }
     return colors[color as keyof typeof colors] || colors.blue
   }
@@ -118,17 +116,19 @@ const StatsPage: React.FC = () => {
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {statCards.map((card) => {
+        {statCards.map(card => {
           const Icon = card.icon
           const colors = getColorClasses(card.color)
-          
+
           return (
             <div
               key={card.title}
               className={`bg-white rounded-lg border ${colors.border} p-6 hover:shadow-md transition-shadow`}
             >
               <div className="flex items-center justify-between mb-4">
-                <div className={`w-12 h-12 ${colors.bg} rounded-lg flex items-center justify-center`}>
+                <div
+                  className={`w-12 h-12 ${colors.bg} rounded-lg flex items-center justify-center`}
+                >
                   <Icon className={`w-6 h-6 ${colors.text}`} />
                 </div>
               </div>
@@ -145,7 +145,7 @@ const StatsPage: React.FC = () => {
       {/* 详细信息 */}
       <div className="bg-white rounded-lg shadow-sm p-6">
         <h2 className="text-xl font-semibold mb-4">详细统计</h2>
-        
+
         <div className="space-y-6">
           {/* 创作进度 */}
           <div>
@@ -156,11 +156,13 @@ const StatsPage: React.FC = () => {
                   {stats.totalWords >= 10000 ? '✓' : Math.round((stats.totalWords / 10000) * 100)}
                 </div>
                 <div className="text-sm text-gray-600">
-                  {stats.totalWords >= 10000 ? '已达成' : `${Math.round((stats.totalWords / 10000) * 100)}%`}
+                  {stats.totalWords >= 10000
+                    ? '已达成'
+                    : `${Math.round((stats.totalWords / 10000) * 100)}%`}
                 </div>
                 <div className="text-xs text-gray-500 mt-1">万字作家</div>
               </div>
-              
+
               <div className="text-center p-4 bg-gray-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600 mb-1">
                   {stats.projects >= 5 ? '✓' : `${stats.projects}/5`}
@@ -170,7 +172,7 @@ const StatsPage: React.FC = () => {
                 </div>
                 <div className="text-xs text-gray-500 mt-1">多产作家</div>
               </div>
-              
+
               <div className="text-center p-4 bg-gray-50 rounded-lg">
                 <div className="text-2xl font-bold text-purple-600 mb-1">
                   {stats.chapters >= 50 ? '✓' : `${stats.chapters}/50`}
@@ -189,21 +191,27 @@ const StatsPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg">
                 <div className="text-lg font-semibold text-blue-900 mb-1">
-                  {stats.projects > 0 ? Math.round(stats.totalWords / stats.projects).toLocaleString() : '0'}
+                  {stats.projects > 0
+                    ? Math.round(stats.totalWords / stats.projects).toLocaleString()
+                    : '0'}
                 </div>
                 <div className="text-sm text-blue-700">每项目平均字数</div>
               </div>
-              
+
               <div className="bg-green-50 p-4 rounded-lg">
                 <div className="text-lg font-semibold text-green-900 mb-1">
-                  {stats.projects > 0 ? Math.round(stats.chapters / stats.projects * 10) / 10 : '0'}
+                  {stats.projects > 0
+                    ? Math.round((stats.chapters / stats.projects) * 10) / 10
+                    : '0'}
                 </div>
                 <div className="text-sm text-green-700">每项目平均章节</div>
               </div>
-              
+
               <div className="bg-purple-50 p-4 rounded-lg">
                 <div className="text-lg font-semibold text-purple-900 mb-1">
-                  {stats.chapters > 0 ? Math.round(stats.totalWords / stats.chapters).toLocaleString() : '0'}
+                  {stats.chapters > 0
+                    ? Math.round(stats.totalWords / stats.chapters).toLocaleString()
+                    : '0'}
                 </div>
                 <div className="text-sm text-purple-700">每章平均字数</div>
               </div>
@@ -216,10 +224,7 @@ const StatsPage: React.FC = () => {
               <Calendar size={16} />
               <span>最后更新: {new Date(stats.lastUpdated).toLocaleString()}</span>
             </div>
-            <button
-              onClick={loadStats}
-              className="text-sm text-blue-600 hover:text-blue-800"
-            >
+            <button onClick={loadStats} className="text-sm text-blue-600 hover:text-blue-800">
               刷新数据
             </button>
           </div>

@@ -22,7 +22,7 @@ const SettingsPage: React.FC = () => {
     if (tempApiKey.trim()) {
       settingsManager.set('grokApiKey', tempApiKey.trim())
     }
-    
+
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -82,7 +82,7 @@ const SettingsPage: React.FC = () => {
                   <input
                     type="checkbox"
                     checked={settings.aiEnabled}
-                    onChange={(e) => handleAIToggle(e.target.checked)}
+                    onChange={e => handleAIToggle(e.target.checked)}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -91,15 +91,14 @@ const SettingsPage: React.FC = () => {
 
               {/* API Key 配置 */}
               <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-700">
-                  Grok API Key
-                </label>
+                <label className="block text-sm font-medium text-gray-700">Grok API Key</label>
                 <div className="flex space-x-2">
                   <div className="relative flex-1">
                     <input
                       type={showApiKey ? 'text' : 'password'}
+                      autoComplete="new-password"
                       value={tempApiKey || settings.grokApiKey || ''}
-                      onChange={(e) => setTempApiKey(e.target.value)}
+                      onChange={e => setTempApiKey(e.target.value)}
                       placeholder="输入你的 Grok API Key"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -113,14 +112,24 @@ const SettingsPage: React.FC = () => {
                   </button>
                 </div>
                 <p className="text-xs text-gray-500">
-                  获取 API Key: <a href="https://console.x.ai/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">https://console.x.ai/</a>
+                  获取 API Key:{' '}
+                  <a
+                    href="https://console.x.ai/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    https://console.x.ai/
+                  </a>
                 </p>
               </div>
 
               {/* AI 状态指示 */}
               <div className="p-3 rounded-lg border border-gray-200">
                 <div className="flex items-center space-x-2">
-                  <div className={`w-3 h-3 rounded-full ${settings.aiEnabled ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                  <div
+                    className={`w-3 h-3 rounded-full ${settings.aiEnabled ? 'bg-green-500' : 'bg-gray-400'}`}
+                  ></div>
                   <span className="text-sm font-medium">
                     AI 状态: {settings.aiEnabled ? '已启用' : '已禁用'}
                   </span>
@@ -128,9 +137,7 @@ const SettingsPage: React.FC = () => {
                 {!settings.aiEnabled && (
                   <div className="mt-2 flex items-start space-x-2">
                     <AlertTriangle size={16} className="text-amber-500 mt-0.5" />
-                    <p className="text-sm text-gray-600">
-                      AI 功能已关闭，编辑器将以纯文本模式运行
-                    </p>
+                    <p className="text-sm text-gray-600">AI 功能已关闭，编辑器将以纯文本模式运行</p>
                   </div>
                 )}
               </div>
@@ -140,21 +147,19 @@ const SettingsPage: React.FC = () => {
           {/* 编辑器设置 */}
           <section>
             <h2 className="text-lg font-semibold mb-4">编辑器设置</h2>
-            
+
             <div className="space-y-4">
               {/* 自动保存 */}
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
                   <label className="font-medium">自动保存</label>
-                  <p className="text-sm text-gray-600">
-                    编辑时自动保存内容
-                  </p>
+                  <p className="text-sm text-gray-600">编辑时自动保存内容</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
                     checked={settings.autoSave}
-                    onChange={(e) => settingsManager.set('autoSave', e.target.checked)}
+                    onChange={e => settingsManager.set('autoSave', e.target.checked)}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -172,7 +177,9 @@ const SettingsPage: React.FC = () => {
                     min="1"
                     max="60"
                     value={settings.autoSaveInterval / 1000}
-                    onChange={(e) => settingsManager.set('autoSaveInterval', parseInt(e.target.value) * 1000)}
+                    onChange={e =>
+                      settingsManager.set('autoSaveInterval', parseInt(e.target.value) * 1000)
+                    }
                     className="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -183,19 +190,17 @@ const SettingsPage: React.FC = () => {
           {/* 界面设置 */}
           <section>
             <h2 className="text-lg font-semibold mb-4">界面设置</h2>
-            
+
             <div className="space-y-4">
               {/* 主题 */}
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
                   <label className="font-medium">主题</label>
-                  <p className="text-sm text-gray-600">
-                    选择界面主题
-                  </p>
+                  <p className="text-sm text-gray-600">选择界面主题</p>
                 </div>
                 <select
                   value={settings.theme}
-                  onChange={(e) => settingsManager.set('theme', e.target.value as 'light' | 'dark')}
+                  onChange={e => settingsManager.set('theme', e.target.value as 'light' | 'dark')}
                   className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="light">浅色</option>
@@ -207,13 +212,13 @@ const SettingsPage: React.FC = () => {
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
                   <label className="font-medium">语言</label>
-                  <p className="text-sm text-gray-600">
-                    选择界面语言
-                  </p>
+                  <p className="text-sm text-gray-600">选择界面语言</p>
                 </div>
                 <select
                   value={settings.language}
-                  onChange={(e) => settingsManager.set('language', e.target.value as 'zh-CN' | 'en-US')}
+                  onChange={e =>
+                    settingsManager.set('language', e.target.value as 'zh-CN' | 'en-US')
+                  }
                   className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="zh-CN">中文</option>

@@ -4,21 +4,23 @@ import { Chapter, CreateChapterData } from '../../services/api'
 
 interface CreateChapterModalProps {
   onClose: () => void
-  onSubmit: (data: Omit<CreateChapterData, 'projectId'> & { summary?: string; mdSynopsis?: string }) => void
+  onSubmit: (
+    data: Omit<CreateChapterData, 'projectId'> & { summary?: string; mdSynopsis?: string }
+  ) => void
   nextOrder: number
 }
 
 export const CreateChapterModal: React.FC<CreateChapterModalProps> = ({
   onClose,
   onSubmit,
-  nextOrder
+  nextOrder,
 }) => {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
     notes: '',
     summary: '',
-    mdSynopsis: ''
+    mdSynopsis: '',
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -31,7 +33,7 @@ export const CreateChapterModal: React.FC<CreateChapterModalProps> = ({
       notes: formData.notes,
       order: nextOrder,
       summary: formData.summary?.trim() || '',
-      mdSynopsis: formData.mdSynopsis?.trim() || ''
+      mdSynopsis: formData.mdSynopsis?.trim() || '',
     })
   }
 
@@ -40,23 +42,18 @@ export const CreateChapterModal: React.FC<CreateChapterModalProps> = ({
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="text-lg font-semibold">创建新章节</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              章节标题 *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">章节标题 *</label>
             <input
               type="text"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={e => setFormData({ ...formData, title: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder={`第 ${nextOrder} 章`}
               required
@@ -64,12 +61,10 @@ export const CreateChapterModal: React.FC<CreateChapterModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              章节大纲
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">章节大纲</label>
             <textarea
               value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              onChange={e => setFormData({ ...formData, notes: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20"
               placeholder="简要描述这一章的内容要点..."
             />
@@ -79,7 +74,7 @@ export const CreateChapterModal: React.FC<CreateChapterModalProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">章节梗概（必填）</label>
             <textarea
               value={formData.summary}
-              onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
+              onChange={e => setFormData({ ...formData, summary: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20"
               placeholder="本章的核心推进与要点"
               required
@@ -87,22 +82,22 @@ export const CreateChapterModal: React.FC<CreateChapterModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">初始元数据：章节梗概（synopsis）</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              初始元数据：章节梗概（synopsis）
+            </label>
             <textarea
               value={formData.mdSynopsis}
-              onChange={(e) => setFormData({ ...formData, mdSynopsis: e.target.value })}
+              onChange={e => setFormData({ ...formData, mdSynopsis: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20"
               placeholder="元数据中的章节梗概，可与上方梗概一致或更详细"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              初始内容
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">初始内容</label>
             <textarea
               value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              onChange={e => setFormData({ ...formData, content: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-32"
               placeholder="可以预先输入一些内容，也可以留空稍后编辑..."
             />
@@ -139,13 +134,13 @@ interface EditChapterModalProps {
 export const EditChapterModal: React.FC<EditChapterModalProps> = ({
   chapter,
   onClose,
-  onSubmit
-  }) => {
+  onSubmit,
+}) => {
   const [formData, setFormData] = useState({
     title: chapter.title,
     notes: chapter.notes || '',
     status: chapter.status,
-    order: chapter.order
+    order: chapter.order,
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -156,7 +151,7 @@ export const EditChapterModal: React.FC<EditChapterModalProps> = ({
       title: formData.title.trim(),
       notes: formData.notes,
       status: formData.status,
-      order: formData.order
+      order: formData.order,
     })
   }
 
@@ -165,48 +160,41 @@ export const EditChapterModal: React.FC<EditChapterModalProps> = ({
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="text-lg font-semibold">编辑章节设置</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              章节标题 *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">章节标题 *</label>
             <input
               type="text"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={e => setFormData({ ...formData, title: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              章节顺序
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">章节顺序</label>
             <input
               type="number"
               min="1"
               value={formData.order}
-              onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 1 })}
+              onChange={e => setFormData({ ...formData, order: parseInt(e.target.value) || 1 })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              章节状态
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">章节状态</label>
             <select
               value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value as Chapter['status'] })}
+              onChange={e =>
+                setFormData({ ...formData, status: e.target.value as Chapter['status'] })
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="draft">草稿</option>
@@ -217,12 +205,10 @@ export const EditChapterModal: React.FC<EditChapterModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              章节大纲
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">章节大纲</label>
             <textarea
               value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              onChange={e => setFormData({ ...formData, notes: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-24"
               placeholder="章节大纲和要点..."
             />

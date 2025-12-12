@@ -8,10 +8,10 @@ import {
   VersionComparison,
   VersionType,
   VersionStatus,
-  ProjectSnapshot
+  ProjectSnapshot,
 } from '../types/version'
 
-const API_BASE_URL = 'http://localhost:5000/api/v1'
+const API_BASE_URL = 'http://localhost:5000/api/v2'
 
 // 创建 axios 实例用于版本管理
 const versionApi = axios.create({
@@ -20,24 +20,24 @@ const versionApi = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true
+  withCredentials: true,
 })
 
 // 请求拦截器：添加认证令牌
-versionApi.interceptors.request.use((config) => {
+versionApi.interceptors.request.use(config => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('novel_auth_token') : null
   if (token) {
     config.headers = config.headers || {}
     ;(config.headers as Record<string, string>).Authorization = `Bearer ${token}`
-    ;(config.headers as Record<string, string>)["x-auth-token"] = token
+    ;(config.headers as Record<string, string>)['x-auth-token'] = token
   }
   return config
 })
 
 // 响应拦截器：错误处理
 versionApi.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  response => response,
+  error => {
     console.error('版本管理 API 错误:', error)
     return Promise.reject(error)
   }
@@ -45,9 +45,8 @@ versionApi.interceptors.response.use(
 
 // 项目版本管理 API 服务
 export const versionManagementApi = {
-  
   // ========== 版本列表和查询 ==========
-  
+
   /**
    * 获取项目的所有版本
    */
@@ -90,7 +89,7 @@ export const versionManagementApi = {
       type: params.type || VersionType.MANUAL,
       displayName: params.displayName,
       description: params.description,
-      branchName: params.branchName
+      branchName: params.branchName,
     })
     return response.data
   },
@@ -107,13 +106,13 @@ export const versionManagementApi = {
    * 创建里程碑版本
    */
   async createMilestone(
-    projectId: string, 
-    displayName: string, 
+    projectId: string,
+    displayName: string,
     description?: string
   ): Promise<ProjectVersion> {
     const response = await versionApi.post(`/projects/${projectId}/versions/milestone`, {
       displayName,
-      description
+      description,
     })
     return response.data
   },
@@ -128,7 +127,7 @@ export const versionManagementApi = {
   ): Promise<ProjectVersion> {
     const response = await versionApi.post(`/projects/${projectId}/versions/snapshot`, {
       branchName,
-      description
+      description,
     })
     return response.data
   },
@@ -139,10 +138,13 @@ export const versionManagementApi = {
    * 恢复到指定版本
    */
   async restoreVersion(params: RestoreVersionParams): Promise<ProjectVersion> {
-    const response = await versionApi.post(`/projects/${params.projectId}/versions/${params.versionId}/restore`, {
-      createBackup: params.createBackup || true,
-      backupDescription: params.backupDescription || '恢复前自动备份'
-    })
+    const response = await versionApi.post(
+      `/projects/${params.projectId}/versions/${params.versionId}/restore`,
+      {
+        createBackup: params.createBackup || true,
+        backupDescription: params.backupDescription || '恢复前自动备份',
+      }
+    )
     return response.data
   },
 
@@ -150,7 +152,9 @@ export const versionManagementApi = {
    * 预览版本恢复（不实际执行）
    */
   async previewRestore(projectId: string, versionId: string): Promise<VersionComparison> {
-    const response = await versionApi.get(`/projects/${projectId}/versions/${versionId}/restore-preview`)
+    const response = await versionApi.get(
+      `/projects/${projectId}/versions/${versionId}/restore-preview`
+    )
     return response.data
   },
 
@@ -160,8 +164,8 @@ export const versionManagementApi = {
    * 比较两个版本
    */
   async compareVersions(
-    projectId: string, 
-    fromVersionId: string, 
+    projectId: string,
+    fromVersionId: string,
     toVersionId: string
   ): Promise<VersionComparison> {
     const response = await versionApi.get(
@@ -174,7 +178,9 @@ export const versionManagementApi = {
    * 比较版本与当前状态
    */
   async compareWithCurrent(projectId: string, versionId: string): Promise<VersionComparison> {
-    const response = await versionApi.get(`/projects/${projectId}/versions/${versionId}/compare-current`)
+    const response = await versionApi.get(
+      `/projects/${projectId}/versions/${versionId}/compare-current`
+    )
     return response.data
   },
 
@@ -187,7 +193,7 @@ export const versionManagementApi = {
     const response = await versionApi.post(`/projects/${params.projectId}/branches`, {
       fromVersionId: params.fromVersionId,
       branchName: params.branchName,
-      description: params.description
+      description: params.description,
     })
     return response.data
   },
@@ -208,7 +214,7 @@ export const versionManagementApi = {
       fromVersionId: params.fromVersionId,
       toVersionId: params.toVersionId,
       description: params.description,
-      conflictResolution: params.conflictResolution
+      conflictResolution: params.conflictResolution,
     })
     return response.data
   },
@@ -219,8 +225,8 @@ export const versionManagementApi = {
    * 更新版本信息
    */
   async updateVersion(
-    projectId: string, 
-    versionId: string, 
+    projectId: string,
+    versionId: string,
     updates: {
       displayName?: string
       description?: string
@@ -280,10 +286,10 @@ export const versionManagementApi = {
   async cleanupVersions(
     projectId: string,
     strategy: {
-      keepAutoSaveDays?: number      // 保留自动保存版本天数
-      keepManualVersions?: number    // 保留手动版本数量
-      keepMilestones?: boolean       // 是否保留所有里程碑
-      keepSnapshots?: boolean        // 是否保留所有快照
+      keepAutoSaveDays?: number // 保留自动保存版本天数
+      keepManualVersions?: number // 保留手动版本数量
+      keepMilestones?: boolean // 是否保留所有里程碑
+      keepSnapshots?: boolean // 是否保留所有快照
     }
   ): Promise<{
     deletedVersions: number
@@ -291,7 +297,7 @@ export const versionManagementApi = {
   }> {
     const response = await versionApi.post(`/projects/${projectId}/versions/cleanup`, strategy)
     return response.data
-  }
+  },
 }
 
 // 版本管理工具函数
@@ -300,7 +306,8 @@ export const versionUtils = {
    * 生成版本号（时间戳格式）
    */
   generateVersionNumber(date: Date = new Date()): string {
-    return date.toISOString()
+    return date
+      .toISOString()
       .replace(/[-:T]/g, '')
       .replace(/\.\d{3}Z$/, '')
       .replace(/(\d{8})(\d{6})/, '$1-$2')
@@ -312,12 +319,12 @@ export const versionUtils = {
   parseVersionNumber(versionNumber: string): Date {
     const timestamp = versionNumber.replace('-', '') + '000'
     return new Date(
-      parseInt(timestamp.substr(0, 4)),  // year
-      parseInt(timestamp.substr(4, 2)) - 1,  // month (0-based)
-      parseInt(timestamp.substr(6, 2)),  // day
-      parseInt(timestamp.substr(8, 2)),  // hour
+      parseInt(timestamp.substr(0, 4)), // year
+      parseInt(timestamp.substr(4, 2)) - 1, // month (0-based)
+      parseInt(timestamp.substr(6, 2)), // day
+      parseInt(timestamp.substr(8, 2)), // hour
       parseInt(timestamp.substr(10, 2)), // minute
-      parseInt(timestamp.substr(12, 2))  // second
+      parseInt(timestamp.substr(12, 2)) // second
     )
   },
 
@@ -328,22 +335,25 @@ export const versionUtils = {
     if (version.displayName) {
       return version.displayName
     }
-    
+
     const date = this.parseVersionNumber(version.versionNumber)
     const typeMap = {
       [VersionType.AUTO]: '自动保存',
       [VersionType.MANUAL]: '手动保存',
       [VersionType.MILESTONE]: '里程碑',
-      [VersionType.SNAPSHOT]: '快照'
+      [VersionType.SNAPSHOT]: '快照',
     }
-    
+
     return `${typeMap[version.type]} - ${date.toLocaleString('zh-CN')}`
   },
 
   /**
    * 计算两个版本间的时间差
    */
-  getVersionTimeDiff(fromVersion: ProjectVersion, toVersion: ProjectVersion): {
+  getVersionTimeDiff(
+    fromVersion: ProjectVersion,
+    toVersion: ProjectVersion
+  ): {
     days: number
     hours: number
     minutes: number
@@ -351,11 +361,11 @@ export const versionUtils = {
     const fromDate = this.parseVersionNumber(fromVersion.versionNumber)
     const toDate = this.parseVersionNumber(toVersion.versionNumber)
     const diffMs = Math.abs(toDate.getTime() - fromDate.getTime())
-    
+
     return {
       days: Math.floor(diffMs / (1000 * 60 * 60 * 24)),
       hours: Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-      minutes: Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+      minutes: Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60)),
     }
-  }
+  },
 }

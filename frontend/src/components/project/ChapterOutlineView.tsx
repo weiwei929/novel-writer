@@ -1,14 +1,14 @@
 import React, { useState } from 'react'
-import { 
-  ChevronDown, 
-  ChevronRight, 
-  FileText, 
-  Edit3, 
-  Clock, 
+import {
+  ChevronDown,
+  ChevronRight,
+  FileText,
+  Edit3,
+  Clock,
   Target,
   CheckCircle,
   Circle,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react'
 import { Chapter } from '../../services/api'
 
@@ -25,7 +25,7 @@ const ChapterOutlineView: React.FC<ChapterOutlineViewProps> = ({
   currentChapterId,
   onChapterSelect,
   onChapterUpdate,
-  className = ''
+  className = '',
 }) => {
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set())
   const [editingChapter, setEditingChapter] = useState<string | null>(null)
@@ -74,10 +74,14 @@ const ChapterOutlineView: React.FC<ChapterOutlineViewProps> = ({
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'published': return '已发布'
-      case 'completed': return '已完成'
-      case 'draft': return '草稿'
-      default: return '待处理'
+      case 'published':
+        return '已发布'
+      case 'completed':
+        return '已完成'
+      case 'draft':
+        return '草稿'
+      default:
+        return '待处理'
     }
   }
 
@@ -92,7 +96,7 @@ const ChapterOutlineView: React.FC<ChapterOutlineViewProps> = ({
       published: [] as Chapter[],
       completed: [] as Chapter[],
       draft: [] as Chapter[],
-      other: [] as Chapter[]
+      other: [] as Chapter[],
     }
 
     chapters.forEach(chapter => {
@@ -124,9 +128,7 @@ const ChapterOutlineView: React.FC<ChapterOutlineViewProps> = ({
       <div key={chapter.id} className="border rounded-lg mb-2 overflow-hidden">
         <div
           className={`p-4 cursor-pointer transition-colors ${
-            isCurrent 
-              ? 'bg-blue-50 border-blue-200' 
-              : 'hover:bg-gray-50'
+            isCurrent ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
           }`}
           onClick={() => onChapterSelect(chapter)}
         >
@@ -134,7 +136,7 @@ const ChapterOutlineView: React.FC<ChapterOutlineViewProps> = ({
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <button
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation()
                     toggleChapterExpanded(chapter.id)
                   }}
@@ -142,7 +144,7 @@ const ChapterOutlineView: React.FC<ChapterOutlineViewProps> = ({
                 >
                   {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                 </button>
-                
+
                 <div className="flex items-center gap-2">
                   {getStatusIcon(chapter.status)}
                   <span className="font-medium text-gray-900">
@@ -156,12 +158,12 @@ const ChapterOutlineView: React.FC<ChapterOutlineViewProps> = ({
                   <FileText size={14} />
                   <span>{chapter.wordCount?.toLocaleString() || 0} 字</span>
                 </div>
-                
+
                 <div className="flex items-center gap-1">
                   <Clock size={14} />
                   <span>{formatReadingTime(chapter.wordCount || 0)}</span>
                 </div>
-                
+
                 <div className="flex items-center gap-1">
                   <Target size={14} />
                   <span>{getStatusText(chapter.status)}</span>
@@ -169,9 +171,7 @@ const ChapterOutlineView: React.FC<ChapterOutlineViewProps> = ({
               </div>
             </div>
 
-            {isCurrent && (
-              <div className="text-xs text-blue-600 font-medium">当前章节</div>
-            )}
+            {isCurrent && <div className="text-xs text-blue-600 font-medium">当前章节</div>}
           </div>
         </div>
 
@@ -183,7 +183,7 @@ const ChapterOutlineView: React.FC<ChapterOutlineViewProps> = ({
                 <h4 className="font-medium text-gray-700">章节概要</h4>
                 {!isEditing && (
                   <button
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation()
                       startEditingSummary(chapter)
                     }}
@@ -198,7 +198,7 @@ const ChapterOutlineView: React.FC<ChapterOutlineViewProps> = ({
                 <div className="space-y-3">
                   <textarea
                     value={editingSummary}
-                    onChange={(e) => setEditingSummary(e.target.value)}
+                    onChange={e => setEditingSummary(e.target.value)}
                     className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-blue-500"
                     rows={3}
                     placeholder="输入章节概要..."
@@ -245,11 +245,11 @@ const ChapterOutlineView: React.FC<ChapterOutlineViewProps> = ({
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-3 text-sm font-medium text-gray-700">
           {icon}
-          <span>{title} ({chapters.length})</span>
+          <span>
+            {title} ({chapters.length})
+          </span>
         </div>
-        <div className="space-y-2">
-          {chapters.map(renderChapterItem)}
-        </div>
+        <div className="space-y-2">{chapters.map(renderChapterItem)}</div>
       </div>
     )
   }
@@ -259,32 +259,29 @@ const ChapterOutlineView: React.FC<ChapterOutlineViewProps> = ({
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">章节大纲</h3>
         <p className="text-sm text-gray-600">
-          共 {chapters.length} 个章节，{chapters.reduce((sum, c) => sum + (c.wordCount || 0), 0).toLocaleString()} 字
+          共 {chapters.length} 个章节，
+          {chapters.reduce((sum, c) => sum + (c.wordCount || 0), 0).toLocaleString()} 字
         </p>
       </div>
 
       <div className="space-y-4">
         {renderGroup(
-          '已发布', 
-          groupedChapters.published, 
+          '已发布',
+          groupedChapters.published,
           <CheckCircle size={16} className="text-green-500" />
         )}
-        
+
         {renderGroup(
-          '已完成', 
-          groupedChapters.completed, 
+          '已完成',
+          groupedChapters.completed,
           <CheckCircle size={16} className="text-blue-500" />
         )}
-        
+
+        {renderGroup('草稿', groupedChapters.draft, <Circle size={16} className="text-gray-400" />)}
+
         {renderGroup(
-          '草稿', 
-          groupedChapters.draft, 
-          <Circle size={16} className="text-gray-400" />
-        )}
-        
-        {renderGroup(
-          '其他', 
-          groupedChapters.other, 
+          '其他',
+          groupedChapters.other,
           <AlertCircle size={16} className="text-orange-500" />
         )}
       </div>

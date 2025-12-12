@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { 
-  CheckCircle, 
-  XCircle, 
-  Loader, 
+import {
+  CheckCircle,
+  XCircle,
+  Loader,
   AlertTriangle,
   Database,
   Server,
   Wifi,
-  RefreshCw
+  RefreshCw,
 } from 'lucide-react'
 import { collectionsApi, projectsApi, chaptersApi } from '../services/api'
 
@@ -32,7 +32,7 @@ const ApiTestPage: React.FC = () => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         const data = await response.json()
         return `根路径正常 - ${data.message || 'OK'}`
-      }
+      },
     },
     {
       name: 'Backend Health Check',
@@ -42,7 +42,7 @@ const ApiTestPage: React.FC = () => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         const data = await response.json()
         return `服务健康 - ${data.status || 'OK'}`
-      }
+      },
     },
     {
       name: 'Collections API - Get All',
@@ -50,7 +50,7 @@ const ApiTestPage: React.FC = () => {
       test: async () => {
         const collections = await collectionsApi.getAll()
         return `成功获取 ${collections.length} 个文集`
-      }
+      },
     },
     {
       name: 'Collections API - Create',
@@ -59,10 +59,10 @@ const ApiTestPage: React.FC = () => {
         const collection = await collectionsApi.create({
           name: `测试文集_${Date.now()}`,
           description: '这是一个API测试文集',
-          tags: ['测试']
+          tags: ['测试'],
         })
         return `成功创建文集: ${collection.name}`
-      }
+      },
     },
     {
       name: 'Projects API - Get All',
@@ -70,7 +70,7 @@ const ApiTestPage: React.FC = () => {
       test: async () => {
         const projects = await projectsApi.getAll()
         return `成功获取 ${projects.length} 个项目`
-      }
+      },
     },
     {
       name: 'Projects API - Create',
@@ -81,10 +81,10 @@ const ApiTestPage: React.FC = () => {
           description: '这是一个API测试项目',
           author: 'API测试员',
           genre: ['测试'],
-          status: 'draft'
+          status: 'draft',
         })
         return `成功创建项目: ${project.title}`
-      }
+      },
     },
     {
       name: 'Chapters API - Create',
@@ -95,15 +95,15 @@ const ApiTestPage: React.FC = () => {
         if (projects.length === 0) {
           throw new Error('需要先创建项目才能测试章节API')
         }
-        
+
         const chapter = await chaptersApi.create({
           projectId: projects[0].id,
           title: `测试章节_${Date.now()}`,
           content: '这是一个API测试章节的内容。\n\n包含一些测试文字来验证字数统计功能。',
-          order: 1
+          order: 1,
         })
         return `成功创建章节: ${chapter.title}`
-      }
+      },
     },
     {
       name: 'Chapters API - Get by Project',
@@ -113,10 +113,10 @@ const ApiTestPage: React.FC = () => {
         if (projects.length === 0) {
           throw new Error('需要先创建项目才能测试章节获取')
         }
-        
+
         const chapters = await chaptersApi.getByProjectId(projects[0].id)
         return `项目 ${projects[0].title} 有 ${chapters.length} 个章节`
-      }
+      },
     },
     {
       name: 'Data Persistence Test',
@@ -127,61 +127,67 @@ const ApiTestPage: React.FC = () => {
         const projects = await projectsApi.getAll()
         const totalItems = collections.length + projects.length
         return `数据持久化正常 - 共 ${totalItems} 条记录`
-      }
-    }
+      },
+    },
   ]
 
-  const runTest = async (apiTest: typeof apiTests[0], index: number): Promise<void> => {
+  const runTest = async (apiTest: (typeof apiTests)[0], index: number): Promise<void> => {
     const startTime = Date.now()
-    
-    setTests(prev => prev.map((test, i) => 
-      i === index ? { ...test, status: 'pending' } : test
-    ))
+
+    setTests(prev => prev.map((test, i) => (i === index ? { ...test, status: 'pending' } : test)))
 
     try {
       const message = await apiTest.test()
       const duration = Date.now() - startTime
-      
-      setTests(prev => prev.map((test, i) => 
-        i === index ? { 
-          ...test, 
-          status: 'success', 
-          message,
-          duration 
-        } : test
-      ))
+
+      setTests(prev =>
+        prev.map((test, i) =>
+          i === index
+            ? {
+                ...test,
+                status: 'success',
+                message,
+                duration,
+              }
+            : test
+        )
+      )
     } catch (error) {
       const duration = Date.now() - startTime
-      
-      setTests(prev => prev.map((test, i) => 
-        i === index ? { 
-          ...test, 
-          status: 'error', 
-          message: error instanceof Error ? error.message : '未知错误',
-          duration 
-        } : test
-      ))
+
+      setTests(prev =>
+        prev.map((test, i) =>
+          i === index
+            ? {
+                ...test,
+                status: 'error',
+                message: error instanceof Error ? error.message : '未知错误',
+                duration,
+              }
+            : test
+        )
+      )
     }
   }
 
   const runAllTests = async () => {
     setIsRunning(true)
-    
+
     // 初始化测试状态
     const initialTests = apiTests.map(test => ({
       endpoint: test.endpoint,
       status: 'pending' as const,
-      message: '等待测试...'
+      message: '等待测试...',
     }))
     setTests(initialTests)
-    
+
     // 顺序执行测试
     for (let i = 0; i < apiTests.length; i++) {
       await runTest(apiTests[i], i)
       // 在测试之间添加短暂延迟
       await new Promise(resolve => setTimeout(resolve, 200))
     }
-    
+
     setIsRunning(false)
   }
 
@@ -206,9 +212,12 @@ const ApiTestPage: React.FC = () => {
 
   const getStatusColor = (status: ApiTestResult['status']) => {
     switch (status) {
-      case 'pending': return 'border-blue-200 bg-blue-50'
-      case 'success': return 'border-green-200 bg-green-50'
-      case 'error': return 'border-red-200 bg-red-50'
+      case 'pending':
+        return 'border-blue-200 bg-blue-50'
+      case 'success':
+        return 'border-green-200 bg-green-50'
+      case 'error':
+        return 'border-red-200 bg-red-50'
     }
   }
 
@@ -217,13 +226,9 @@ const ApiTestPage: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-sm border p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              API 连接测试
-            </h1>
-            <p className="text-gray-600 mb-6">
-              验证前后端API连接和数据持久化功能
-            </p>
-            
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">API 连接测试</h1>
+            <p className="text-gray-600 mb-6">验证前后端API连接和数据持久化功能</p>
+
             <button
               onClick={runAllTests}
               disabled={isRunning}
@@ -242,19 +247,19 @@ const ApiTestPage: React.FC = () => {
                 <div className="text-2xl font-bold text-gray-900">{summary.total}</div>
                 <div className="text-sm text-gray-600">总测试数</div>
               </div>
-              
+
               <div className="bg-green-50 p-4 rounded-lg text-center">
                 <CheckCircle size={24} className="mx-auto mb-2 text-green-600" />
                 <div className="text-2xl font-bold text-green-700">{summary.passed}</div>
                 <div className="text-sm text-green-600">通过</div>
               </div>
-              
+
               <div className="bg-red-50 p-4 rounded-lg text-center">
                 <XCircle size={24} className="mx-auto mb-2 text-red-600" />
                 <div className="text-2xl font-bold text-red-700">{summary.failed}</div>
                 <div className="text-sm text-red-600">失败</div>
               </div>
-              
+
               <div className="bg-blue-50 p-4 rounded-lg text-center">
                 <Wifi size={24} className="mx-auto mb-2 text-blue-600" />
                 <div className="text-2xl font-bold text-blue-700">
@@ -285,15 +290,13 @@ const ApiTestPage: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    
+
                     <div className="text-sm text-gray-600 mb-2">
                       <Server size={14} className="inline mr-1" />
                       {test.endpoint}
                     </div>
-                    
-                    <div className="text-sm text-gray-700">
-                      {test.message}
-                    </div>
+
+                    <div className="text-sm text-gray-700">{test.message}</div>
                   </div>
                 </div>
               </div>

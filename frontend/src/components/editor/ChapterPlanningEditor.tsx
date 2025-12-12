@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { X, Plus, Trash2, ArrowUp, ArrowDown, Copy } from 'lucide-react'
 import { projectsApi, chaptersApi, Chapter } from '../../services/api'
-import { useNotifications } from '../../contexts/UIContext'
+import { useNotifications } from '../../hooks/useNotifications'
 
 type PlanStatus = 'planned' | 'started' | 'completed'
 
@@ -28,10 +28,15 @@ const emptyPlan = (nextOrder: number): ChapterPlanItem => ({
   title: `第${nextOrder}章（待定）`,
   plannedLength: 2000,
   synopsisText: '',
-  status: 'planned'
+  status: 'planned',
 })
 
-const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({ projectId, initialPlans = [], onClose, onSaved }) => {
+const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({
+  projectId,
+  initialPlans = [],
+  onClose,
+  onSaved,
+}) => {
   const { success, error: notifyError, warning } = useNotifications()
   const [plans, setPlans] = useState<ChapterPlanItem[]>(() => {
     const sorted = [...initialPlans].sort((a, b) => a.order - b.order)
@@ -56,7 +61,7 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({ projectId
     const dup: ChapterPlanItem = {
       ...src,
       id: Math.random().toString(36).slice(2),
-      title: src.title + '（副本）'
+      title: src.title + '（副本）',
     }
     const next = [...plans]
     next.splice(index + 1, 0, dup)
@@ -86,14 +91,21 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({ projectId
 
   // 载入现有章节，作为顶部参考列表；若无初始规划，按章节生成规划草稿
   useEffect(() => {
-    (async () => {
+    ;(async () => {
       try {
         const list = await chaptersApi.getByProjectId(projectId)
         setChapters(list)
         if (initialPlans.length === 0 && list.length > 0) {
           const drafts: ChapterPlanItem[] = list
             .sort((a, b) => a.order - b.order)
-            .map((c) => ({ id: Math.random().toString(36).slice(2), order: c.order, title: c.title || `第${c.order}章`, plannedLength: c.wordCount || 2000, synopsisText: c.summary || '', status: 'planned' }))
+            .map(c => ({
+              id: Math.random().toString(36).slice(2),
+              order: c.order,
+              title: c.title || `第${c.order}章`,
+              plannedLength: c.wordCount || 2000,
+              synopsisText: c.summary || '',
+              status: 'planned',
+            }))
           setPlans(drafts)
         }
       } catch (e) {
@@ -116,20 +128,27 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({ projectId
       // 同步：根据规划创建缺失章节，并更新已存在章节的标题/状态/梗概
       try {
         const existing = await chaptersApi.getByProjectId(projectId)
-        const byOrder = new Map(existing.map((c) => [c.order, c]))
+        const byOrder = new Map(existing.map(c => [c.order, c]))
         for (const p of payload) {
-          const mappedStatus = p.status === 'planned' ? 'draft' : p.status === 'started' ? 'writing' : p.status === 'completed' ? 'completed' : undefined
+          const mappedStatus =
+            p.status === 'planned'
+              ? 'draft'
+              : p.status === 'started'
+                ? 'writing'
+                : p.status === 'completed'
+                  ? 'completed'
+                  : undefined
           const at = byOrder.get(p.order)
           if (!at) {
             const created = await chaptersApi.createForProject(projectId, {
               title: p.title,
               order: p.order,
-              content: ''
+              content: '',
             })
             if (mappedStatus || p.synopsisText) {
               await chaptersApi.update(created.id, {
                 status: (mappedStatus as any) || created.status,
-                summary: p.synopsisText || created.summary
+                summary: p.synopsisText || created.summary,
               })
             }
           } else {
@@ -164,13 +183,22 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({ projectId
         <div className="px-4 py-3 border-b flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">章节规划</h2>
-            <p className="text-xs text-gray-500 mt-0.5">结构化编辑（顺序、标题、预计字数、梗概、状态）</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              结构化编辑（顺序、标题、预计字数、梗概、状态）
+            </p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={addPlan} className="inline-flex items-center gap-1 px-2.5 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+            <button
+              onClick={addPlan}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
               <Plus className="w-4 h-4" /> 新增
             </button>
-            <button onClick={save} disabled={saving} className="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
+            <button
+              onClick={save}
+              disabled={saving}
+              className="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+            >
               {saving ? '保存中...' : '保存'}
             </button>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded" title="关闭">
@@ -186,41 +214,73 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({ projectId
             <div className="bg-white rounded border p-3">
               <div className="font-medium text-gray-900 mb-2">现有章节</div>
               <div className="grid grid-cols-12 gap-2 text-xs">
-                {[...chapters].sort((a,b)=>a.order-b.order).map((c) => (
-                  <div key={c.id} className="col-span-6 flex items-center gap-2">
-                    <span className="px-1.5 py-0.5 bg-gray-100 rounded">第 {c.order} 章</span>
-                    <span className="truncate">{c.title || `第${c.order}章`}</span>
-                  </div>
-                ))}
+                {[...chapters]
+                  .sort((a, b) => a.order - b.order)
+                  .map(c => (
+                    <div key={c.id} className="col-span-6 flex items-center gap-2">
+                      <span className="px-1.5 py-0.5 bg-gray-100 rounded">第 {c.order} 章</span>
+                      <span className="truncate">{c.title || `第${c.order}章`}</span>
+                    </div>
+                  ))}
               </div>
             </div>
           )}
           {plans.length === 0 && (
-            <div className="text-center text-gray-400 text-sm py-10">暂无规划项，点击“新增”开始</div>
+            <div className="text-center text-gray-400 text-sm py-10">
+              暂无规划项，点击“新增”开始
+            </div>
           )}
           {plans.map((p, idx) => (
             <div key={p.id} className="bg-white rounded border shadow-sm p-3">
               <div className="flex items-start gap-3">
                 {/* 排序与操作 */}
                 <div className="flex flex-col items-center gap-1 mt-1">
-                  <button onClick={() => moveUp(idx)} className="p-1 hover:bg-gray-100 rounded" title="上移"><ArrowUp className="w-4 h-4" /></button>
+                  <button
+                    onClick={() => moveUp(idx)}
+                    className="p-1 hover:bg-gray-100 rounded"
+                    title="上移"
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                  </button>
                   <div className="text-xs text-gray-500 w-8 text-center">{p.order}</div>
-                  <button onClick={() => moveDown(idx)} className="p-1 hover:bg-gray-100 rounded" title="下移"><ArrowDown className="w-4 h-4" /></button>
+                  <button
+                    onClick={() => moveDown(idx)}
+                    className="p-1 hover:bg-gray-100 rounded"
+                    title="下移"
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                  </button>
                 </div>
 
                 {/* 表单区 */}
                 <div className="flex-1 grid grid-cols-12 gap-3">
                   <div className="col-span-7">
                     <label className="block text-xs text-gray-600 mb-1">标题</label>
-                    <input value={p.title} onChange={e => updatePlan(idx, { title: e.target.value })} className="w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input
+                      value={p.title}
+                      onChange={e => updatePlan(idx, { title: e.target.value })}
+                      className="w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
                   </div>
                   <div className="col-span-2">
                     <label className="block text-xs text-gray-600 mb-1">预计字数</label>
-                    <input type="number" min={0} value={p.plannedLength} onChange={e => updatePlan(idx, { plannedLength: Number(e.target.value || 0) })} className="w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input
+                      type="number"
+                      min={0}
+                      value={p.plannedLength}
+                      onChange={e =>
+                        updatePlan(idx, { plannedLength: Number(e.target.value || 0) })
+                      }
+                      className="w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
                   </div>
                   <div className="col-span-3">
                     <label className="block text-xs text-gray-600 mb-1">状态</label>
-                    <select value={p.status} onChange={e => updatePlan(idx, { status: e.target.value as PlanStatus })} className="w-full px-2 py-1 border rounded bg-white">
+                    <select
+                      value={p.status}
+                      onChange={e => updatePlan(idx, { status: e.target.value as PlanStatus })}
+                      className="w-full px-2 py-1 border rounded bg-white"
+                    >
                       <option value="planned">计划中</option>
                       <option value="started">进行中</option>
                       <option value="completed">已完成</option>
@@ -239,8 +299,20 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({ projectId
 
                 {/* 右侧操作 */}
                 <div className="flex flex-col items-center gap-1 mt-1">
-                  <button onClick={() => duplicatePlan(idx)} className="p-1 hover:bg-gray-100 rounded" title="复制"><Copy className="w-4 h-4" /></button>
-                  <button onClick={() => deletePlan(idx)} className="p-1 hover:bg-red-50 rounded text-red-600" title="删除"><Trash2 className="w-4 h-4" /></button>
+                  <button
+                    onClick={() => duplicatePlan(idx)}
+                    className="p-1 hover:bg-gray-100 rounded"
+                    title="复制"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => deletePlan(idx)}
+                    className="p-1 hover:bg-red-50 rounded text-red-600"
+                    title="删除"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             </div>

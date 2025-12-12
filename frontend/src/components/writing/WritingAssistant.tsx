@@ -1,14 +1,5 @@
 import React, { useState } from 'react'
-import { 
-  Target, 
-  FileText, 
-  TrendingUp, 
-  Calendar,
-  Award,
-  BarChart3,
-  Eye,
-  Edit3
-} from 'lucide-react'
+import { Target, FileText, TrendingUp, Calendar, Award, BarChart3, Eye, Edit3 } from 'lucide-react'
 import { Project, Chapter } from '../../services/api'
 
 interface WritingAssistantProps {
@@ -42,33 +33,35 @@ const WritingAssistant: React.FC<WritingAssistantProps> = ({
   chapters,
   currentChapter,
   currentContent = '',
-  className = ''
+  className = '',
 }) => {
   const [goals, setGoals] = useState<WritingGoals>({
     dailyWords: 1000,
     weeklyWords: 7000,
     totalWords: 80000,
     dailyTime: 60,
-    targetDate: ''
+    targetDate: '',
   })
-  
+
   const [isEditingGoals, setIsEditingGoals] = useState(false)
 
   // 计算写作统计
   const stats: WritingStats = React.useMemo(() => {
     const totalWords = chapters.reduce((sum, chapter) => sum + (chapter.wordCount || 0), 0)
     const currentContentWords = currentContent ? calculateWordCount(currentContent) : 0
-    const totalWordsWithCurrent = totalWords + currentContentWords - (currentChapter?.wordCount || 0)
-    
+    const totalWordsWithCurrent =
+      totalWords + currentContentWords - (currentChapter?.wordCount || 0)
+
     // 模拟今日/本周/本月数据（实际项目中需要从后端获取）
     const todayWords = currentContentWords // 简化：当前章节的字数作为今日字数
     const weekWords = totalWords * 0.3 // 简化：总字数的30%作为本周字数
     const monthWords = totalWords * 0.8 // 简化：总字数的80%作为本月字数
-    
+
     const averageWordsPerDay = weekWords / 7
     const averageWordsPerChapter = chapters.length > 0 ? totalWords / chapters.length : 0
     const estimatedReadingTime = Math.ceil(totalWordsWithCurrent / 250) // 每分钟250字
-    const completionProgress = goals.totalWords > 0 ? (totalWordsWithCurrent / goals.totalWords) * 100 : 0
+    const completionProgress =
+      goals.totalWords > 0 ? (totalWordsWithCurrent / goals.totalWords) * 100 : 0
 
     return {
       todayWords,
@@ -77,12 +70,15 @@ const WritingAssistant: React.FC<WritingAssistantProps> = ({
       averageWordsPerDay,
       averageWordsPerChapter,
       estimatedReadingTime,
-      completionProgress
+      completionProgress,
     }
   }, [chapters, currentContent, currentChapter, goals.totalWords])
 
   const calculateWordCount = (text: string): number => {
-    return text.replace(/[^\u4e00-\u9fa5\w]/g, ' ').split(/\s+/).filter(word => word.length > 0).length
+    return text
+      .replace(/[^\u4e00-\u9fa5\w]/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 0).length
   }
 
   const formatTime = (minutes: number): string => {
@@ -122,7 +118,7 @@ const WritingAssistant: React.FC<WritingAssistantProps> = ({
           <BarChart3 size={20} />
           写作统计
         </h3>
-        
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-blue-50 p-4 rounded-lg">
             <div className="flex items-center gap-2 text-blue-600 mb-1">
@@ -136,7 +132,7 @@ const WritingAssistant: React.FC<WritingAssistantProps> = ({
               目标：{goals.dailyWords.toLocaleString()}
             </div>
           </div>
-          
+
           <div className="bg-green-50 p-4 rounded-lg">
             <div className="flex items-center gap-2 text-green-600 mb-1">
               <TrendingUp size={16} />
@@ -149,7 +145,7 @@ const WritingAssistant: React.FC<WritingAssistantProps> = ({
               目标：{goals.weeklyWords.toLocaleString()}
             </div>
           </div>
-          
+
           <div className="bg-purple-50 p-4 rounded-lg">
             <div className="flex items-center gap-2 text-purple-600 mb-1">
               <Eye size={16} />
@@ -159,7 +155,7 @@ const WritingAssistant: React.FC<WritingAssistantProps> = ({
               {formatTime(stats.estimatedReadingTime)}
             </div>
           </div>
-          
+
           <div className="bg-orange-50 p-4 rounded-lg">
             <div className="flex items-center gap-2 text-orange-600 mb-1">
               <Award size={16} />
@@ -190,49 +186,41 @@ const WritingAssistant: React.FC<WritingAssistantProps> = ({
         {isEditingGoals ? (
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                每日目标字数
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">每日目标字数</label>
               <input
                 type="number"
                 value={goals.dailyWords}
-                onChange={(e) => setGoals({...goals, dailyWords: Number(e.target.value)})}
+                onChange={e => setGoals({ ...goals, dailyWords: Number(e.target.value) })}
                 className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                 min="100"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                每周目标字数
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">每周目标字数</label>
               <input
                 type="number"
                 value={goals.weeklyWords}
-                onChange={(e) => setGoals({...goals, weeklyWords: Number(e.target.value)})}
+                onChange={e => setGoals({ ...goals, weeklyWords: Number(e.target.value) })}
                 className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                 min="500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                总目标字数
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">总目标字数</label>
               <input
                 type="number"
                 value={goals.totalWords}
-                onChange={(e) => setGoals({...goals, totalWords: Number(e.target.value)})}
+                onChange={e => setGoals({ ...goals, totalWords: Number(e.target.value) })}
                 className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                 min="10000"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                目标完成日期
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">目标完成日期</label>
               <input
                 type="date"
                 value={goals.targetDate || ''}
-                onChange={(e) => setGoals({...goals, targetDate: e.target.value})}
+                onChange={e => setGoals({ ...goals, targetDate: e.target.value })}
                 className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
               />
             </div>
@@ -305,7 +293,7 @@ const WritingAssistant: React.FC<WritingAssistantProps> = ({
           <Calendar size={20} />
           预测信息
         </h3>
-        
+
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="bg-gray-50 p-3 rounded">
             <div className="text-gray-600 mb-1">预计完成时间</div>
@@ -313,26 +301,22 @@ const WritingAssistant: React.FC<WritingAssistantProps> = ({
               {estimateDaysToComplete() > 0 ? `${estimateDaysToComplete()} 天` : '已完成'}
             </div>
           </div>
-          
+
           <div className="bg-gray-50 p-3 rounded">
             <div className="text-gray-600 mb-1">平均章节字数</div>
             <div className="font-semibold">
               {Math.round(stats.averageWordsPerChapter).toLocaleString()} 字
             </div>
           </div>
-          
+
           <div className="bg-gray-50 p-3 rounded">
             <div className="text-gray-600 mb-1">本月产量</div>
-            <div className="font-semibold">
-              {stats.monthWords.toLocaleString()} 字
-            </div>
+            <div className="font-semibold">{stats.monthWords.toLocaleString()} 字</div>
           </div>
-          
+
           <div className="bg-gray-50 p-3 rounded">
             <div className="text-gray-600 mb-1">预计总页数</div>
-            <div className="font-semibold">
-              {Math.ceil(goals.totalWords / 400)} 页
-            </div>
+            <div className="font-semibold">{Math.ceil(goals.totalWords / 400)} 页</div>
           </div>
         </div>
       </div>

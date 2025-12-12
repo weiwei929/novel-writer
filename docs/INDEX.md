@@ -27,11 +27,18 @@
 - **[API路由修复方案](./technical/API_ROUTING_FIX.md)** - Express.js路由问题深度解析
 - **[技术问题解决记录](./technical/TECH-ISSUES-RESOLVED-2025-11-03.md)** - 技术问题解决记录
 
+### 💡 深度思考 (`thinklogs/`)
+- **[2025-12-11 Thinklog](./thinklogs/2025-12-11_Thinklog_Alignment_and_Granularity.md)** - 关于对齐、颗粒度和工具的思考
+- **[技术栈评估](./thinklogs/2025-12-08_Tech_Stack_Evaluation.md)** - 技术选型评估与优化
+- **[文档重构报告](./thinklogs/2025-11-04_Documentation_Restructure_Report.md)** - 文档体系重构思考
+- **[体验优化报告](./thinklogs/2025-11-04_UX_Improvements_Report.md)** - 用户体验优化实施思考
+
 ### 🚀 部署运维
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - 生产环境部署指南
 - **[DEVELOPMENT.md](./DEVELOPMENT.md)** - 开发环境配置指南
 
 ### 📦 历史归档 (`archive/`)
+- **[2025年12月日志归档](./archive/2025_12_11logs/)** - 2025年12月清理的历史日志和报告
 - **[实际状态记录](./archive/ACTUAL-STATUS.md)** - 项目历史状态记录
 - **[开发进展记录](./archive/DEVELOPMENT-PROGRESS-2025-11-03.md)** - 历史开发进展
 - **[快速开始指南](./archive/QUICK-START.md)** - 旧版快速开始文档
@@ -55,6 +62,9 @@
 
 ### 🔧 **Technical** - 技术专项
 包含具体技术问题的深度分析和解决方案等专业技术文档。
+
+### 💡 **Thinklogs** - 深度思考
+包含"提出问题-思考问题-解决问题"的决策过程记录，关注"Why"而非"What"。
 
 ### 📦 **Archive** - 历史归档
 包含过时的文档和历史记录，保留作为参考但不再维护。
@@ -82,5 +92,5 @@
 ---
 
 **文档维护**: 随项目开发实时更新  
-**最后更新**: 2025年11月4日  
+**最后更新**: 2025年12月11日  
 **维护团队**: Novel-Writer开发团队

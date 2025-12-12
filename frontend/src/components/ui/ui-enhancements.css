@@ -42,17 +42,17 @@
     right: 1rem;
     z-index: 50;
   }
-  
+
   .notification-item {
     min-width: auto;
     width: 100%;
   }
-  
+
   /* 移动端表格响应式 */
   .table-responsive {
     overflow-x: auto;
   }
-  
+
   /* 移动端按钮改进 */
   .btn-mobile {
     min-height: 44px; /* 触摸友好的最小高度 */
@@ -71,7 +71,7 @@
   border: 1px solid #f87171;
 }
 
-/* 成功状态样式 */  
+/* 成功状态样式 */
 .success-display {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
   border: 1px solid #4ade80;
@@ -107,11 +107,11 @@
   .custom-scrollbar::-webkit-scrollbar-track {
     background: #1e293b;
   }
-  
+
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background: #475569;
   }
-  
+
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #64748b;
   }
@@ -130,11 +130,15 @@
 
 /* 卡片阴影层次 */
 .card-shadow {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.24);
 }
 
 .card-shadow:hover {
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.25),
+    0 10px 10px rgba(0, 0, 0, 0.22);
 }
 
 /* 骨架屏动画 */

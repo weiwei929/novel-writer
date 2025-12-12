@@ -16,14 +16,20 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
   onUpdate,
   onClose,
   className = '',
-  initialMode
+  initialMode,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [activeField, setActiveField] = useState<string>('synopsis')
   const [mode, setMode] = useState<'view' | 'edit' | 'view_all'>(initialMode || 'view')
-  const [preview, setPreview] = useState<{ current: string; lastModified?: string; wordCount?: number } | null>(null)
+  const [preview, setPreview] = useState<{
+    current: string
+    lastModified?: string
+    wordCount?: number
+  } | null>(null)
   const [loading, setLoading] = useState(false)
-  const [previewsAll, setPreviewsAll] = useState<Record<string, { current: string; lastModified?: string; wordCount?: number } | null>>({})
+  const [previewsAll, setPreviewsAll] = useState<
+    Record<string, { current: string; lastModified?: string; wordCount?: number } | null>
+  >({})
 
   // 章节元数据字段定义 (根据PLAN第119-127行)
   const metadataFields = [
@@ -36,12 +42,23 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
   useEffect(() => {
     if (chapter && mode === 'view' && activeField) {
       setLoading(true)
-      chaptersApi.getMetadata(chapter.id, activeField)
-        .then((res) => setPreview({ current: res.current || '', lastModified: res.lastModified, wordCount: res.wordCount }))
+      chaptersApi
+        .getMetadata(chapter.id, activeField)
+        .then(res =>
+          setPreview({
+            current: res.current || '',
+            lastModified: res.lastModified,
+            wordCount: res.wordCount,
+          })
+        )
         .catch(() => {
           // 后端暂未提供章节元数据接口时的回退：使用章节 summary 作为梗概预览
           if (activeField === 'synopsis' && (chapter as any)?.summary) {
-            setPreview({ current: (chapter as any).summary, lastModified: chapter.updatedAt, wordCount: undefined })
+            setPreview({
+              current: (chapter as any).summary,
+              lastModified: chapter.updatedAt,
+              wordCount: undefined,
+            })
           } else {
             setPreview(null)
           }
@@ -54,19 +71,33 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
     if (chapter && mode === 'view_all') {
       setLoading(true)
       Promise.all(
-        metadataFields.map(async (f) => {
+        metadataFields.map(async f => {
           try {
             const res = await chaptersApi.getMetadata(chapter.id, f.key)
-            return { key: f.key, value: { current: res.current || '', lastModified: res.lastModified, wordCount: res.wordCount } }
+            return {
+              key: f.key,
+              value: {
+                current: res.current || '',
+                lastModified: res.lastModified,
+                wordCount: res.wordCount,
+              },
+            }
           } catch {
             return { key: f.key, value: null }
           }
         })
-      ).then((arr) => {
-        const map: Record<string, { current: string; lastModified?: string; wordCount?: number } | null> = {}
-        arr.forEach(({ key, value }) => { map[key] = value })
-        setPreviewsAll(map)
-      }).finally(() => setLoading(false))
+      )
+        .then(arr => {
+          const map: Record<
+            string,
+            { current: string; lastModified?: string; wordCount?: number } | null
+          > = {}
+          arr.forEach(({ key, value }) => {
+            map[key] = value
+          })
+          setPreviewsAll(map)
+        })
+        .finally(() => setLoading(false))
     }
   }, [chapter?.id, mode])
 
@@ -74,7 +105,7 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
     return (
       <div className={`w-12 border-l bg-gray-50 flex flex-col items-center py-4 ${className}`}>
         <button
-          onClick={() => onClose ? onClose() : setIsCollapsed(false)}
+          onClick={() => (onClose ? onClose() : setIsCollapsed(false))}
           className="p-2 hover:bg-gray-200 rounded"
           title="关闭元数据面板"
         >
@@ -89,13 +120,13 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
       <div className={`w-80 bg-gray-100 flex flex-col ${className}`}>
         <div className="flex items-center justify-between p-4 border-b border-gray-300 bg-white shadow-sm">
           <h2 className="font-semibold text-gray-900">章节元数据</h2>
-        <button
-          onClick={() => onClose ? onClose() : setIsCollapsed(true)}
-          className="p-1.5 hover:bg-gray-100 rounded"
-          title="关闭面板"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
+          <button
+            onClick={() => (onClose ? onClose() : setIsCollapsed(true))}
+            className="p-1.5 hover:bg-gray-100 rounded"
+            title="关闭面板"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
         </div>
         <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
           请选择一个章节
@@ -110,14 +141,31 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
       <div className="flex items-center justify-between p-4 border-b border-gray-300 bg-white shadow-sm">
         <div className="min-w-0">
           <h2 className="font-semibold text-gray-900">章节元数据</h2>
-          <div className="text-xs text-gray-500 truncate">第 {chapter.order} 章：{chapter.title}</div>
+          <div className="text-xs text-gray-500 truncate">
+            第 {chapter.order} 章：{chapter.title}
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          <button className={`px-2 py-1 text-xs border rounded ${mode === 'view' ? 'bg-gray-50' : ''}`} onClick={() => setMode('view')}>预览</button>
-          <button className={`px-2 py-1 text-xs border rounded ${mode === 'view_all' ? 'bg-gray-50' : ''}`} onClick={() => setMode('view_all')}>预览全部</button>
-          <button className={`px-2 py-1 text-xs border rounded ${mode === 'edit' ? 'bg-gray-50' : ''}`} onClick={() => setMode('edit')}>编辑</button>
           <button
-            onClick={() => onClose ? onClose() : setIsCollapsed(true)}
+            className={`px-2 py-1 text-xs border rounded ${mode === 'view' ? 'bg-gray-50' : ''}`}
+            onClick={() => setMode('view')}
+          >
+            预览
+          </button>
+          <button
+            className={`px-2 py-1 text-xs border rounded ${mode === 'view_all' ? 'bg-gray-50' : ''}`}
+            onClick={() => setMode('view_all')}
+          >
+            预览全部
+          </button>
+          <button
+            className={`px-2 py-1 text-xs border rounded ${mode === 'edit' ? 'bg-gray-50' : ''}`}
+            onClick={() => setMode('edit')}
+          >
+            编辑
+          </button>
+          <button
+            onClick={() => (onClose ? onClose() : setIsCollapsed(true))}
             className="p-1.5 hover:bg-gray-100 rounded"
             title="关闭面板"
           >
@@ -126,10 +174,9 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
         </div>
       </div>
 
-
       <div className="border-b bg-white">
         <div className="flex flex-wrap gap-1 p-2">
-          {metadataFields.map((field) => (
+          {metadataFields.map(field => (
             <button
               key={field.key}
               onClick={() => setActiveField(field.key)}
@@ -151,8 +198,15 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
         {mode === 'view' ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-medium text-gray-900">{metadataFields.find(f => f.key === activeField)?.label}</h3>
-              <button className="px-2 py-1 text-sm border rounded hover:bg-gray-50" onClick={() => setMode('edit')}>编辑此字段</button>
+              <h3 className="font-medium text-gray-900">
+                {metadataFields.find(f => f.key === activeField)?.label}
+              </h3>
+              <button
+                className="px-2 py-1 text-sm border rounded hover:bg-gray-50"
+                onClick={() => setMode('edit')}
+              >
+                编辑此字段
+              </button>
             </div>
             {loading ? (
               <div className="text-gray-500 text-sm">加载中...</div>
@@ -162,8 +216,12 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
               </div>
             )}
             <div className="text-xs text-gray-500">
-              {preview?.wordCount !== undefined && <span className="mr-3">字数：{preview.wordCount}</span>}
-              {preview?.lastModified && <span>更新于：{new Date(preview.lastModified).toLocaleString('zh-CN')}</span>}
+              {preview?.wordCount !== undefined && (
+                <span className="mr-3">字数：{preview.wordCount}</span>
+              )}
+              {preview?.lastModified && (
+                <span>更新于：{new Date(preview.lastModified).toLocaleString('zh-CN')}</span>
+              )}
             </div>
           </div>
         ) : mode === 'view_all' ? (
@@ -171,18 +229,36 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
             {loading ? (
               <div className="text-gray-500 text-sm">加载中...</div>
             ) : (
-              metadataFields.map((f) => (
+              metadataFields.map(f => (
                 <div key={f.key} className="p-3 bg-white border rounded">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-gray-900">{f.label}{f.required && <span className="text-red-500 ml-1">*</span>}</h4>
-                    <button className="px-2 py-1 text-xs border rounded hover:bg-gray-50" onClick={() => { setActiveField(f.key); setMode('edit') }}>编辑</button>
+                    <h4 className="text-sm font-medium text-gray-900">
+                      {f.label}
+                      {f.required && <span className="text-red-500 ml-1">*</span>}
+                    </h4>
+                    <button
+                      className="px-2 py-1 text-xs border rounded hover:bg-gray-50"
+                      onClick={() => {
+                        setActiveField(f.key)
+                        setMode('edit')
+                      }}
+                    >
+                      编辑
+                    </button>
                   </div>
                   <div className="mt-2 text-sm text-gray-800 whitespace-pre-wrap min-h-[80px]">
                     {previewsAll[f.key]?.current || '暂无内容'}
                   </div>
                   <div className="mt-1 text-xs text-gray-500">
-                    {previewsAll[f.key]?.wordCount !== undefined && <span className="mr-3">字数：{previewsAll[f.key]?.wordCount}</span>}
-                    {previewsAll[f.key]?.lastModified && <span>更新于：{new Date(previewsAll[f.key]!.lastModified!).toLocaleString('zh-CN')}</span>}
+                    {previewsAll[f.key]?.wordCount !== undefined && (
+                      <span className="mr-3">字数：{previewsAll[f.key]?.wordCount}</span>
+                    )}
+                    {previewsAll[f.key]?.lastModified && (
+                      <span>
+                        更新于：
+                        {new Date(previewsAll[f.key]!.lastModified!).toLocaleString('zh-CN')}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))
@@ -195,7 +271,7 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
               entityId={chapter.id}
               field={activeField}
               required={metadataFields.find(f => f.key === activeField)?.required}
-              onSave={(content) => onUpdate?.(activeField, content)}
+              onSave={content => onUpdate?.(activeField, content)}
               className="h-full"
             />
           )
@@ -205,9 +281,15 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
       {/* 底部提示 */}
       <div className="p-4 border-t border-gray-300 bg-white shadow-sm">
         <div className="text-xs text-gray-500 space-y-1">
-          <p>💡 <strong>快速保存</strong>: 点击"保存"按钮即时保存当前内容</p>
-          <p>📦 <strong>版本管理</strong>: 点击"保存版本"添加版本说明并保存历史记录</p>
-          <p>🔄 <strong>版本恢复</strong>: 点击"版本历史"查看并恢复之前的版本</p>
+          <p>
+            💡 <strong>快速保存</strong>: 点击"保存"按钮即时保存当前内容
+          </p>
+          <p>
+            📦 <strong>版本管理</strong>: 点击"保存版本"添加版本说明并保存历史记录
+          </p>
+          <p>
+            🔄 <strong>版本恢复</strong>: 点击"版本历史"查看并恢复之前的版本
+          </p>
         </div>
       </div>
     </div>

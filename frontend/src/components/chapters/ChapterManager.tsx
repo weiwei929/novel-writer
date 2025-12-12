@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { 
-  chaptersApi, 
-  projectsApi, 
-  Project, 
-  Chapter, 
-  CreateChapterData 
-} from '../../services/api'
+import { chaptersApi, projectsApi, Project, Chapter, CreateChapterData } from '../../services/api'
 import {
   Plus,
   Edit3,
@@ -18,7 +12,7 @@ import {
   BarChart3,
   ArrowUp,
   ArrowDown,
-  Play
+  Play,
 } from 'lucide-react'
 import { CreateChapterModal, EditChapterModal } from './ChapterModals'
 
@@ -31,7 +25,7 @@ interface ChapterManagerProps {
 const ChapterManager: React.FC<ChapterManagerProps> = ({
   projectId,
   currentChapterId,
-  onChapterSelect
+  onChapterSelect,
 }) => {
   const navigate = useNavigate()
   const [project, setProject] = useState<Project | null>(null)
@@ -49,12 +43,12 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
     try {
       setLoading(true)
       setError(null)
-      
+
       const [projectData, chaptersData] = await Promise.all([
         projectsApi.getById(projectId),
-        chaptersApi.getByProjectId(projectId) // 使用新的RESTful API
+        chaptersApi.getByProjectId(projectId), // 使用新的RESTful API
       ])
-      
+
       setProject(projectData)
       setChapters(chaptersData.sort((a, b) => a.order - b.order))
     } catch (err) {
@@ -65,13 +59,15 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
     }
   }
 
-  const handleCreateChapter = async (chapterData: Omit<CreateChapterData, 'projectId'> & { summary?: string; mdSynopsis?: string }) => {
+  const handleCreateChapter = async (
+    chapterData: Omit<CreateChapterData, 'projectId'> & { summary?: string; mdSynopsis?: string }
+  ) => {
     try {
       const newChapter = await chaptersApi.createForProject(projectId, {
         title: chapterData.title,
         content: chapterData.content,
         notes: chapterData.notes,
-        order: chapters.length + 1
+        order: chapters.length + 1,
       })
       // 写入章节梗概与初始元数据
       try {
@@ -84,10 +80,10 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
       } catch (metaErr) {
         console.warn('初始化章节元数据失败：', metaErr)
       }
-      
+
       setChapters([...chapters, newChapter])
       setShowCreateModal(false)
-      
+
       // 自动跳转到新章节编辑
       if (onChapterSelect) {
         onChapterSelect(newChapter)
@@ -103,7 +99,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
   const handleUpdateChapter = async (chapterId: string, updates: Partial<Chapter>) => {
     try {
       const updatedChapter = await chaptersApi.update(chapterId, updates)
-      setChapters(chapters.map(c => c.id === chapterId ? updatedChapter : c))
+      setChapters(chapters.map(c => (c.id === chapterId ? updatedChapter : c)))
       setEditingChapter(null)
     } catch (err) {
       setError('更新章节失败')
@@ -113,7 +109,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
 
   const handleDeleteChapter = async (chapterId: string) => {
     if (!confirm('确定要删除这个章节吗？此操作无法撤销！')) return
-    
+
     try {
       await chaptersApi.delete(chapterId)
       setChapters(chapters.filter(c => c.id !== chapterId))
@@ -126,22 +122,22 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
   const handleReorderChapter = async (chapterId: string, direction: 'up' | 'down') => {
     const chapterIndex = chapters.findIndex(c => c.id === chapterId)
     if (chapterIndex === -1) return
-    
+
     const targetIndex = direction === 'up' ? chapterIndex - 1 : chapterIndex + 1
     if (targetIndex < 0 || targetIndex >= chapters.length) return
-    
+
     const newChapters = [...chapters]
     const [chapter] = newChapters.splice(chapterIndex, 1)
     newChapters.splice(targetIndex, 0, chapter)
-    
+
     // 更新order字段
     const updates = newChapters.map((c, index) => ({
       ...c,
-      order: index + 1
+      order: index + 1,
     }))
-    
+
     setChapters(updates)
-    
+
     // 批量更新order（这里简化处理，实际项目中可能需要优化）
     try {
       await handleUpdateChapter(chapterId, { order: targetIndex + 1 })
@@ -155,23 +151,35 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
 
   const getStatusColor = (status: Chapter['status'] | Project['status']) => {
     switch (status) {
-      case 'draft': return 'bg-gray-100 text-gray-700 border-gray-200'
-      case 'writing': return 'bg-blue-100 text-blue-700 border-blue-200'
-      case 'completed': return 'bg-green-100 text-green-700 border-green-200'
-      case 'published': return 'bg-purple-100 text-purple-700 border-purple-200'
-      case 'archived': return 'bg-yellow-100 text-yellow-700 border-yellow-200'
-      default: return 'bg-gray-100 text-gray-700 border-gray-200'
+      case 'draft':
+        return 'bg-gray-100 text-gray-700 border-gray-200'
+      case 'writing':
+        return 'bg-blue-100 text-blue-700 border-blue-200'
+      case 'completed':
+        return 'bg-green-100 text-green-700 border-green-200'
+      case 'published':
+        return 'bg-purple-100 text-purple-700 border-purple-200'
+      case 'archived':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200'
+      default:
+        return 'bg-gray-100 text-gray-700 border-gray-200'
     }
   }
 
   const getStatusText = (status: Chapter['status'] | Project['status']) => {
     switch (status) {
-      case 'draft': return '草稿'
-      case 'writing': return '写作中'
-      case 'completed': return '已完成'
-      case 'published': return '已发布'
-      case 'archived': return '已归档'
-      default: return '未知'
+      case 'draft':
+        return '草稿'
+      case 'writing':
+        return '写作中'
+      case 'completed':
+        return '已完成'
+      case 'published':
+        return '已发布'
+      case 'archived':
+        return '已归档'
+      default:
+        return '未知'
     }
   }
 
@@ -196,10 +204,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
         <div className="text-red-700">{error}</div>
-        <button
-          onClick={loadData}
-          className="mt-2 text-red-600 hover:underline text-sm"
-        >
+        <button onClick={loadData} className="mt-2 text-red-600 hover:underline text-sm">
           重试
         </button>
       </div>
@@ -216,11 +221,13 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
               <BookOpen className="w-5 h-5 text-blue-500" />
               {project.title}
             </h2>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
+            <span
+              className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}
+            >
               {getStatusText(project.status)}
             </span>
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-1">
               <FileText className="w-4 h-4" />
@@ -277,7 +284,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
               }`}
             >
               <div className="flex items-center justify-between">
-                <div 
+                <div
                   className="flex-1 cursor-pointer"
                   onClick={() => {
                     if (onChapterSelect) {
@@ -294,11 +301,13 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
                     <h4 className="font-medium text-gray-900 hover:text-blue-600 transition-colors">
                       {chapter.title}
                     </h4>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(chapter.status)}`}>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(chapter.status)}`}
+                    >
                       {getStatusText(chapter.status)}
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center gap-4 text-sm text-gray-500">
                     <span>{chapter.wordCount.toLocaleString()} 字</span>
                     <span>{calculateReadingTime(chapter.wordCount)}</span>
@@ -310,18 +319,18 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
                 <div className="flex items-center gap-1 ml-4">
                   <button
                     onClick={() => {
-                    if (onChapterSelect) {
-                      onChapterSelect(chapter)
-                    } else {
-                      navigate(`/editor/${chapter.id}`)
-                    }
+                      if (onChapterSelect) {
+                        onChapterSelect(chapter)
+                      } else {
+                        navigate(`/editor/${chapter.id}`)
+                      }
                     }}
                     className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors"
                     title="编辑章节"
                   >
                     <Play className="w-4 h-4" />
                   </button>
-                  
+
                   <button
                     onClick={() => setEditingChapter(chapter)}
                     className="p-2 text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 rounded transition-colors"
@@ -329,7 +338,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
                   >
                     <Edit3 className="w-4 h-4" />
                   </button>
-                  
+
                   {index > 0 && (
                     <button
                       onClick={() => handleReorderChapter(chapter.id, 'up')}
@@ -339,7 +348,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
                       <ArrowUp className="w-4 h-4" />
                     </button>
                   )}
-                  
+
                   {index < chapters.length - 1 && (
                     <button
                       onClick={() => handleReorderChapter(chapter.id, 'down')}
@@ -349,7 +358,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
                       <ArrowDown className="w-4 h-4" />
                     </button>
                   )}
-                  
+
                   <button
                     onClick={() => handleDeleteChapter(chapter.id)}
                     className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"

@@ -1,6 +1,15 @@
 import React, { ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Home, FolderOpen, FileText, Edit, BarChart3, Settings, TestTube, Upload } from 'lucide-react'
+import {
+  Home,
+  FolderOpen,
+  FileText,
+  Edit,
+  BarChart3,
+  Settings,
+  TestTube,
+  Upload,
+} from 'lucide-react'
 
 interface LayoutProps {
   children: ReactNode
@@ -31,13 +40,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
               <h1 className="text-xl font-bold text-gray-900">小说创作器</h1>
             </Link>
-            
+
             <nav className="flex items-center space-x-1">
-              {navItems.map((item) => {
-                const isActive = location.pathname === item.path || 
+              {navItems.map(item => {
+                const isActive =
+                  location.pathname === item.path ||
                   (item.path !== '/' && location.pathname.startsWith(item.path))
                 const Icon = item.icon
-                
+
                 return (
                   <Link
                     key={item.path}
@@ -56,11 +66,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </nav>
 
             <div className="flex items-center space-x-3">
-              <Link
-                to="/stats"
-                className="text-gray-600 hover:text-gray-900"
-                title="统计信息"
-              >
+              <Link to="/stats" className="text-gray-600 hover:text-gray-900" title="统计信息">
                 <BarChart3 className="w-5 h-5" />
               </Link>
             </div>
@@ -69,9 +75,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </header>
 
       {/* 主要内容区域 */}
-      <main className="container mx-auto px-4 py-6">
-        {children}
-      </main>
+      <main className="container mx-auto px-4 py-6">{children}</main>
     </div>
   )
 }

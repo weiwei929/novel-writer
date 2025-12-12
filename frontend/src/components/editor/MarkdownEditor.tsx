@@ -1,7 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { Save, Eye, EyeOff, Maximize2, Minimize2, FileText, Palette } from 'lucide-react'
-import EnhancedMonacoEditor from './EnhancedMonacoEditor'
+import EnhancedMonacoEditor, { EnhancedMonacoEditorRef } from './EnhancedMonacoEditor'
 import AIAssistant from './AIAssistant'
+
+export interface MarkdownEditorRef {
+  insertContent: (text: string) => void
+}
 
 interface MarkdownEditorProps {
   initialContent?: string
@@ -11,23 +15,33 @@ interface MarkdownEditorProps {
   autoSaveDelay?: number
 }
 
-const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
+const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
   initialContent = '',
   onSave,
   onContentChange,
   autoSave = true,
-  autoSaveDelay = 2000
-}) => {
+  autoSaveDelay = 2000,
+}, ref) => {
   const [content, setContent] = useState(initialContent)
   const [displayMode, setDisplayMode] = useState<'edit' | 'preview'>('edit')
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [editorTheme, setEditorTheme] = useState<string>('novel-light')
-  
+
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout>>()
   const onSaveRef = useRef<typeof onSave>()
+  const monacoEditorRef = useRef<EnhancedMonacoEditorRef>(null)
+
   onSaveRef.current = onSave
+
+  useImperativeHandle(ref, () => ({
+    insertContent: (text: string) => {
+      if (monacoEditorRef.current) {
+        monacoEditorRef.current.insertContent(text)
+      }
+    }
+  }))
 
   // 更新内容
   useEffect(() => {
@@ -88,7 +102,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     if (!onSave) return
 
     const contentToSave = saveContent || content
-    
+
     setIsSaving(true)
     try {
       await onSave(contentToSave)
@@ -101,9 +115,14 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   }
 
   const handleSuggestionAccept = (suggestion: string) => {
-    const newContent = content + '\n\n' + suggestion
-    setContent(newContent)
-    onContentChange?.(newContent)
+    // Legacy support for AIAssistant inside MarkdownEditor (if used)
+    if (monacoEditorRef.current) {
+      monacoEditorRef.current.insertContent(suggestion)
+    } else {
+       const newContent = content + '\n\n' + suggestion
+       setContent(newContent)
+       onContentChange?.(newContent)
+    }
   }
 
   const toggleFullscreen = () => {
@@ -169,9 +188,15 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     // 增强的Markdown渲染，更好的写作预览体验
     let html = body
       // 标题 - 添加更好的间距
-      .replace(/^### (.*$)/gm, '<h3 class="text-xl font-semibold text-gray-800 mt-8 mb-4 border-b border-gray-200 pb-2">$1</h3>')
+      .replace(
+        /^### (.*$)/gm,
+        '<h3 class="text-xl font-semibold text-gray-800 mt-8 mb-4 border-b border-gray-200 pb-2">$1</h3>'
+      )
       .replace(/^## (.*$)/gm, '<h2 class="text-2xl font-bold text-gray-900 mt-10 mb-6">$1</h2>')
-      .replace(/^# (.*$)/gm, '<h1 class="text-3xl font-bold text-gray-900 mt-12 mb-8 border-b-2 border-gray-300 pb-4">$1</h1>')
+      .replace(
+        /^# (.*$)/gm,
+        '<h1 class="text-3xl font-bold text-gray-900 mt-12 mb-8 border-b-2 border-gray-300 pb-4">$1</h1>'
+      )
       // 粗体和斜体
       .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')
       .replace(/\*(.*?)\*/g, '<em class="italic text-gray-700">$1</em>')
@@ -184,18 +209,26 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       .replace(/\n/g, '<br>')
 
     // 包装列表项
-    html = html.replace(/(<li[^>]*>.*?<\/li>)/gs, '<ul class="list-disc ml-6 mb-6 space-y-1">$1</ul>')
-    
-    return { __html: propsHtml + `<div class="text-gray-800 leading-relaxed"><p class="mb-6 text-gray-800 leading-relaxed">${html}</p></div>` }
+    html = html.replace(
+      /(<li[^>]*>.*?<\/li>)/gs,
+      '<ul class="list-disc ml-6 mb-6 space-y-1">$1</ul>'
+    )
+
+    return {
+      __html:
+        propsHtml +
+        `<div class="text-gray-800 leading-relaxed"><p class="mb-6 text-gray-800 leading-relaxed">${html}</p></div>`,
+    }
   }
 
   const insertMarkdown = (before: string, after: string = '') => {
     // 这个功能将由Monaco编辑器内部处理
     console.log('插入Markdown:', before, after)
+    // Future improvement: use monacoEditorRef to insert around selection
   }
 
-  const containerClasses = isFullscreen 
-    ? 'fixed inset-0 z-50 bg-white' 
+  const containerClasses = isFullscreen
+    ? 'fixed inset-0 z-50 bg-white'
     : 'w-full h-full min-h-[600px]'
 
   const editorHeight = isFullscreen ? 'calc(100vh - 60px)' : 'calc(100vh - 220px)'
@@ -214,7 +247,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 {displayMode === 'edit' ? '编辑模式' : '预览模式'}
               </span>
             </div>
-            
+
             {/* 分隔线 */}
             <div className="h-4 w-px bg-gray-300"></div>
 
@@ -256,9 +289,9 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 >
                   列表
                 </button>
-                
+
                 <div className="h-4 w-px bg-gray-300"></div>
-                
+
                 <button
                   onClick={toggleTheme}
                   className="flex items-center space-x-1 px-3 py-1 text-sm border rounded hover:bg-gray-100"
@@ -276,9 +309,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             {/* 保存状态 */}
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               {lastSaved && (
-                <span>
-                  {isSaving ? '保存中...' : `已保存 ${lastSaved.toLocaleTimeString()}`}
-                </span>
+                <span>{isSaving ? '保存中...' : `已保存 ${lastSaved.toLocaleTimeString()}`}</span>
               )}
             </div>
 
@@ -296,8 +327,8 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               <button
                 onClick={() => setDisplayMode(displayMode === 'edit' ? 'preview' : 'edit')}
                 className={`flex items-center space-x-1 px-3 py-1.5 text-sm border rounded transition-colors ${
-                  displayMode === 'preview' 
-                    ? 'bg-blue-50 border-blue-300 text-blue-700' 
+                  displayMode === 'preview'
+                    ? 'bg-blue-50 border-blue-300 text-blue-700'
                     : 'hover:bg-gray-100'
                 }`}
                 title="切换预览"
@@ -324,6 +355,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
           /* 编辑模式 - 全宽编辑器 */
           <div className="w-full">
             <EnhancedMonacoEditor
+              ref={monacoEditorRef}
               value={content}
               onChange={handleEditorChange}
               onSave={handleSave}
@@ -357,12 +389,11 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       </div>
 
       {/* AI 助手 - 始终渲染，内部会检查设置 */}
-      <AIAssistant
-        currentContent={content}
-        onSuggestionAccept={handleSuggestionAccept}
-      />
+      <AIAssistant currentContent={content} onSuggestionAccept={handleSuggestionAccept} />
     </div>
   )
-}
+})
+
+MarkdownEditor.displayName = 'MarkdownEditor'
 
 export default MarkdownEditor

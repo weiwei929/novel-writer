@@ -23,19 +23,19 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return {
       hasError: true,
-      error
+      error,
     }
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     })
 
     // 记录错误到外部服务（如果需要）
     console.error('ErrorBoundary caught an error:', error, errorInfo)
-    
+
     // 调用外部错误处理函数
     if (this.props.onError) {
       this.props.onError(error, errorInfo)
@@ -67,9 +67,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
           <div className="sm:mx-auto sm:w-full sm:max-w-md">
             <div className="text-center">
               <AlertTriangle className="mx-auto h-16 w-16 text-red-500" />
-              <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-                出现了意外错误
-              </h2>
+              <h2 className="mt-6 text-3xl font-extrabold text-gray-900">出现了意外错误</h2>
               <p className="mt-2 text-sm text-gray-600">
                 应用程序遇到了一个意外的问题。请尝试以下解决方案：
               </p>
@@ -124,9 +122,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
               )}
 
               <div className="mt-6 text-center">
-                <p className="text-xs text-gray-500">
-                  如果问题持续存在，请联系技术支持
-                </p>
+                <p className="text-xs text-gray-500">如果问题持续存在，请联系技术支持</p>
               </div>
             </div>
           </div>
@@ -144,10 +140,7 @@ interface AsyncErrorBoundaryProps {
   onError?: (error: Error) => void
 }
 
-export const AsyncErrorBoundary: React.FC<AsyncErrorBoundaryProps> = ({ 
-  children, 
-  onError 
-}) => {
+export const AsyncErrorBoundary: React.FC<AsyncErrorBoundaryProps> = ({ children, onError }) => {
   return (
     <ErrorBoundary
       onError={(error, _errorInfo) => {
@@ -168,20 +161,12 @@ interface ErrorDisplayProps {
   className?: string
 }
 
-export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ 
-  error, 
-  onRetry,
-  className = ''
-}) => {
+export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, onRetry, className = '' }) => {
   return (
     <div className={`text-center py-8 ${className}`}>
       <AlertTriangle className="mx-auto h-12 w-12 text-red-500 mb-4" />
-      <h3 className="text-lg font-medium text-gray-900 mb-2">
-        出现错误
-      </h3>
-      <p className="text-sm text-gray-600 mb-4">
-        {error}
-      </p>
+      <h3 className="text-lg font-medium text-gray-900 mb-2">出现错误</h3>
+      <p className="text-sm text-gray-600 mb-4">{error}</p>
       {onRetry && (
         <button
           onClick={onRetry}

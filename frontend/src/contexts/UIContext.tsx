@@ -32,7 +32,7 @@ interface UIState {
 }
 
 // Actions类型
-type UIAction = 
+type UIAction =
   | { type: 'ADD_NOTIFICATION'; payload: Notification }
   | { type: 'REMOVE_NOTIFICATION'; payload: string }
   | { type: 'CLEAR_NOTIFICATIONS' }
@@ -46,9 +46,21 @@ type UIAction =
 const initialState: UIState = {
   notifications: [],
   loading: { isLoading: false },
-  theme: (() => { try { return (localStorage.getItem('theme') as 'light' | 'dark' | 'auto') || 'auto' } catch { return 'auto' } })(),
-  sidebarCollapsed: (() => { try { return localStorage.getItem('sidebarCollapsed') === 'true' } catch { return false } })(),
-  mobileMenuOpen: false
+  theme: (() => {
+    try {
+      return (localStorage.getItem('theme') as 'light' | 'dark' | 'auto') || 'auto'
+    } catch {
+      return 'auto'
+    }
+  })(),
+  sidebarCollapsed: (() => {
+    try {
+      return localStorage.getItem('sidebarCollapsed') === 'true'
+    } catch {
+      return false
+    }
+  })(),
+  mobileMenuOpen: false,
 }
 
 // Reducer
@@ -57,54 +69,58 @@ const uiReducer = (state: UIState, action: UIAction): UIState => {
     case 'ADD_NOTIFICATION':
       return {
         ...state,
-        notifications: [...state.notifications, action.payload]
+        notifications: [...state.notifications, action.payload],
       }
-    
+
     case 'REMOVE_NOTIFICATION':
       return {
         ...state,
-        notifications: state.notifications.filter(n => n.id !== action.payload)
+        notifications: state.notifications.filter(n => n.id !== action.payload),
       }
-    
+
     case 'CLEAR_NOTIFICATIONS':
       return {
         ...state,
-        notifications: []
+        notifications: [],
       }
-    
+
     case 'SET_LOADING':
       return {
         ...state,
-        loading: action.payload
+        loading: action.payload,
       }
-    
+
     case 'CLEAR_LOADING':
       return {
         ...state,
-        loading: { isLoading: false }
+        loading: { isLoading: false },
       }
-    
+
     case 'SET_THEME':
-      try { localStorage.setItem('theme', action.payload) } catch {}
+      try {
+        localStorage.setItem('theme', action.payload)
+      } catch {}
       return {
         ...state,
-        theme: action.payload
+        theme: action.payload,
       }
-    
+
     case 'TOGGLE_SIDEBAR':
       const newCollapsedState = !state.sidebarCollapsed
-      try { localStorage.setItem('sidebarCollapsed', newCollapsedState.toString()) } catch {}
+      try {
+        localStorage.setItem('sidebarCollapsed', newCollapsedState.toString())
+      } catch {}
       return {
         ...state,
-        sidebarCollapsed: newCollapsedState
+        sidebarCollapsed: newCollapsedState,
       }
-    
+
     case 'TOGGLE_MOBILE_MENU':
       return {
         ...state,
-        mobileMenuOpen: !state.mobileMenuOpen
+        mobileMenuOpen: !state.mobileMenuOpen,
       }
-    
+
     default:
       return state
   }
@@ -120,11 +136,7 @@ const UIContext = createContext<{
 export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(uiReducer, initialState)
 
-  return (
-    <UIContext.Provider value={{ state, dispatch }}>
-      {children}
-    </UIContext.Provider>
-  )
+  return <UIContext.Provider value={{ state, dispatch }}>{children}</UIContext.Provider>
 }
 
 // Hook for using UI context
@@ -147,8 +159,8 @@ export const useNotifications = () => {
       payload: {
         id,
         duration: 5000, // 默认5秒
-        ...notification
-      }
+        ...notification,
+      },
     })
     return id
   }
@@ -162,12 +174,12 @@ export const useNotifications = () => {
   }
 
   const error = (title: string, message?: string, actions?: NotificationAction[]) => {
-    return addNotification({ 
-      type: 'error', 
-      title, 
-      message, 
+    return addNotification({
+      type: 'error',
+      title,
+      message,
       actions,
-      duration: 8000 // 错误消息显示更久
+      duration: 8000, // 错误消息显示更久
     })
   }
 
@@ -184,7 +196,7 @@ export const useNotifications = () => {
     error,
     warning,
     info,
-    removeNotification
+    removeNotification,
   }
 }
 
@@ -196,17 +208,14 @@ export const useLoading = () => {
     if (isLoading) {
       dispatch({
         type: 'SET_LOADING',
-        payload: { isLoading: true, message, progress }
+        payload: { isLoading: true, message, progress },
       })
     } else {
       dispatch({ type: 'CLEAR_LOADING' })
     }
   }
 
-  const withLoading = async function<T>(
-    asyncFn: () => Promise<T>,
-    message?: string
-  ): Promise<T> {
+  const withLoading = async function <T>(asyncFn: () => Promise<T>, message?: string): Promise<T> {
     setLoading(true, message)
     try {
       const result = await asyncFn()
@@ -220,6 +229,6 @@ export const useLoading = () => {
 
   return {
     setLoading,
-    withLoading
+    withLoading,
   }
 }
