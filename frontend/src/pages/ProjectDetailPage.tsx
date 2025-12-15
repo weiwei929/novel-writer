@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
-import ChapterPlanningEditor from '../components/editor/ChapterPlanningEditor'
+import { PlannerBoard } from '../components/planner/PlannerBoard'
+import { ProjectOutline } from '../types/planner'
 import { useNotifications } from '../hooks/useNotifications'
-import { ArrowLeft, FileText, Play } from 'lucide-react'
+import { ArrowLeft, FileText, Play, Layout, Settings, List } from 'lucide-react'
+import ProjectManagementPanel from '../components/project/ProjectManagementPanel'
 
 const ProjectDetailPage: React.FC = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  const { success: notifySuccess } = useNotifications()
+  const { success: notifySuccess, error: notifyError } = useNotifications()
 
   const [project, setProject] = useState<Project | null>(null)
   const [chapters, setChapters] = useState<Chapter[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [showPlanning, setShowPlanning] = useState(false)
+  const [activeTab, setActiveTab] = useState<'chapters' | 'planner' | 'settings'>('chapters')
 
   const load = async () => {
     if (!id) return
@@ -36,6 +38,30 @@ const ProjectDetailPage: React.FC = () => {
     load()
   }, [id])
 
+  // Planner Save Handler
+  const handleOutlineSave = async (outline: ProjectOutline) => {
+    if (!project) return
+    try {
+      const updatedMetadata = {
+        ...project.metadata,
+        outline // Save outline to metadata
+      }
+      const updatedProject = await projectsApi.update(project.id, {
+        metadata: updatedMetadata
+      })
+      setProject(updatedProject)
+      notifySuccess('大纲已保存')
+    } catch (err) {
+      notifyError('保存大纲失败')
+      console.error(err)
+    }
+  }
+
+  const handleProjectUpdate = (updated: Project) => {
+      setProject(updated)
+      notifySuccess('项目信息已更新')
+  }
+
   if (loading) {
     return (
       <div className="h-[60vh] flex items-center justify-center">
@@ -44,11 +70,11 @@ const ProjectDetailPage: React.FC = () => {
     )
   }
 
-  if (error) {
+  if (error || !project) {
     return (
       <div className="p-6">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 text-red-700">
-          {error}
+          {error || '项目不存在'}
         </div>
         <button
           onClick={() => navigate('/projects')}
@@ -61,92 +87,108 @@ const ProjectDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 flex flex-col h-[calc(100vh-64px)] overflow-hidden">
       {/* 顶部栏 */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={() => navigate('/projects')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
-        >
-          <ArrowLeft className="w-5 h-5" /> 返回项目列表
-        </button>
-        <button
-          className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          onClick={() => setShowPlanning(true)}
-        >
-          管理章节规划
-        </button>
-      </div>
-
-      {/* 项目信息 */}
-      {project && (
-        <div className="bg-white rounded-lg shadow-sm border p-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold">{project.title}</h1>
-            <div className="text-sm text-gray-600">
-              共 {chapters.length} 章 · {project.wordCount.toLocaleString()} 字
-            </div>
-          </div>
-          {project.metadata?.synopsis?.current && (
-            <div className="mt-2 text-sm text-gray-700">
-              <span className="px-2 py-0.5 mr-2 rounded bg-blue-100 text-blue-700 border border-blue-200 text-xs">
-                作品梗概
-              </span>
-              <span>{project.metadata.synopsis.current}</span>
-            </div>
-          )}
+      <div className="flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-4">
+            <button
+            onClick={() => navigate('/projects')}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+            >
+            <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-xl font-bold text-gray-800">{project.title}</h1>
         </div>
-      )}
-
-      {/* 章节列表 */}
-      <div className="bg-white rounded-lg shadow-sm border">
-        <div className="p-4 border-b flex items-center justify-between">
-          <h2 className="text-lg font-semibold">章节列表</h2>
-          {/* 明确取消“新建章节”入口，统一到“管理章节规划” */}
-        </div>
-
-        {chapters.length === 0 ? (
-          <div className="p-10 text-center text-gray-500">
-            <FileText className="w-10 h-10 mx-auto mb-3 text-gray-400" />
-            <div>该项目暂时没有章节，请使用右上角“管理章节规划”进行新增与规划</div>
-          </div>
-        ) : (
-          <div className="divide-y">
-            {chapters.map(c => (
-              <div key={c.id} className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-xs px-2 py-0.5 bg-gray-100 rounded">第 {c.order} 章</span>
-                  <span className="font-medium truncate max-w-[40rem]">
-                    {c.title || `第${c.order}章`}
-                  </span>
+        
+        {/* Tabs */}
+        <div className="flex bg-gray-100 p-1 rounded-lg">
+            <button
+                onClick={() => setActiveTab('chapters')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'chapters' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+            >
+                <div className="flex items-center gap-2">
+                    <List size={16} />
+                    章节列表
                 </div>
-                <button
-                  onClick={() => navigate(`/editor/${c.id}`)}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 border rounded hover:bg-gray-50 text-gray-700"
-                  title="进入编辑器"
-                >
-                  <Play className="w-4 h-4" /> 编辑
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+            </button>
+            <button
+                onClick={() => setActiveTab('planner')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'planner' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+            >
+                <div className="flex items-center gap-2">
+                    <Layout size={16} />
+                    深度策划
+                </div>
+            </button>
+            <button
+                onClick={() => setActiveTab('settings')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'settings' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+            >
+                <div className="flex items-center gap-2">
+                    <Settings size={16} />
+                    项目设置
+                </div>
+            </button>
+        </div>
       </div>
 
-      {showPlanning && project && (
-        <ChapterPlanningEditor
-          projectId={project.id}
-          initialPlans={(project as any).chapterPlanning || []}
-          onClose={() => setShowPlanning(false)}
-          onSaved={() => {
-            setShowPlanning(false)
-            notifySuccess('章节规划已更新')
-            load()
-          }}
-        />
-      )}
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+          {activeTab === 'chapters' && (
+             <div className="bg-white rounded-lg shadow-sm border">
+                <div className="p-4 border-b flex items-center justify-between">
+                <h2 className="text-lg font-semibold">章节列表</h2>
+                </div>
+
+                {chapters.length === 0 ? (
+                <div className="p-10 text-center text-gray-500">
+                    <FileText className="w-10 h-10 mx-auto mb-3 text-gray-400" />
+                    <div>该项目暂时没有章节，请使用"管理章节规划"（待集成）或直接创建</div>
+                </div>
+                ) : (
+                <div className="divide-y">
+                    {chapters.map(c => (
+                    <div key={c.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-xs px-2 py-0.5 bg-gray-100 rounded text-gray-600">第 {c.order} 章</span>
+                        <span className="font-medium truncate max-w-[40rem] text-gray-800">
+                            {c.title || `第${c.order}章`}
+                        </span>
+                        </div>
+                        <button
+                        onClick={() => navigate(`/editor/${project.id}/${c.id}`)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 border border-blue-200 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors font-medium text-sm"
+                        title="进入编辑器"
+                        >
+                        <Play className="w-4 h-4" /> 写作
+                        </button>
+                    </div>
+                    ))}
+                </div>
+                )}
+             </div>
+          )}
+
+          {activeTab === 'planner' && (
+              <div className="h-full">
+                  <PlannerBoard 
+                    initialOutline={(project.metadata as any)?.outline} 
+                    onSave={handleOutlineSave}
+                  />
+              </div>
+          )}
+
+          {activeTab === 'settings' && (
+              <ProjectManagementPanel 
+                project={project} 
+                chapters={chapters} 
+                onProjectUpdate={handleProjectUpdate} 
+              />
+          )}
+      </div>
     </div>
   )
 }
 
 export default ProjectDetailPage
+

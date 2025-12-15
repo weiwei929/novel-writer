@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify'
+import { FastifyInstance, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../utils/db'
 
@@ -15,7 +15,8 @@ const UpdateProjectSchema = z.object({
   author: z.string().optional(),
   status: z.enum(['draft', 'writing', 'completed', 'archived']).optional(),
   coverImage: z.string().optional(),
-  metadata: z.string().optional(),
+  metadata: z.any().optional(), // Allow any JSON object/value
+  tags: z.any().optional(),     // Allow any JSON array/value
 })
 
 const ImportProjectSchema = z.object({
@@ -28,9 +29,14 @@ const ImportProjectSchema = z.object({
   createdAt: z.string().optional(), // ISO Date string
 })
 
+type GetByIdParams = { Params: { id: string } }
+type CreateProjectBody = { Body: z.infer<typeof CreateProjectSchema> }
+type UpdateProjectBody = { Params: { id: string }, Body: z.infer<typeof UpdateProjectSchema> }
+type ImportProjectBody = { Body: z.infer<typeof ImportProjectSchema> }
+
 export async function projectRoutes(app: FastifyInstance) {
   // GET /projects/:id/export - Export project as Markdown
-  app.get('/:id/export', async (req: any, reply) => {
+  app.get('/:id/export', async (req: FastifyRequest<GetByIdParams>, reply) => {
     const project = await prisma.project.findUnique({
       where: { id: req.params.id },
       include: {
@@ -61,7 +67,7 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   // POST /projects/import - Bulk import project with chapters
-  app.post('/import', async (req: any, reply) => {
+  app.post('/import', async (req: FastifyRequest<ImportProjectBody>, reply) => {
     const result = ImportProjectSchema.safeParse(req.body)
     if (!result.success) {
       return reply.status(400).send({ success: false, error: result.error.format() })
@@ -135,7 +141,7 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   // GET /projects/:id
-  app.get('/:id', async (req: any, reply) => {
+  app.get('/:id', async (req: FastifyRequest<GetByIdParams>, reply) => {
     const project = await prisma.project.findUnique({
       where: { id: req.params.id },
       include: {
@@ -147,7 +153,7 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   // POST /projects
-  app.post('/', async (req: any, reply) => {
+  app.post('/', async (req: FastifyRequest<CreateProjectBody>, reply) => {
     const result = CreateProjectSchema.safeParse(req.body)
     if (!result.success) {
       return reply.status(400).send({ success: false, error: result.error.format() })
@@ -164,7 +170,7 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   // PUT /projects/:id
-  app.put('/:id', async (req: any, reply) => {
+  app.put('/:id', async (req: FastifyRequest<UpdateProjectBody>, reply) => {
     const result = UpdateProjectSchema.safeParse(req.body)
     if (!result.success) {
       return reply.status(400).send({ success: false, error: result.error.format() })
@@ -182,7 +188,7 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   // DELETE /projects/:id
-  app.delete('/:id', async (req: any, reply) => {
+  app.delete('/:id', async (req: FastifyRequest<GetByIdParams>, reply) => {
     try {
       await prisma.project.delete({
         where: { id: req.params.id }

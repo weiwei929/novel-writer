@@ -2,13 +2,13 @@ import React, { ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   Home,
-  FolderOpen,
   FileText,
   Edit,
-  BarChart3,
+  BarChart2,
   Settings,
-  TestTube,
   Upload,
+  StickyNote,
+  Archive
 } from 'lucide-react'
 
 interface LayoutProps {
@@ -20,12 +20,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const navItems = [
     { path: '/', label: '首页', icon: Home },
-    { path: '/collections', label: '文集管理', icon: FolderOpen },
     { path: '/projects', label: '项目管理', icon: FileText },
+    { path: '/collections', label: '素材/设定', icon: Archive },
+    { path: '/scraps', label: '灵感碎片', icon: StickyNote },
     { path: '/editor', label: '写作编辑器', icon: Edit },
     { path: '/files', label: '文件管理', icon: Upload },
-    { path: '/settings', label: '设置', icon: Settings },
-    { path: '/api-test', label: 'API测试', icon: TestTube },
+    { path: '/stats', label: '数据统计', icon: BarChart2 },
+    { path: '/settings', label: '系统设置', icon: Settings },
   ]
 
   return (
@@ -67,7 +68,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
             <div className="flex items-center space-x-3">
               <Link to="/stats" className="text-gray-600 hover:text-gray-900" title="统计信息">
-                <BarChart3 className="w-5 h-5" />
+                <BarChart2 className="w-5 h-5" />
               </Link>
             </div>
           </div>

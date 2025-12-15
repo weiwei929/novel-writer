@@ -6,13 +6,15 @@ import ProjectMetadataPanel from '../components/editor/ProjectMetadataPanel'
 import ChapterMetadataPanel from '../components/editor/ChapterMetadataPanel'
 import DualModeSwitch, { EditorMode } from '../components/writer/DualModeSwitch'
 import AIAssistantPanel from '../components/writer/AIAssistantPanel'
+import AIReviewPanel from '../components/writer/AIReviewPanel'
 import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
 import { ArrowLeft, Save } from 'lucide-react'
 import { useNotifications } from '../hooks/useNotifications'
 
 const EnhancedEditorPageContent: React.FC = () => {
   const { error: notifyError, success: notifySuccess } = useNotifications()
-  const { chapterId } = useParams<{ chapterId?: string }>()
+  // 改用 projectId 和 chapterId 双参数
+  const { projectId, chapterId } = useParams<{ projectId: string, chapterId: string }>()
   const navigate = useNavigate()
   const editorRef = useRef<MarkdownEditorRef>(null)
 
@@ -34,70 +36,66 @@ const EnhancedEditorPageContent: React.FC = () => {
   const [exitStatus, setExitStatus] = useState<'writing' | 'completed'>('writing')
   const [editorMode, setEditorMode] = useState<EditorMode>('pure')
 
+  // 初始化加载：并行获取项目和章节
   useEffect(() => {
-    if (chapterId) {
-      loadChapter()
-    } else {
+    if (!projectId || !chapterId) {
       setLoading(false)
+      return
     }
-  }, [chapterId])
+    loadData(projectId, chapterId)
+  }, [projectId, chapterId])
 
-  const loadProject = async (projectId: string) => {
+  const loadData = async (pId: string, cId: string) => {
     try {
       setLoading(true)
       setError(null)
-      const [projectData, chaptersData] = await Promise.all([
-        projectsApi.getById(projectId),
-        chaptersApi.getByProjectId(projectId),
+      
+      // 1. 并行获取项目详情、章节列表、当前章节内容
+      // 这样即使章节加载失败，项目框架也能显示
+      const [projectData, chaptersData, chapterData] = await Promise.all([
+        projectsApi.getById(pId),
+        chaptersApi.getByProjectId(pId),
+        chaptersApi.getById(cId)
       ])
+
       setProject(projectData)
       setChapters(chaptersData)
-    } catch (err) {
-      setError('加载项目失败')
-      console.error('Error loading project:', err)
-      setLoading(false)
-    }
-  }
-
-  const loadChapter = async () => {
-    if (!chapterId) return
-    try {
-      setLoading(true)
-      setError(null)
-      const chapterData = await chaptersApi.getById(chapterId)
       setChapter(chapterData)
+      
+      // 2. 构造编辑器内容
       const raw = chapterData.content || ''
       const hasHeader = /^#\s/.test(raw.trim()) || /^---\n/.test(raw.trim())
       let header = ''
-      if (project) {
-        const projSynopsis = (project as any)?.metadata?.synopsis?.current || ''
-        const chapSynopsis =
-          (chapterData as any)?.summary || (chapterData as any)?.metadata?.synopsis?.current || ''
-        header += `---\nprojectTitle: ${project.title}\nprojectAuthor: ${project.author}\nprojectCreatedAt: ${new Date(project.createdAt).toLocaleDateString()}\nprojectUpdatedAt: ${new Date(project.updatedAt).toLocaleDateString()}\nprojectSynopsis: ${projSynopsis}\nchapterOrder: ${chapterData.order}\nchapterTitle: ${chapterData.title}\nchapterAuthor: ${project.author}\nchapterCreatedAt: ${new Date(chapterData.createdAt).toLocaleDateString()}\nchapterUpdatedAt: ${new Date(chapterData.updatedAt).toLocaleDateString()}\nchapterSynopsis: ${chapSynopsis}\n---\n\n# ${project.title}\n\n`
-      }
+      
+      // 总是使用最新的项目和章节元数据构造
+      const projSynopsis = (projectData as any)?.metadata?.synopsis?.current || ''
+      const chapSynopsis = (chapterData as any)?.summary || (chapterData as any)?.metadata?.synopsis?.current || ''
+      
+      header += `---\nprojectTitle: ${projectData.title}\nprojectAuthor: ${projectData.author}\nprojectCreatedAt: ${new Date(projectData.createdAt).toLocaleDateString()}\nprojectUpdatedAt: ${new Date(projectData.updatedAt).toLocaleDateString()}\nprojectSynopsis: ${projSynopsis}\nchapterOrder: ${chapterData.order}\nchapterTitle: ${chapterData.title}\nchapterAuthor: ${projectData.author}\nchapterCreatedAt: ${new Date(chapterData.createdAt).toLocaleDateString()}\nchapterUpdatedAt: ${new Date(chapterData.updatedAt).toLocaleDateString()}\nchapterSynopsis: ${chapSynopsis}\n---\n\n# ${projectData.title}\n\n`
       header += `## 第 ${chapterData.order} 章：${chapterData.title}\n\n`
+      
       const composed = hasHeader ? raw : `${header}${raw}`
       setContent(composed)
       setHasUnsavedChanges(false)
 
-      // 加载章节所属的项目
-      if (chapterData.projectId) {
-        await loadProject(chapterData.projectId)
+    } catch (err: any) {
+      console.error('加载数据失败:', err)
+      // 尝试至少保留项目上下文以便导航
+      if (err.message?.includes('Chapter')) {
+          setError('加载章节失败，找不到指定章节')
+      } else {
+          setError('加载项目数据失败')
       }
-
-      setLoading(false)
-    } catch (err) {
-      setError('加载章节失败')
-      console.error('Error loading chapter:', err)
+    } finally {
       setLoading(false)
     }
   }
 
-  // 刷新当前项目的章节列表（用于章节规划保存后）
+  // 刷新当前项目的章节列表
   const refreshChapters = async () => {
-    if (!project) return
+    if (!projectId) return
     try {
-      const chaptersData = await chaptersApi.getByProjectId(project.id)
+      const chaptersData = await chaptersApi.getByProjectId(projectId)
       setChapters(chaptersData)
     } catch (err) {
       console.error('刷新章节列表失败:', err)
@@ -181,7 +179,7 @@ const EnhancedEditorPageContent: React.FC = () => {
         // 已在 handleSave 内部处理错误提示
       }
     }
-    navigate(`/editor/${selectedChapter.id}`)
+    navigate(`/editor/${project?.id}/${selectedChapter.id}`)
   }
 
   const updateChapterAndProject = async (chapterId: string, updates: Partial<Chapter>) => {
@@ -277,7 +275,7 @@ const EnhancedEditorPageContent: React.FC = () => {
       </div>
     )
 
-  if (!chapter && !chapterId) {
+  if ((!chapter && !loading) || !chapterId) {
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="text-center text-gray-500">
@@ -337,6 +335,14 @@ const EnhancedEditorPageContent: React.FC = () => {
         <div className="flex items-center space-x-3">
           <DualModeSwitch mode={editorMode} onChange={setEditorMode} />
           
+          <button
+             onClick={() => setEditorMode(editorMode === 'review' ? 'pure' : 'review')}
+             className={`px-3 py-1.5 text-sm border rounded-lg flex items-center gap-1 transition-colors ${editorMode === 'review' ? 'bg-indigo-50 text-indigo-600 border-indigo-200' : 'text-gray-600 hover:bg-gray-50'}`}
+             title="AI 审阅"
+          >
+             <span>🔍 审阅</span>
+          </button>
+
           <div className="h-5 w-px bg-gray-300"></div>
 
           <button
@@ -457,6 +463,42 @@ const EnhancedEditorPageContent: React.FC = () => {
              <AIAssistantPanel 
                 onClose={() => setEditorMode('pure')} 
                 onApplyContent={handleApplyAIContent}
+                onUpdateMetadata={async (field, content) => {
+                    if (!project) return;
+                    try {
+                        // Append to existing content for these fields to avoid overwriting
+                        // Or just replace if it's "logline".
+                        // Logic:
+                        // - characters: Append or Replace? AI usually generates a list. Append seems safer if list.
+                        // - worldview: Append.
+                        // - logline: Replace.
+                        
+                        // For MVP, let's just append with a newline if it exists.
+                        const currentVal = (project.metadata as any)?.[field] || '';
+                        const newVal = currentVal ? `${currentVal}\n\n${content}` : content;
+                        
+                        await projectsApi.updateMetadata(project.id, field, newVal);
+                        notifySuccess('设定已更新', `已更新项目的 ${field}`);
+                        // Refresh project data to update context
+                        const updated = await projectsApi.getById(project.id);
+                        setProject(updated);
+                    } catch (e) {
+                        notifyError('更新失败', '无法保存设定');
+                    }
+                }}
+                projectId={project?.id}
+                chapterId={chapter?.id}
+             />
+           </>
+        )}
+        
+        {/* Right Panel - AI Reviewer */}
+        {editorMode === 'review' && (
+           <>
+             <div className="w-1 bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 shadow-sm"></div>
+             <AIReviewPanel 
+                content={content}
+                onClose={() => setEditorMode('pure')} 
              />
            </>
         )}

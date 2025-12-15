@@ -1,7 +1,7 @@
 import React from 'react'
 import { Sparkles, Feather } from 'lucide-react'
 
-export type EditorMode = 'pure' | 'ai'
+export type EditorMode = 'pure' | 'ai' | 'review'
 
 interface DualModeSwitchProps {
   mode: EditorMode

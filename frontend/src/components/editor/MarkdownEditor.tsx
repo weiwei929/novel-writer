@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { Save, Eye, EyeOff, Maximize2, Minimize2, FileText, Palette } from 'lucide-react'
 import EnhancedMonacoEditor, { EnhancedMonacoEditorRef } from './EnhancedMonacoEditor'
-import AIAssistant from './AIAssistant'
+
 
 export interface MarkdownEditorRef {
   insertContent: (text: string) => void
@@ -114,16 +114,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
     }
   }
 
-  const handleSuggestionAccept = (suggestion: string) => {
-    // Legacy support for AIAssistant inside MarkdownEditor (if used)
-    if (monacoEditorRef.current) {
-      monacoEditorRef.current.insertContent(suggestion)
-    } else {
-       const newContent = content + '\n\n' + suggestion
-       setContent(newContent)
-       onContentChange?.(newContent)
-    }
-  }
+
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen)
@@ -388,8 +379,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
         )}
       </div>
 
-      {/* AI 助手 - 始终渲染，内部会检查设置 */}
-      <AIAssistant currentContent={content} onSuggestionAccept={handleSuggestionAccept} />
+      {/* AI 助手 - 已迁移至 EnhancedEditorPage 的 SidePanel，此处移除旧版悬浮球 */}
     </div>
   )
 })

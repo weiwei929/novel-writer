@@ -35,14 +35,13 @@ model Project {
   wordCount    Int      @default(0)
   
   // Flexible Metadata (For Living Guidebook / Synopsis etc.)
-  // Flexible Metadata (For Living Guidebook / Synopsis etc.)
-  metadata     String?  // JSON string: { "synopsis": "...", "outline": ... }
+  metadata     Json?    // { "synopsis": "...", "outline": ... }
   
   // The "Deep Line" (暗线) - AI Guidance
   masterPrompt String?  // The distilled prompt from Socratic dialogue
   
   // Collection Management
-  tags         String?  // JSON string: ["玄幻", "大女主"]
+  tags         Json?    // ["玄幻", "大女主"]
   
   
   // Relations
@@ -67,7 +66,7 @@ model Chapter {
   
   wordCount Int      @default(0)
   summary   String?  // Chapter synopsis
-  metadata  String?  // JSON string for extra data
+  metadata  Json?    // JSON string for extra data
   
   projectId String
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -87,7 +86,7 @@ model Scrap {
   id        String   @id @default(uuid())
   content   String
   note      String?  // User's note on why they clipped this
-  tags      String?  // JSON string or comma-separated tags
+  tags      Json?    // JSON string or comma-separated tags
   
   // Where did this come from?
   projectId String
@@ -110,7 +109,7 @@ model Character {
   description String?
   
   // Detailed traits stored as JSON for flexibility
-  profile     String? // JSON: { "age": 20, "appearance": "...", "relationships": [] }
+  profile     Json?   // { "age": 20, "appearance": "...", "relationships": [] }
   
   projectId   String
   project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)

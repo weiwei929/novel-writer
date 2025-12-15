@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify'
+import { FastifyInstance, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../utils/db'
 
@@ -12,6 +12,10 @@ const UpdateCollectionSchema = z.object({
   name: z.string().optional(),
   description: z.string().optional(),
 })
+
+type CreateCollectionBody = { Body: z.infer<typeof CreateCollectionSchema> }
+type UpdateCollectionBody = { Params: { id: string }, Body: z.infer<typeof UpdateCollectionSchema> }
+type GetByIdParams = { Params: { id: string } }
 
 export async function collectionRoutes(app: FastifyInstance) {
   // GET /collections
@@ -28,7 +32,7 @@ export async function collectionRoutes(app: FastifyInstance) {
   })
 
   // GET /collections/:id
-  app.get('/:id', async (req: any, reply) => {
+  app.get('/:id', async (req: FastifyRequest<GetByIdParams>, reply) => {
     const collection = await prisma.collection.findUnique({
       where: { id: req.params.id },
       include: {
@@ -41,7 +45,7 @@ export async function collectionRoutes(app: FastifyInstance) {
   })
 
   // POST /collections
-  app.post('/', async (req: any, reply) => {
+  app.post('/', async (req: FastifyRequest<CreateCollectionBody>, reply) => {
     const result = CreateCollectionSchema.safeParse(req.body)
     if (!result.success) {
       return reply.status(400).send({ success: false, error: result.error.format() })
@@ -59,7 +63,7 @@ export async function collectionRoutes(app: FastifyInstance) {
   })
 
   // PUT /collections/:id
-  app.put('/:id', async (req: any, reply) => {
+  app.put('/:id', async (req: FastifyRequest<UpdateCollectionBody>, reply) => {
     const result = UpdateCollectionSchema.safeParse(req.body)
     if (!result.success) {
       return reply.status(400).send({ success: false, error: result.error.format() })
@@ -77,7 +81,7 @@ export async function collectionRoutes(app: FastifyInstance) {
   })
 
   // DELETE /collections/:id
-  app.delete('/:id', async (req: any, reply) => {
+  app.delete('/:id', async (req: FastifyRequest<GetByIdParams>, reply) => {
     try {
       await prisma.collection.delete({
         where: { id: req.params.id }

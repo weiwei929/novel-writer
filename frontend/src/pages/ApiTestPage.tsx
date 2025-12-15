@@ -9,7 +9,7 @@ import {
   Wifi,
   RefreshCw,
 } from 'lucide-react'
-import { collectionsApi, projectsApi, chaptersApi } from '../services/api'
+import { collectionsApi, projectsApi, chaptersApi, aiApi } from '../services/api'
 
 interface ApiTestResult {
   endpoint: string
@@ -46,7 +46,7 @@ const ApiTestPage: React.FC = () => {
     },
     {
       name: 'Collections API - Get All',
-      endpoint: '/api/v1/collections',
+      endpoint: '/api/v2/collections',
       test: async () => {
         const collections = await collectionsApi.getAll()
         return `成功获取 ${collections.length} 个文集`
@@ -54,7 +54,7 @@ const ApiTestPage: React.FC = () => {
     },
     {
       name: 'Collections API - Create',
-      endpoint: '/api/v1/collections',
+      endpoint: '/api/v2/collections',
       test: async () => {
         const collection = await collectionsApi.create({
           name: `测试文集_${Date.now()}`,
@@ -66,7 +66,7 @@ const ApiTestPage: React.FC = () => {
     },
     {
       name: 'Projects API - Get All',
-      endpoint: '/api/v1/projects',
+      endpoint: '/api/v2/projects',
       test: async () => {
         const projects = await projectsApi.getAll()
         return `成功获取 ${projects.length} 个项目`
@@ -74,7 +74,7 @@ const ApiTestPage: React.FC = () => {
     },
     {
       name: 'Projects API - Create',
-      endpoint: '/api/v1/projects',
+      endpoint: '/api/v2/projects',
       test: async () => {
         const project = await projectsApi.create({
           title: `测试项目_${Date.now()}`,
@@ -88,7 +88,7 @@ const ApiTestPage: React.FC = () => {
     },
     {
       name: 'Chapters API - Create',
-      endpoint: '/api/v1/chapters',
+      endpoint: '/api/v2/chapters',
       test: async () => {
         // 先获取一个项目ID
         const projects = await projectsApi.getAll()
@@ -107,7 +107,7 @@ const ApiTestPage: React.FC = () => {
     },
     {
       name: 'Chapters API - Get by Project',
-      endpoint: '/api/v1/chapters',
+      endpoint: '/api/v2/chapters',
       test: async () => {
         const projects = await projectsApi.getAll()
         if (projects.length === 0) {
@@ -127,6 +127,22 @@ const ApiTestPage: React.FC = () => {
         const projects = await projectsApi.getAll()
         const totalItems = collections.length + projects.length
         return `数据持久化正常 - 共 ${totalItems} 条记录`
+      },
+    },
+    {
+      name: 'AI Context Injection (Tier A)',
+      endpoint: '/api/v2/ai/chat',
+      test: async () => {
+        const projects = await projectsApi.getAll()
+        if (projects.length === 0) throw new Error('Need a project to test context')
+        const p = projects[0]
+        
+        // Verify backend accepts projectId without error
+        await aiApi.chat(
+            [{ role: 'user', content: 'What is this project about?' }],
+            { projectId: p.id }
+        )
+        return `Successfully injected context for project: ${p.title}`
       },
     },
   ]

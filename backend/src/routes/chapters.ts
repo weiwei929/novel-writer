@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify'
+import { FastifyInstance, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../utils/db'
 
@@ -8,7 +8,7 @@ const CreateChapterSchema = z.object({
   order: z.number().int().optional(),
   content: z.string().optional(),
   summary: z.string().optional(),
-  metadata: z.string().optional(),
+  metadata: z.any().optional(),
 })
 
 const UpdateChapterSchema = z.object({
@@ -18,8 +18,13 @@ const UpdateChapterSchema = z.object({
   status: z.enum(['draft', 'writing', 'completed']).optional(),
   wordCount: z.number().int().optional(),
   summary: z.string().optional(),
-  metadata: z.string().optional(),
+  metadata: z.any().optional(),
 })
+
+type CreateChapterBody = { Body: z.infer<typeof CreateChapterSchema> }
+type UpdateChapterBody = { Params: { id: string }, Body: z.infer<typeof UpdateChapterSchema> }
+type GetByIdParams = { Params: { id: string } }
+type GetByProjectParams = { Params: { projectId: string } }
 
 function countWords(text: string): number {
   // Simple word count logic (compatible with CJK)
@@ -30,7 +35,7 @@ function countWords(text: string): number {
 
 export async function chapterRoutes(app: FastifyInstance) {
   // GET /chapters/project/:projectId
-  app.get('/project/:projectId', async (req: any, reply) => {
+  app.get('/project/:projectId', async (req: FastifyRequest<GetByProjectParams>, reply) => {
     const chapters = await prisma.chapter.findMany({
       where: { projectId: req.params.projectId },
       orderBy: { order: 'asc' },
@@ -39,7 +44,7 @@ export async function chapterRoutes(app: FastifyInstance) {
   })
 
   // GET /chapters/:id
-  app.get('/:id', async (req: any, reply) => {
+  app.get('/:id', async (req: FastifyRequest<GetByIdParams>, reply) => {
     const chapter = await prisma.chapter.findUnique({
       where: { id: req.params.id }
     })
@@ -48,7 +53,7 @@ export async function chapterRoutes(app: FastifyInstance) {
   })
 
   // POST /chapters
-  app.post('/', async (req: any, reply) => {
+  app.post('/', async (req: FastifyRequest<CreateChapterBody>, reply) => {
     const result = CreateChapterSchema.safeParse(req.body)
     if (!result.success) {
       return reply.status(400).send({ success: false, error: result.error.format() })
@@ -81,7 +86,7 @@ export async function chapterRoutes(app: FastifyInstance) {
   })
 
   // PUT /chapters/:id
-  app.put('/:id', async (req: any, reply) => {
+  app.put('/:id', async (req: FastifyRequest<UpdateChapterBody>, reply) => {
     const result = UpdateChapterSchema.safeParse(req.body)
     if (!result.success) {
       return reply.status(400).send({ success: false, error: result.error.format() })
@@ -111,7 +116,7 @@ export async function chapterRoutes(app: FastifyInstance) {
   })
 
   // DELETE /chapters/:id
-  app.delete('/:id', async (req: any, reply) => {
+  app.delete('/:id', async (req: FastifyRequest<GetByIdParams>, reply) => {
     try {
       const chapter = await prisma.chapter.delete({
         where: { id: req.params.id }

@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Project, projectsApi } from '../../services/api'
 import { ProjectCard } from './ProjectCard'
 import { Inbox, PenTool, CheckCircle } from 'lucide-react'
+import { GlobalReviewModal } from './GlobalReviewModal'
 
 interface KanbanBoardProps {
   projects: Project[]
@@ -18,6 +19,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   onExport,
   onPreview,
 }) => {
+  const [reviewModalProject, setReviewModalProject] = useState<Project | null>(null);
+
   // Group projects by internal columns
   const columns = {
     imported: projects.filter(p => p.status === 'imported'),
@@ -33,6 +36,10 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
       console.error('Failed to update status', error)
       alert("更新状态失败")
     }
+  }
+
+  const handleReview = (project: Project) => {
+      setReviewModalProject(project);
   }
 
   return (
@@ -106,6 +113,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
               onExport={onExport}
               // No status change forward from completed for now, maybe "Reopen"?
               onStatusChange={(p) => handleStatusChange(p, 'draft')} // Allow reopen
+              onReview={handleReview}
             />
           ))}
           {columns.completed.length === 0 && (
@@ -115,6 +123,15 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
           )}
         </div>
       </div>
+
+      {reviewModalProject && (
+        <GlobalReviewModal 
+            isOpen={!!reviewModalProject}
+            onClose={() => setReviewModalProject(null)}
+            projectId={reviewModalProject.id}
+            projectTitle={reviewModalProject.title}
+        />
+      )}
     </div>
   )
 }

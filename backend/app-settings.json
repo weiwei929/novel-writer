@@ -1,0 +1,8 @@
+{
+  "ai": {
+    "provider": "gemini",
+    "apiKey": "AIzaSyCZwws_4d__563ZZKZ6IKJvoN4XO-RwJ28",
+    "model": "gemini-2.0-flash-exp",
+    "baseUrl": "https://generativelanguage.googleapis.com"
+  }
+}

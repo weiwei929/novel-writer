@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { handleApiResponse, handleApiError } from '../types/api'
 
-const API_BASE_URL = 'http://localhost:5000/api/v2'
+const API_BASE_URL = '/api/v2'
 
 // Create Axios Instance
 const api = axios.create({
@@ -25,17 +25,31 @@ api.interceptors.response.use(
   }
 )
 
-// --- Type Definitions (kept for compatibility) ---
+// --- Type Definitions ---
+
+// Type definitions
+export interface ApiResponse<T = any> {
+  success: boolean
+  data?: T
+  error?: {
+    code: number
+    message: string
+  }
+}
 
 export interface Collection {
   id: string
   name: string
   description?: string
-  // Backend V2 might not return these yet, keeping optional
-  tags?: string[]
-  projectCount?: number
+  projects?: Project[]
   createdAt: string
   updatedAt: string
+}
+
+export interface CreateCollectionData {
+  name: string
+  description?: string
+  tags?: string[]
 }
 
 export interface Project {
@@ -43,21 +57,16 @@ export interface Project {
   title: string
   description?: string
   author: string
-  status: 'draft' | 'writing' | 'completed' | 'archived' | 'imported'
+  status: 'draft' | 'writing' | 'completed' | 'archived' | 'imported' | 'published'
   collectionId?: string 
   wordCount: number
-  // chapterCount is returned by backend in _count or separate field?
-  // Backend V2: include: { _count: { select: { chapters: true } } }
-  // Only mapped if we transform it.
-  // For now, let's assume the UI might break or show 0 if not mapped.
-  // We'll fix validatiors later.
   chapterCount?: number 
   createdAt: string
   updatedAt: string
   coverImage?: string
-  metadata?: Record<string, any> // For living guidebook extensions
+  metadata?: Record<string, any> // Now natively JSON object
   genre?: string[]
-  tags?: string[]
+  tags?: string[] // Now natively JSON array
   masterPrompt?: string
 }
 
@@ -72,8 +81,6 @@ export interface CreateProjectData {
   masterPrompt?: string
 }
 
-
-
 export interface Chapter {
   id: string
   projectId: string
@@ -85,6 +92,16 @@ export interface Chapter {
   createdAt: string
   updatedAt: string
   summary?: string
+  metadata?: Record<string, any>
+  notes?: string // Mapped from metadata.notes
+}
+
+export interface CreateChapterData {
+  projectId: string
+  title: string
+  content?: string
+  notes?: string
+  order?: number
 }
 
 export interface Scrap {
@@ -92,57 +109,61 @@ export interface Scrap {
   projectId: string
   content: string
   note?: string
-  tags?: string
+  tags?: string[] | string // Can be array or string depending on usage, DB is Json
   originalChapterId?: string
   createdAt: string
 }
 
 export const collectionsApi = {
-  // Skeleton implementation for now
   async getAll(): Promise<Collection[]> {
-    // V2 doesn't have collections route yet, return empty or mock
-    // Or maybe we should implement it?
-    // Let's return empty array to prevent crash
-    console.warn('Collections API not fully implemented in V2 yet.')
-    return []
+    const response = await api.get('/collections')
+    return (response.data || []).map((c: any) => ({
+      ...c,
+      tags: c.tags || [],
+      projectCount: c._count?.projects || c.projectCount || 0
+    }))
   },
-  async getById(_id: string): Promise<Collection> {
-      throw new Error("Not implemented")
+  async getById(id: string): Promise<Collection> {
+      const response = await api.get(`/collections/${id}`)
+      return response.data
+  },
+  async create(data: { name: string; description?: string; tags?: string[] }): Promise<Collection> {
+      const response = await api.post('/collections', data)
+      return response.data
+  },
+
+  async update(id: string, data: { name?: string; description?: string; tags?: string[] }): Promise<Collection> {
+      const response = await api.put(`/collections/${id}`, data)
+      return response.data
+  },
+
+  async delete(id: string): Promise<void> {
+      await api.delete(`/collections/${id}`)
   }
 }
 
-// ...
-
 export const projectsApi = {
   async getAll(_collectionId?: string): Promise<Project[]> {
-    // V2 returns all projects. Collection filtering not yet implemented.
+    // V2 return all (filtering not implemented)
     const response = await api.get('/projects')
-    // Ensure arrays are present to prevent frontend crashes
-    return (response.data || []).map((p: any) => {
-      let tags = []
-      try {
-        tags = typeof p.tags === 'string' ? JSON.parse(p.tags) : (p.tags || [])
-      } catch (e) { tags = [] }
-      
-      let metadata = {}
-      try {
-         metadata = typeof p.metadata === 'string' ? JSON.parse(p.metadata) : (p.metadata || {})
-      } catch { metadata = {} }
-
-      return {
+    // No more manual JSON parsing needed!
+    return (response.data || []).map((p: any) => ({
         ...p,
-        tags: tags,
-        genre: p.genre || [], // Legacy or mapped from tags
-        status: p.status || 'draft',
-        metadata: metadata,
-        masterPrompt: p.masterPrompt
-      }
-    })
+        tags: p.tags || [],
+        metadata: p.metadata || {},
+        genre: p.tags || [], // Mapping tags to genre for compatibility if needed
+        status: p.status || 'draft'
+    }))
   },
 
   async getById(id: string): Promise<Project> {
     const response = await api.get(`/projects/${id}`)
-    return response.data
+    const p = response.data
+    return {
+        ...p,
+        tags: p.tags || [],
+        metadata: p.metadata || {}
+    }
   },
 
   async create(data: Partial<Project>): Promise<Project> {
@@ -169,16 +190,10 @@ export const projectsApi = {
     return response.data
   },
 
-  // Metadata / Stats / Other V1 methods - Stubbed or Adapted
   async updateMetadata(projectId: string, field: string, content: string) {
-      // Simple implementation: modify metadata JSON
-      // This is a naive implementation (race conditions possible), but works for single user
       try {
         const project = await this.getById(projectId)
         const meta = project.metadata || {}
-        // Logic to update nested field? Or just flat?
-        // Legacy: field might be 'synopsis'.
-        // Let's just store it.
         meta[field] = content
         return await this.update(projectId, { metadata: meta })
       } catch (e) {
@@ -191,22 +206,49 @@ export const projectsApi = {
 export const chaptersApi = {
   async getByProjectId(projectId: string): Promise<Chapter[]> {
     const response = await api.get(`/chapters/project/${projectId}`)
-    return response.data
+    return (response.data || []).map((c: any) => ({
+        ...c,
+        metadata: c.metadata || {},
+        notes: c.metadata?.notes || ''
+    }))
   },
 
   async getById(id: string): Promise<Chapter> {
     const response = await api.get(`/chapters/${id}`)
-    return response.data
+    const c = response.data
+    return {
+        ...c,
+        metadata: c.metadata || {},
+        notes: c.metadata?.notes || ''
+    }
   },
 
-  async create(data: { projectId: string; title: string; content?: string; order?: number }): Promise<Chapter> {
-    const response = await api.post('/chapters', data)
-    return response.data
+  async create(data: { projectId: string; title: string; content?: string; order?: number; notes?: string; summary?: string }): Promise<Chapter> {
+    const payload = { ...data, metadata: { notes: data.notes } }
+    const response = await api.post('/chapters', payload)
+     const c = response.data
+    return {
+        ...c,
+        metadata: c.metadata || {},
+        notes: c.metadata?.notes || ''
+    }
   },
 
-  async update(id: string, data: Partial<Chapter>): Promise<Chapter> {
-    const response = await api.put(`/chapters/${id}`, data)
-    return response.data
+  async update(id: string, data: Partial<Chapter> & { notes?: string }): Promise<Chapter> {
+    let payload = { ...data }
+    if (data.notes !== undefined) {
+         // Merge notes into metadata
+         const current = await this.getById(id)
+         const meta = { ...(current.metadata || {}), notes: data.notes }
+         payload.metadata = meta
+    }
+    const response = await api.put(`/chapters/${id}`, payload)
+    const c = response.data
+    return {
+        ...c,
+        metadata: c.metadata || {},
+        notes: c.metadata?.notes || ''
+    }
   },
 
   async delete(id: string): Promise<void> {
@@ -217,21 +259,18 @@ export const chaptersApi = {
     if (field === 'synopsis') {
        return await this.update(chapterId, { summary: content })
     }
-    // Fallback to metadata JSON
     try {
-        await this.getById(chapterId)
-        // chapter.metadata is string in DB but mapped to object in interface?  
-        // Wait, interface says string? No, I defined it as string?
-        // I need to check interface definition in this file.
-        // Let's assume backend returns JSON string, frontend needs to parse.
-        // But better to let backend parse?
-        // For now, let's just ignore non-synopsis metadata updates to avoid complexity
-        console.warn(`Chapter metadata update for ${field} not fully implemented.`)
-        return {}
+        const chapter = await this.getById(chapterId)
+        const meta = chapter.metadata || {}
+        meta[field] = content;
+        return await this.update(chapterId, { metadata: meta })
     } catch (e) { return {} }
   },
 
-  // Method expected by frontend logic in some places?
+  async createForProject(projectId: string, data: Omit<CreateChapterData, 'projectId'>): Promise<Chapter> {
+      return this.create({ ...data, projectId })
+  },
+  
   async getByProject(projectId: string) {
       return this.getByProjectId(projectId)
   }
@@ -243,7 +282,7 @@ export const scrapsApi = {
     return response.data
   },
   
-  async create(data: { projectId: string; content: string; tags?: string; note?: string }): Promise<Scrap> {
+  async create(data: { projectId: string; content: string; tags?: string[]; note?: string }): Promise<Scrap> {
     const response = await api.post('/scraps', data)
     return response.data
   },
@@ -251,6 +290,12 @@ export const scrapsApi = {
   async delete(id: string): Promise<void> {
      await api.delete(`/scraps/${id}`)
   }
+}
+
+
+export const settingsApi = {
+  get: () => api.get<ApiResponse<any>>('/settings').then(res => res.data),
+  update: (data: any) => api.put<ApiResponse<any>>('/settings', data).then(res => res.data),
 }
 
 export const aiApi = {
@@ -263,28 +308,140 @@ export const aiApi = {
       }
   },
 
-  async chat(messages: { role: string, content: string }[]): Promise<string> {
-      const response = await api.post<{ content: string }>('/ai/chat', { messages })
+  async chat(messages: { role: string, content: string }[], options?: { projectId?: string, chapterId?: string,  contextType?: 'chat' | 'writing' | 'global' | 'chapter_review', writingType?: string, currentContent?: string }): Promise<string> {
+      const payload = { messages, ...options };
+      const response = await api.post<{ content: string }>('/ai/chat', payload)
       return response.data.content
   },
 
-  // Convenience methods
-  async generate(prompt: string) { 
-      return this.chat([{ role: 'user', content: prompt }]) 
-  },
-  
-  async getWritingSuggestion(currentText: string) { 
-      return this.chat([
-          { role: 'system', content: 'You are a helpful writing assistant. Provide a brief suggestion or continuation for the text.' },
-          { role: 'user', content: currentText }
-      ]) 
+  async generate(data: {
+    prompt: string
+    context?: string
+    systemPrompt?: string
+    maxTokens?: number
+    temperature?: number
+    projectId?: string
+  }): Promise<ApiResponse<{ content: string }>> {
+    try {
+      // Check if context is just a string or more complex?
+      // For now, mapping to chat structure
+      const response = await api.post('/ai/chat', {
+        messages: [
+          ...(data.systemPrompt ? [{ role: 'system', content: data.systemPrompt }] : []),
+          ...(data.context ? [{ role: 'user', content: `Context: ${data.context}` }] : []),
+          { role: 'user', content: data.prompt }
+        ],
+        projectId: data.projectId,
+        contextType: 'chat'
+      })
+      return { success: true, data: response.data }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: {
+          code: error.response?.status || 500,
+          message: error.response?.data?.error || 'AI request failed'
+        }
+      }
+    }
   },
 
-  async generateCharacter(description: string) { 
-      return this.chat([
-          { role: 'system', content: 'Generate a character profile JSON based on the description.' },
-          { role: 'user', content: description }
-      ]) 
+  // ... (generateOutline and reviewChapter can remain for now, or update if Outline generation needs Tier A)
+
+  async getWritingSuggestion(data: { content: string, type: 'continue' | 'improve' | 'brainstorm', chapterId?: string }) { 
+      // No manual system prompt here if using backend context manager?
+      // For now, let's keep basic system prompt as fallback or override?
+      // Actually PromptManager handles system prompt now.
+      // But we still need to pass user message.
+      
+      const payload = {
+          messages: [{ role: 'user', content: data.content }], // Or empty if content is sent as currentContent parameter?
+          // If type is continue, user message is empty? 
+          // PromptManager logic:
+          // getWritingSystemPrompt uses `currentContent`.
+          // System prompt says "Output ONLY continuation".
+          // So user message might just be "Continue" or empty.
+          // Let's pass content as `currentContent` param, and user message as empty or instruction.
+          
+          chapterId: data.chapterId,
+          contextType: 'writing' as const,
+          writingType: data.type,
+          currentContent: data.content
+      };
+
+      try {
+        // If chapterId is missing (e.g. new file), PromptManager won't work.
+        // Fallback to client-side prompt logic?
+        if (!data.chapterId) {
+             let systemPrompt = 'You are a helpful writing assistant.'
+             if (data.type === 'continue') systemPrompt = 'You are a co-writer. Continue the story naturally from the provided text.'
+             if (data.type === 'improve') systemPrompt = 'You are an editor. Improve the provided text for clarity and style.'
+             if (data.type === 'brainstorm') systemPrompt = 'You are a creative muse. Provide 3 interesting plot twists or ideas based on the text.'
+             
+             const content = await this.chat([
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: data.content }
+             ]);
+             return { success: true, data: { suggestion: content } }
+        }
+
+        // Use new Backend Context Logic
+        // We pass empty user message because SystemPrompt + Context handles everything.
+        // Actually, for 'continue', we might want user message to be "Continue from: ..."
+        // But PromptManager appends content to Context.
+        // Let's just send a dummy user trigger.
+        const content = await this.chat(
+            [{ role: 'user', content: 'Please proceed based on context.' }], 
+            payload
+        )
+        return { success: true, data: { suggestion: content } }
+      } catch (error: any) {
+        return { 
+            success: false, 
+            error: { code: 500, message: 'Failed to get suggestion' }
+        }
+      }
+  },
+
+  async generateCharacter(description: string): Promise<ApiResponse<{ character: string }>> { 
+      try {
+        const content = await this.chat([
+            { role: 'system', content: 'Generate a character profile JSON based on the description.' },
+            { role: 'user', content: description }
+        ]) 
+        return { success: true, data: { character: content } }
+      } catch (error: any) {
+        return {
+          success: false,
+          error: {
+            code: error.response?.status || 500,
+            message: error.response?.data?.error || 'Character generation failed'
+          }
+        }
+      }
+  }
+}
+
+export const statsApi = {
+  async get() {
+    // Mock implementation using projects aggregation or endpoint if available
+    try {
+        const projects = await projectsApi.getAll()
+        const collections = await collectionsApi.getAll()
+        const totalWords = projects.reduce((acc, p) => acc + (p.wordCount || 0), 0)
+        const chaptersCount = projects.reduce((acc, p) => acc + (p.chapterCount || 0), 0)
+        
+        return {
+            collections: collections.length,
+            projects: projects.length,
+            chapters: chaptersCount,
+            totalWords: totalWords,
+            lastUpdated: new Date().toISOString()
+        }
+    } catch (e) {
+        console.error("Stats aggregation failed", e)
+        return { collections: 0, projects: 0, chapters: 0, totalWords: 0, lastUpdated: new Date().toISOString() }
+    }
   }
 }
 

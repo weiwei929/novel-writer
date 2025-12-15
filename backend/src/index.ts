@@ -7,6 +7,7 @@ import { chapterRoutes } from './routes/chapters'
 import { scrapRoutes } from './routes/scraps'
 import { authRoutes } from './routes/auth'
 import { aiRoutes } from './routes/ai'
+import { collectionRoutes } from './routes/collections'
 
 const server = Fastify({
   logger: true,
@@ -33,9 +34,7 @@ server.get('/health', async (request, reply) => {
 })
 
 // Register Routes
-import { collectionRoutes } from './routes/collections'
-
-// ...
+import { settingsRoutes } from './routes/settings'
 
 // Register Routes
 server.register(projectRoutes, { prefix: '/api/v2/projects' })
@@ -44,6 +43,7 @@ server.register(scrapRoutes, { prefix: '/api/v2/scraps' })
 server.register(collectionRoutes, { prefix: '/api/v2/collections' })
 server.register(authRoutes, { prefix: '/api/v2/auth' })
 server.register(aiRoutes, { prefix: '/api/v2/ai' })
+server.register(settingsRoutes, { prefix: '/api/v2/settings' })
 
 // Run Server
 const start = async () => {

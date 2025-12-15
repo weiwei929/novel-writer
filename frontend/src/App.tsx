@@ -15,11 +15,13 @@ const EnhancedEditorPage = lazy(() => import('./pages/EnhancedEditorPage'))
 const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage'))
 const StatsPage = lazy(() => import('./pages/StatsPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
-const ApiTestPage = lazy(() => import('./pages/ApiTestPage'))
 const FileManagerPage = lazy(() => import('./pages/FileManagerPage'))
+const ApiTestPage = lazy(() => import('./pages/ApiTestPage'))
 
-// 页面加载包装组件
-const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+import { PageWrapper as UI_PageWrapper } from './components/layout/PageWrapper'
+
+// 页面加载包装组件 - 处理 Suspense
+const SuspenseWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <Suspense
     fallback={
       <div className="flex items-center justify-center min-h-screen">
@@ -27,7 +29,9 @@ const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
       </div>
     }
   >
-    {children}
+    <UI_PageWrapper>
+      {children}
+    </UI_PageWrapper>
   </Suspense>
 )
 
@@ -41,79 +45,9 @@ function App() {
               path: '/',
               element: (
                 <Layout>
-                  <PageWrapper>
+                  <SuspenseWrapper>
                     <HomePage />
-                  </PageWrapper>
-                </Layout>
-              ),
-            },
-            {
-              path: '/collections',
-              element: (
-                <Layout>
-                  <PageWrapper>
-                    <CollectionsPage />
-                  </PageWrapper>
-                </Layout>
-              ),
-            },
-            {
-              path: '/projects',
-              element: (
-                <Layout>
-                  <PageWrapper>
-                    <ProjectsPage />
-                  </PageWrapper>
-                </Layout>
-              ),
-            },
-            {
-              path: '/projects/:id',
-              element: (
-                <Layout>
-                  <PageWrapper>
-                    <ProjectDetailPage />
-                  </PageWrapper>
-                </Layout>
-              ),
-            },
-            {
-              path: '/editor/:chapterId',
-              element: (
-                <Layout>
-                  <PageWrapper>
-                    <EnhancedEditorPage />
-                  </PageWrapper>
-                </Layout>
-              ),
-            },
-            {
-              path: '/editor',
-              element: (
-                <Layout>
-                  <PageWrapper>
-                    <EnhancedEditorPage />
-                  </PageWrapper>
-                </Layout>
-              ),
-            },
-            {
-              path: '/stats',
-              element: (
-                <Layout>
-                  <PageWrapper>
-                    <StatsPage />
-                  </PageWrapper>
-                </Layout>
-              ),
-            },
-            {
-              path: '/files',
-              element: (
-                <Layout>
-                  <PageWrapper>
-                    <FileManagerPage />
-                  </PageWrapper>
+                  </SuspenseWrapper>
                 </Layout>
               ),
             },
@@ -121,9 +55,79 @@ function App() {
               path: '/settings',
               element: (
                 <Layout>
-                  <PageWrapper>
+                  <SuspenseWrapper>
                     <SettingsPage />
-                  </PageWrapper>
+                  </SuspenseWrapper>
+                </Layout>
+              ),
+            },
+            {
+              path: '/collections',
+              element: (
+                <Layout>
+                  <SuspenseWrapper>
+                    <CollectionsPage />
+                  </SuspenseWrapper>
+                </Layout>
+              ),
+            },
+            {
+              path: '/projects',
+              element: (
+                <Layout>
+                  <SuspenseWrapper>
+                    <ProjectsPage />
+                  </SuspenseWrapper>
+                </Layout>
+              ),
+            },
+            {
+              path: '/projects/:id',
+              element: (
+                <Layout>
+                  <SuspenseWrapper>
+                    <ProjectDetailPage />
+                  </SuspenseWrapper>
+                </Layout>
+              ),
+            },
+            {
+              path: '/editor/:projectId/:chapterId',
+              element: (
+                <Layout>
+                  <SuspenseWrapper>
+                    <EnhancedEditorPage />
+                  </SuspenseWrapper>
+                </Layout>
+              ),
+            },
+            {
+              path: '/editor',
+              element: (
+                <Layout>
+                  <SuspenseWrapper>
+                    <EnhancedEditorPage />
+                  </SuspenseWrapper>
+                </Layout>
+              ),
+            },
+            {
+              path: '/stats',
+              element: (
+                <Layout>
+                  <SuspenseWrapper>
+                    <StatsPage />
+                  </SuspenseWrapper>
+                </Layout>
+              ),
+            },
+            {
+              path: '/files',
+              element: (
+                <Layout>
+                  <SuspenseWrapper>
+                    <FileManagerPage />
+                  </SuspenseWrapper>
                 </Layout>
               ),
             },
@@ -131,9 +135,9 @@ function App() {
               path: '/api-test',
               element: (
                 <Layout>
-                  <PageWrapper>
+                  <SuspenseWrapper>
                     <ApiTestPage />
-                  </PageWrapper>
+                  </SuspenseWrapper>
                 </Layout>
               ),
             },

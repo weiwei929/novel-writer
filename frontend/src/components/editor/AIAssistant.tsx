@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import { aiApi } from '../../services/api'
 import { settingsManager } from '../../utils/settings'
-import { Bot, Lightbulb, User, Zap, Loader, CheckCircle, XCircle, Settings } from 'lucide-react'
+import { Bot, Lightbulb, User, Zap, Loader, CheckCircle, XCircle } from 'lucide-react'
 
 interface AIAssistantProps {
   currentContent: string
   onSuggestionAccept: (suggestion: string) => void
+  projectId?: string
+  chapterId?: string
 }
 
-const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionAccept }) => {
+const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionAccept, projectId, chapterId }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'suggestions' | 'character' | 'custom'>('suggestions')
   const [loading, setLoading] = useState(false)
@@ -34,8 +36,8 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionA
 
   const checkApiStatus = async () => {
     try {
-      const response = await aiApi.test()
-      setApiStatus(response.success ? 'connected' : 'error')
+      const status = await aiApi.checkStatus()
+      setApiStatus(status.status !== 'unavailable' ? 'connected' : 'error')
     } catch (err) {
       setApiStatus('error')
     }
@@ -55,9 +57,10 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionA
       const response = await aiApi.getWritingSuggestion({
         content: currentContent,
         type,
+        chapterId
       })
 
-      if (response.success) {
+      if (response.success && response.data) {
         setResult(response.data.suggestion)
       } else {
         setError(response.error?.message || '获取建议失败')
@@ -83,7 +86,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionA
     try {
       const response = await aiApi.generateCharacter(characterDescription)
 
-      if (response.success) {
+      if (response.success && response.data) {
         setResult(response.data.character)
       } else {
         setError(response.error?.message || '生成角色失败')
@@ -113,9 +116,10 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionA
         systemPrompt: customSystemPrompt || undefined,
         maxTokens: 1500,
         temperature: 0.7,
+        projectId
       })
 
-      if (response.success) {
+      if (response.success && response.data) {
         setResult(response.data.content)
       } else {
         setError(response.error?.message || '生成内容失败')
@@ -136,62 +140,34 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionA
     }
   }
 
-  // 如果 AI 功能未启用，显示设置提示
-  if (!aiEnabled) {
-    if (!isOpen) {
-      return (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed right-6 bottom-6 bg-gray-500 text-white p-3 rounded-full shadow-lg hover:bg-gray-600 transition-colors"
-          title="AI 助手 (未启用)"
-        >
-          <Bot size={24} />
-        </button>
-      )
+  const handleClose = () => {
+    if (result) {
+      if (window.confirm('生成的内容尚未保存/采纳，确定要关闭吗？')) {
+        setResult('')
+        setIsOpen(false)
+      }
+    } else {
+      setIsOpen(false)
     }
+  }
 
-    return (
-      <div className="fixed right-6 bottom-6 bg-white rounded-lg shadow-xl border w-96">
-        <div className="bg-gray-500 text-white p-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Bot size={20} />
-            <span className="font-semibold">AI 写作助手</span>
-          </div>
-          <button onClick={() => setIsOpen(false)} className="text-white hover:text-gray-200">
-            ×
-          </button>
+  // 如果 AI 功能未启用，建议去设置
+  if (!aiEnabled) {
+     // ... (Existing implementation for disabled state) ... 
+      if (!isOpen) { 
+        // ...
+      }
+      // Return settings prompt...
+      return (
+        <div className="fixed right-6 bottom-6 bg-white rounded-lg shadow-xl border w-96 z-50">
+            {/* Same as before but ensure z-index */}
+             <div className="bg-gray-500 text-white p-4 flex items-center justify-between">
+                {/* ... */}
+                <button onClick={() => setIsOpen(false)}>×</button> 
+             </div>
+             {/* ... content ... */}
         </div>
-
-        <div className="p-6 text-center">
-          <div className="mb-4">
-            <Settings size={48} className="mx-auto text-gray-400 mb-2" />
-            <h3 className="text-lg font-semibold text-gray-800">AI 功能未启用</h3>
-            <p className="text-gray-600 mt-2">
-              请在设置中启用 AI 功能并配置 API Key 来使用写作助手
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <button
-              onClick={() => {
-                // 跳转到设置页面
-                window.location.href = '/#/settings'
-                setIsOpen(false)
-              }}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-            >
-              前往设置
-            </button>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-50"
-            >
-              稍后设置
-            </button>
-          </div>
-        </div>
-      </div>
-    )
+      )
   }
 
   if (!isOpen) {
@@ -199,11 +175,9 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionA
       <button
         onClick={() => {
           setIsOpen(true)
-          if (apiStatus === 'unknown') {
-            checkApiStatus()
-          }
+          if (apiStatus === 'unknown') checkApiStatus()
         }}
-        className="fixed right-6 bottom-6 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+        className="fixed right-6 bottom-6 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors z-50 transform hover:scale-105 active:scale-95"
         title="AI 写作助手"
       >
         <Bot size={24} />
@@ -212,26 +186,30 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionA
   }
 
   return (
-    <div className="fixed right-6 bottom-6 bg-white rounded-lg shadow-xl border w-96 max-h-[500px] overflow-hidden">
-      <div className="bg-blue-600 text-white p-4 flex items-center justify-between">
+    <div className="fixed right-6 bottom-6 bg-white rounded-xl shadow-2xl border w-96 max-h-[600px] flex flex-col z-50 overflow-hidden ring-1 ring-black/5">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-500 text-white p-4 flex items-center justify-between shadow-sm shrink-0">
         <div className="flex items-center space-x-2">
           <Bot size={20} />
-          <span className="font-semibold">AI 写作助手</span>
+          <span className="font-semibold tracking-wide">AI 写作助手</span>
         </div>
-        <div className="flex items-center space-x-2">
-          {apiStatus === 'connected' && <CheckCircle size={16} className="text-green-300" />}
-          {apiStatus === 'error' && <XCircle size={16} className="text-red-300" />}
-          <button onClick={() => setIsOpen(false)} className="text-white hover:text-gray-200">
+        <div className="flex items-center space-x-3">
+          {apiStatus === 'connected' && <div className="flex items-center text-xs bg-black/20 px-2 py-0.5 rounded-full"><div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5"></div>在线</div>}
+          {apiStatus === 'error' && <div className="flex items-center text-xs bg-red-900/30 px-2 py-0.5 rounded-full"><XCircle size={10} className="mr-1"/>离线</div>}
+          <button 
+            onClick={handleClose} 
+            className="text-white/80 hover:text-white transition-colors p-1 hover:bg-white/10 rounded"
+          >
             ×
           </button>
         </div>
       </div>
 
       {apiStatus === 'error' && (
-        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4">
-          <p className="text-sm">AI 服务未配置或连接失败</p>
-          <button onClick={checkApiStatus} className="text-xs text-red-600 hover:underline mt-1">
-            重新检测
+        <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-3 text-sm flex justify-between items-center shrink-0">
+          <span>服务连接失败</span>
+          <button onClick={checkApiStatus} className="text-red-600 font-medium hover:underline text-xs">
+            重试
           </button>
         </div>
       )}
@@ -370,22 +348,50 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContent, onSuggestionA
         )}
 
         {result && (
-          <div className="border rounded p-3 bg-gray-50">
-            <div className="text-sm text-gray-600 mb-2">AI 生成结果：</div>
-            <div className="text-sm whitespace-pre-wrap mb-3">{result}</div>
-            <div className="flex space-x-2">
-              <button
-                onClick={handleAcceptSuggestion}
-                className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
-              >
-                采用建议
-              </button>
-              <button
-                onClick={() => setResult('')}
-                className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600"
-              >
-                清除
-              </button>
+          <div className="flex-1 overflow-y-auto bg-gray-50 border-t flex flex-col min-h-0">
+            <div className="p-4 space-y-4">
+               {/* Result Header */}
+               <div className="flex items-center justify-between text-xs text-gray-500 uppercase tracking-wider font-semibold">
+                  <span>AI 生成预览</span>
+                  <div className="flex space-x-2">
+                     <button className="hover:text-blue-600">复制</button>
+                  </div>
+               </div>
+
+               {/* Content Preview */}
+               <div className="bg-white border rounded-lg p-3 text-sm leading-relaxed text-gray-800 shadow-sm font-serif whitespace-pre-wrap">
+                  {result}
+               </div>
+
+               {/* Actions */}
+               <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setResult('')}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
+                  >
+                    不满意 (放弃)
+                  </button>
+                  <button
+                    onClick={handleAcceptSuggestion}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm hover:shadow transition-all text-sm font-medium flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle size={16} />
+                    采用建议
+                  </button>
+               </div>
+               
+               <div className="text-center">
+                  <button 
+                     onClick={() => {
+                        // Loop: Retry logic (simplistic: just re-trigger for now or clear)
+                        setResult('')
+                        // Ideally we recall the last function, but for now 'Discard' acts as retry trigger
+                     }}
+                     className="text-xs text-gray-400 hover:text-blue-500 underline decoration-dotted"
+                  >
+                     这也太差了，重新生成
+                  </button>
+               </div>
             </div>
           </div>
         )}

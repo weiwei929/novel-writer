@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Edit, Trash2, Eye, Download, User, FileText, Calendar, BarChart3, MoveRight } from 'lucide-react'
+import { Edit, Trash2, Eye, Download, User, FileText, Calendar, BarChart3, MoveRight, Stethoscope } from 'lucide-react'
 import { Project, chaptersApi } from '../../services/api'
 
 interface ProjectCardProps {
@@ -10,6 +10,7 @@ interface ProjectCardProps {
   onUpdate?: () => void
   onExport?: (project: Project) => void
   onPreview: (project: Project) => void
+  onReview?: (project: Project) => void
   onStatusChange?: (project: Project, newStatus: string) => void
   compact?: boolean
 }
@@ -20,6 +21,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   onDelete,
   onExport,
   onPreview,
+  onReview,
   onStatusChange,
   compact = false
 }) => {
@@ -114,8 +116,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                 // Editor Navigation Logic
                 try {
                   const chapters = await chaptersApi.getByProjectId(project.id)
-                  if (chapters && chapters.length > 0) navigate(`/editor/${chapters[0].id}`)
-                  else navigate(`/projects/${project.id}`)
+                  if (chapters && chapters.length > 0) {
+                     navigate(`/editor/${project.id}/${chapters[0].id}`)
+                  } else {
+                     navigate(`/projects/${project.id}`)
+                  }
                 } catch { navigate(`/projects/${project.id}`) }
               }}
             >
@@ -135,6 +140,15 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                 onClick={() => onExport(project)}
               >
                 <Download size={16} />
+              </button>
+            )}
+             {project.status === 'completed' && onReview && (
+              <button 
+                className="p-1.5 text-purple-600 hover:bg-purple-50 rounded" 
+                title="AI 全书审阅"
+                onClick={() => onReview(project)}
+              >
+                <Stethoscope size={16} />
               </button>
             )}
              <button 
