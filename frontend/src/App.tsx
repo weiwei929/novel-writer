@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import ErrorBoundary from './components/ui/ErrorBoundary'
 import NotificationContainer from './components/ui/NotificationContainer'
@@ -103,13 +103,7 @@ function App() {
             },
             {
               path: '/editor',
-              element: (
-                <Layout>
-                  <SuspenseWrapper>
-                    <EnhancedEditorPage />
-                  </SuspenseWrapper>
-                </Layout>
-              ),
+              element: <Navigate to="/projects" replace />,
             },
             {
               path: '/stats',
