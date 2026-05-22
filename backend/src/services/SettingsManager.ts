@@ -14,10 +14,27 @@ const DEFAULT_SETTINGS: AppSettings = {
   ai: {
     provider: 'gemini', // Defaulting to Gemini as requested
     apiKey: process.env.GEMINI_API_KEY || '',
-    model: 'gemini-1.5-pro',
+    model: 'gemini-3.5-flash',
     baseUrl: ''
   }
 };
+
+/** Non-empty file value wins; otherwise fall back to GEMINI_API_KEY from env. */
+function resolveApiKey(stored?: string): string {
+  const trimmed = stored?.trim();
+  if (trimmed) return trimmed;
+  return process.env.GEMINI_API_KEY?.trim() || '';
+}
+
+function withResolvedApiKey(settings: AppSettings): AppSettings {
+  return {
+    ...settings,
+    ai: {
+      ...settings.ai,
+      apiKey: resolveApiKey(settings.ai.apiKey),
+    },
+  };
+}
 
 export class SettingsManager {
   private configPath: string;
@@ -32,16 +49,22 @@ export class SettingsManager {
     try {
       if (fs.existsSync(this.configPath)) {
         const raw = fs.readFileSync(this.configPath, 'utf-8');
-        return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+        const parsed = JSON.parse(raw) as Partial<AppSettings>;
+        const merged: AppSettings = {
+          ...DEFAULT_SETTINGS,
+          ...parsed,
+          ai: { ...DEFAULT_SETTINGS.ai, ...parsed.ai },
+        };
+        return withResolvedApiKey(merged);
       }
     } catch (error) {
       console.error('Failed to load settings:', error);
     }
-    return DEFAULT_SETTINGS;
+    return withResolvedApiKey(DEFAULT_SETTINGS);
   }
 
   getSettings(): AppSettings {
-    return this.settings;
+    return withResolvedApiKey(this.settings);
   }
 
   updateSettings(newSettings: Partial<AppSettings>): AppSettings {
