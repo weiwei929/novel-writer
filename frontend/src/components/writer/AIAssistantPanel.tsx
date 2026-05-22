@@ -131,7 +131,7 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ onClose, onApplyCon
                             {activeMessageIdx === idx && (
                                 <div className="absolute top-full left-0 mt-1 w-32 bg-white rounded-lg shadow-xl border border-gray-200 z-10 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100">
                                     <button 
-                                        onClick={() => handleMetadataAction('worldview', msg.content)}
+                                        onClick={() => handleMetadataAction('settings', msg.content)}
                                         className="text-left px-3 py-2 text-xs hover:bg-purple-50 text-gray-700"
                                     >
                                         存为世界观
@@ -143,7 +143,7 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ onClose, onApplyCon
                                         存为角色
                                     </button>
                                     <button 
-                                        onClick={() => handleMetadataAction('logline', msg.content)}
+                                        onClick={() => handleMetadataAction('synopsis', msg.content)}
                                         className="text-left px-3 py-2 text-xs hover:bg-purple-50 text-gray-700"
                                     >
                                         存为梗概

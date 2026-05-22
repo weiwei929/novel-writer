@@ -11,6 +11,7 @@ import { Plus, FileText, LayoutGrid, LayoutList } from 'lucide-react'
 import { ProjectCard } from './ProjectCard'
 import { KanbanBoard } from './KanbanBoard'
 import { CreateProjectModal } from './CreateProjectModal'
+import { readMetadataFieldValue } from '../../utils/metadataField'
 
 const ProjectsList: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([])
@@ -276,7 +277,7 @@ const ProjectsList: React.FC = () => {
               <div className="mb-6">
                 <h4 className="font-medium text-gray-900 mb-2">梗概</h4>
                 <div className="p-4 bg-gray-50 rounded-lg text-gray-700 whitespace-pre-wrap leading-relaxed">
-                  {(previewProject as any)?.metadata?.synopsis?.current || '暂无梗概'}
+                  {readMetadataFieldValue((previewProject as any)?.metadata?.synopsis) || '暂无梗概'}
                 </div>
               </div>
 

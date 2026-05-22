@@ -10,6 +10,7 @@ import AIReviewPanel from '../components/writer/AIReviewPanel'
 import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
 import { ArrowLeft, Save } from 'lucide-react'
 import { useNotifications } from '../hooks/useNotifications'
+import { readMetadataFieldValue } from '../utils/metadataField'
 
 const EnhancedEditorPageContent: React.FC = () => {
   const { error: notifyError, success: notifySuccess } = useNotifications()
@@ -312,21 +313,21 @@ const EnhancedEditorPageContent: React.FC = () => {
                 {lastSaved && !hasUnsavedChanges && ` · ${lastSaved.toLocaleTimeString()} 已保存`}
               </div>
             )}
-            {project?.metadata?.synopsis?.current && (
+            {readMetadataFieldValue(project?.metadata?.synopsis) && (
               <div className="mt-2 text-sm line-clamp-2">
                 <span className="px-2 py-0.5 mr-2 rounded bg-blue-100 text-blue-700 border border-blue-200 text-xs">
                   作品梗概
                 </span>
-                <span className="text-gray-800">{project.metadata.synopsis.current}</span>
+                <span className="text-gray-800">{readMetadataFieldValue(project?.metadata?.synopsis)}</span>
               </div>
             )}
-            {((chapter as any)?.metadata?.synopsis?.current || chapter?.summary) && (
+            {(readMetadataFieldValue((chapter as any)?.metadata?.synopsis) || chapter?.summary) && (
               <div className="mt-1 text-xs line-clamp-1">
                 <span className="px-2 py-0.5 mr-2 rounded bg-green-100 text-green-700 border border-green-200">
                   章节梗概
                 </span>
                 <span className="text-gray-700">
-                  {(chapter as any)?.metadata?.synopsis?.current || chapter?.summary}
+                  {readMetadataFieldValue((chapter as any)?.metadata?.synopsis) || chapter?.summary}
                 </span>
               </div>
             )}
@@ -466,17 +467,14 @@ const EnhancedEditorPageContent: React.FC = () => {
                 onUpdateMetadata={async (field, content) => {
                     if (!project) return;
                     try {
-                        // Append to existing content for these fields to avoid overwriting
-                        // Or just replace if it's "logline".
-                        // Logic:
-                        // - characters: Append or Replace? AI usually generates a list. Append seems safer if list.
-                        // - worldview: Append.
-                        // - logline: Replace.
-                        
-                        // For MVP, let's just append with a newline if it exists.
-                        const currentVal = (project.metadata as any)?.[field] || '';
-                        const newVal = currentVal ? `${currentVal}\n\n${content}` : content;
-                        
+                        const currentVal = readMetadataFieldValue((project.metadata as any)?.[field])
+                        const newVal =
+                          field === 'synopsis'
+                            ? content
+                            : currentVal
+                              ? `${currentVal}\n\n${content}`
+                              : content
+
                         await projectsApi.updateMetadata(project.id, field, newVal);
                         notifySuccess('设定已更新', `已更新项目的 ${field}`);
                         // Refresh project data to update context
