@@ -496,6 +496,7 @@ const EnhancedEditorPageContent: React.FC = () => {
              <div className="w-1 bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 shadow-sm"></div>
              <AIReviewPanel 
                 content={content}
+                chapterId={chapter?.id}
                 onClose={() => setEditorMode('pure')} 
              />
            </>

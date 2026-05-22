@@ -4,11 +4,13 @@ import { aiApi } from '../../services/api'
 import { Loader, Send, Save, BookOpen } from 'lucide-react'
 
 interface PlannerBoardProps {
+  projectId: string
   initialOutline?: ProjectOutline
   onSave: (outline: ProjectOutline) => void
 }
 
-export const PlannerBoard: React.FC<PlannerBoardProps> = ({ initialOutline, onSave }) => {
+/** @experimental Blocker B4 — outline generation endpoint returns 404 */
+export const PlannerBoard: React.FC<PlannerBoardProps> = ({ projectId, initialOutline, onSave }) => {
   const [outline, setOutline] = useState<ProjectOutline | undefined>(initialOutline)
   const [prompt, setPrompt] = useState('')
   const [loading, setLoading] = useState(false)
@@ -19,7 +21,7 @@ export const PlannerBoard: React.FC<PlannerBoardProps> = ({ initialOutline, onSa
     setLoading(true)
     setError('')
     
-    const res = await aiApi.generateOutline(prompt)
+    const res = await aiApi.generateOutline(projectId, prompt)
     if (res.success) {
       setOutline(res.data)
     } else {

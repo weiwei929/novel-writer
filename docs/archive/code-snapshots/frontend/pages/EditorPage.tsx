@@ -3,6 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom'
 import MarkdownEditor from '../components/editor/MarkdownEditor'
 import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
 import { ArrowLeft, BookOpen } from 'lucide-react'
+import { MetadataMissingPrompt } from '../components/project/MetadataMissingPrompt'
+import { MetadataReviewModal } from '../components/import/MetadataReviewModal'
+
 
 const EditorPage: React.FC = () => {
   const { projectId, chapterId } = useParams<{ projectId?: string; chapterId?: string }>()
@@ -13,6 +16,11 @@ const EditorPage: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  
+  // 元数据提示相关状态
+  const [showMetadataPrompt, setShowMetadataPrompt] = useState(false)
+  const [extractedMetadata, setExtractedMetadata] = useState<any>(null)
+  const [showMetadataReview, setShowMetadataReview] = useState(false)
 
   useEffect(() => {
     if (projectId) {
@@ -50,11 +58,52 @@ const EditorPage: React.FC = () => {
           `# ${projectData.title}\n\n*项目描述：${projectData.description || '暂无描述'}*\n\n---\n\n## 开始创作\n\n选择一个章节开始编辑，或者创建新章节。`
         )
       }
+      
+      // 检查是否需要显示元数据提示
+      const needsMetadata = projectData.status === 'draft' && !projectData.metadata?.synopsis
+      setShowMetadataPrompt(needsMetadata)
+      
     } catch (err) {
       setError('加载项目失败')
       console.error('Error loading project:', err)
     } finally {
       setLoading(false)
+    }
+  }
+  
+  // 元数据轮询函数
+  const pollForMetadata = async (projectId: string) => {
+    const checkMetadata = async () => {
+      try {
+        const project = await projectsApi.getById(projectId)
+        if (project.metadata?._draft) {
+          setExtractedMetadata(project.metadata._draft)
+          setShowMetadataReview(true)
+        } else {
+          setTimeout(checkMetadata, 2000)
+        }
+      } catch (err) {
+        console.error('Failed to check metadata:', err)
+      }
+    }
+    
+    setTimeout(checkMetadata, 3000)
+  }
+  
+  const handleMetadataConfirm = async (confirmed: boolean, editedMetadata?: any) => {
+    if (!projectId) return
+    
+    try {
+      await projectsApi.confirmMetadata(projectId, confirmed, editedMetadata)
+      setShowMetadataReview(false)
+      setExtractedMetadata(null)
+      
+      // 重新加载项目以获取更新的元数据
+      const updatedProject = await projectsApi.getById(projectId)
+      setProject(updatedProject)
+      setShowMetadataPrompt(false)
+    } catch (err) {
+      console.error('Failed to confirm metadata:', err)
     }
   }
 
@@ -151,6 +200,20 @@ const EditorPage: React.FC = () => {
         </div>
       </div>
 
+      {/* 元数据缺失提示 */}
+      {project && showMetadataPrompt && (
+        <div className="px-4 pt-4">
+          <MetadataMissingPrompt
+            projectId={project.id}
+            onAIStarted={() => {
+              setShowMetadataPrompt(false)
+              pollForMetadata(project.id)
+            }}
+            onDismiss={() => setShowMetadataPrompt(false)}
+          />
+        </div>
+      )}
+
       {/* 编辑器区域 */}
       <div className="flex-1 overflow-hidden">
         <MarkdownEditor
@@ -161,6 +224,23 @@ const EditorPage: React.FC = () => {
           autoSaveDelay={3000}
         />
       </div>
+      
+      {/* 元数据确认模态框 */}
+      {showMetadataReview && extractedMetadata && project && (
+        <MetadataReviewModal
+          isOpen={showMetadataReview}
+          projectId={project.id}
+          projectTitle={project.title}
+          extractedMetadata={extractedMetadata}
+          onConfirm={() => {
+            void handleMetadataConfirm(true)
+          }}
+          onReject={() => {
+            void handleMetadataConfirm(false)
+          }}
+          onClose={() => setShowMetadataReview(false)}
+        />
+      )}
     </div>
   )
 }

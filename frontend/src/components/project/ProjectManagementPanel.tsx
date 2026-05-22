@@ -42,7 +42,7 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
     const totalWords = chapters.reduce((sum, chapter) => sum + (chapter.wordCount || 0), 0)
     const completedChapters = chapters.filter(c => c.status === 'completed').length
     const draftChapters = chapters.filter(c => c.status === 'draft').length
-    const publishedChapters = chapters.filter(c => c.status === 'published').length
+    const writingChapters = chapters.filter(c => c.status === 'writing').length
     const avgWordsPerChapter = chapters.length > 0 ? Math.round(totalWords / chapters.length) : 0
     const progress = writingGoal > 0 ? Math.round((totalWords / writingGoal) * 100) : 0
     const estimatedReadingTime = Math.ceil(totalWords / 250) // 按每分钟250字计算
@@ -51,7 +51,7 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
       totalWords,
       completedChapters,
       draftChapters,
-      publishedChapters,
+      writingChapters,
       avgWordsPerChapter,
       progress,
       estimatedReadingTime,
@@ -290,9 +290,9 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
 
           <div className="text-center p-4 bg-green-50 rounded-lg">
             <div className="text-2xl font-bold text-green-700 mb-1">
-              {statistics.publishedChapters}
+              {statistics.writingChapters}
             </div>
-            <div className="text-sm text-green-600">已发布</div>
+            <div className="text-sm text-green-600">写作中</div>
           </div>
         </div>
 

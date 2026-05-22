@@ -172,6 +172,7 @@ const ProjectDetailPage: React.FC = () => {
           {activeTab === 'planner' && (
               <div className="h-full">
                   <PlannerBoard 
+                    projectId={project.id}
                     initialOutline={(project.metadata as any)?.outline} 
                     onSave={handleOutlineSave}
                   />

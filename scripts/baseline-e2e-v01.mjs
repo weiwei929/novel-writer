@@ -374,21 +374,24 @@ async function main() {
 async function recordKnownBlockers(aiAvailable, projectId, chapterId) {
   console.log('\n--- 已知高风险链路探测（只记录，不修）---\n')
 
-  // B1: AIReviewPanel API signature — simulate wrong call
+  // B1: wrong-payload defense probe (frontend single-arg call fixed in Commit 5)
   try {
     const wrong = await req('POST', '/ai/review/chapter', { chapterId: '这是一段正文内容而不是ID', content: undefined })
+    const defended = wrong.status === 400 || wrong.status === 422
     record(
       'B1',
-      'AI 章节审阅（AIReviewPanel 当前调用方式）',
-      'blocker',
-      '前端 aiApi.reviewChapter(content) 仅传 1 参；后端需 chapterId+content。探测：错误 payload 返回 ' + wrong.status,
+      'AI 章节审阅（错误 payload 防御探测）',
+      defended ? 'pass' : 'fail',
+      defended
+        ? `前端 reviewChapter(chapterId, content) 签名已修复；后端拒收错误 payload HTTP ${wrong.status}。章节审阅仍为 @experimental，需 UI 路径验证`
+        : `错误 payload 未被拒绝 status=${wrong.status}`,
       JSON.stringify(wrong.json).slice(0, 150)
     )
   } catch (e) {
-    record('B1', 'AI 章节审阅', 'blocker', e.message)
+    record('B1', 'AI 章节审阅（错误 payload 防御探测）', 'blocker', e.message)
   }
 
-  // B1b: correct API returns markdown string not ReviewReport struct
+  // B1b: API returns markdown; structured ReviewReport UI not implemented
   if (aiAvailable && chapterId) {
     try {
       const correct = await req('POST', '/ai/review/chapter', {
@@ -400,16 +403,16 @@ async function recordKnownBlockers(aiAvailable, projectId, chapterId) {
       const hasStructured = data?.report?.overallScore !== undefined
       record(
         'B1b',
-        'AI 章节审阅（正确 API 响应格式 vs UI 期望）',
+        'AI 章节审阅（响应格式 vs 结构化 UI）',
         isMarkdown && !hasStructured ? 'blocker' : 'fail',
-        '后端返回 Markdown 字符串；AIReviewPanel 期望 ReviewReport JSON（overallScore/issues）',
+        '后端返回 Markdown 字符串；结构化 ReviewReport UI 未实现（AIReviewPanel 当前仅 Markdown 展示，@experimental）',
         String(data?.report || data).slice(0, 100)
       )
     } catch (e) {
-      record('B1b', 'AI 章节审阅响应格式', 'blocker', e.message)
+      record('B1b', 'AI 章节审阅（响应格式 vs 结构化 UI）', 'blocker', e.message)
     }
   } else {
-    record('B1b', 'AI 章节审阅响应格式', 'skip', 'AI 不可用或未创建章节')
+    record('B1b', 'AI 章节审阅（响应格式 vs 结构化 UI）', 'skip', 'AI 不可用或未创建章节')
   }
 
   // B2: Chapter planning save API missing

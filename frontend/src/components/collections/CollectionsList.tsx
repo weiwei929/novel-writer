@@ -163,15 +163,17 @@ const CollectionCard: React.FC<CollectionCardProps> = ({ collection, onDelete, o
       {collection.description && <p className="text-gray-600 mb-4">{collection.description}</p>}
 
       <div className="flex items-center gap-4 mb-4">
-        <span className="text-sm text-gray-500">{collection.projectCount} 个项目</span>
+        <span className="text-sm text-gray-500">
+          {collection.projectCount ?? collection.projects?.length ?? 0} 个项目
+        </span>
         <span className="text-sm text-gray-500">
           {new Date(collection.createdAt).toLocaleDateString()}
         </span>
       </div>
 
-      {collection.tags.length > 0 && (
+      {(collection.tags ?? []).length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {collection.tags.map((tag, index) => (
+          {(collection.tags ?? []).map((tag: string, index: number) => (
             <span
               key={index}
               className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-1 rounded text-sm"

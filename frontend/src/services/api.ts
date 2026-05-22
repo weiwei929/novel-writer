@@ -42,6 +42,10 @@ export interface Collection {
   name: string
   description?: string
   projects?: Project[]
+  /** Client-normalized from API `_count.projects` */
+  projectCount?: number
+  /** UI-only legacy field; backend does not persist collection tags */
+  tags?: string[]
   createdAt: string
   updatedAt: string
 }
@@ -125,7 +129,12 @@ export const collectionsApi = {
   },
   async getById(id: string): Promise<Collection> {
       const response = await api.get(`/collections/${id}`)
-      return response.data
+      const c = response.data
+      return {
+        ...c,
+        tags: c.tags || [],
+        projectCount: c._count?.projects ?? c.projects?.length ?? c.projectCount ?? 0,
+      }
   },
   async create(data: { name: string; description?: string; tags?: string[] }): Promise<Collection> {
       const response = await api.post('/collections', data)
@@ -200,7 +209,12 @@ export const projectsApi = {
         console.warn('Failed to update project metadata', e)
         return {}
       }
-  }
+  },
+
+  /** @experimental Blocker B2 — backend endpoint not implemented */
+  async updateChapterPlanning(_projectId: string, _plans: unknown[]): Promise<unknown> {
+    throw new Error('updateChapterPlanning is not implemented')
+  },
 }
 
 export const chaptersApi = {
@@ -419,7 +433,37 @@ export const aiApi = {
           }
         }
       }
-  }
+  },
+
+  async generateOutline(projectId: string, prompt: string): Promise<ApiResponse<any>> {
+    try {
+      const response = await api.post('/ai/generate/outline', { projectId, prompt });
+      return { success: true, data: response.data.data };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: {
+          code: error.response?.status || 500,
+          message: error.response?.data?.error || 'Outline generation failed'
+        }
+      };
+    }
+  },
+
+  async reviewChapter(chapterId: string, content: string): Promise<ApiResponse<{ report: string }>> {
+    try {
+      const response = await api.post('/ai/review/chapter', { chapterId, content });
+      return { success: true, data: response.data.data };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: {
+          code: error.response?.status || 500,
+          message: error.response?.data?.error || 'Chapter review failed'
+        }
+      };
+    }
+  },
 }
 
 export const statsApi = {
