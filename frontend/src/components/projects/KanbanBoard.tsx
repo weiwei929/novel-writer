@@ -1,8 +1,11 @@
 import React, { useState } from 'react'
 import { Project, projectsApi } from '../../services/api'
 import { ProjectCard } from './ProjectCard'
+import { ImportedProjectCard } from '../import/ImportedProjectCard'
 import { Inbox, PenTool, CheckCircle } from 'lucide-react'
 import { GlobalReviewModal } from './GlobalReviewModal'
+import { useNotifications } from '../../hooks/useNotifications'
+
 
 interface KanbanBoardProps {
   projects: Project[]
@@ -42,6 +45,20 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
       setReviewModalProject(project);
   }
 
+  const { success, error } = useNotifications()
+
+  const handleMoveToDraft = async (projectId: string) => {
+    try {
+      await projectsApi.moveToDraft(projectId)
+      success('已转入原创构思', '项目已移动到创作区域')
+      onProjectUpdate()
+    } catch (err: any) {
+      error('转移失败', err.message || '无法转移项目')
+      console.error('Failed to move to draft:', err)
+    }
+  }
+
+
   return (
     <div className="flex h-full gap-6 overflow-x-auto pb-4">
       {/* Column 1: Imported */}
@@ -52,14 +69,12 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
         </div>
         <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
           {columns.imported.map(p => (
-            <ProjectCard 
-              key={p.id} 
-              project={p} 
-              compact={true}
-              onDelete={onDelete}
-              onPreview={onPreview}
-              onExport={onExport}
-              onStatusChange={handleStatusChange}
+            <ImportedProjectCard
+              key={p.id}
+              project={p}
+              onPreview={() => onPreview(p)}
+              onMoveToDraft={() => handleMoveToDraft(p.id)}
+              onDelete={() => onDelete(p.id)}
             />
           ))}
           {columns.imported.length === 0 && (

@@ -4,6 +4,7 @@ import type { editor } from 'monaco-editor'
 
 export interface EnhancedMonacoEditorRef {
   insertContent: (text: string) => void
+  toggleFrontmatter: () => void
 }
 
 interface EnhancedMonacoEditorProps {
@@ -34,6 +35,11 @@ const EnhancedMonacoEditor = forwardRef<EnhancedMonacoEditorRef, EnhancedMonacoE
   const [wordCount, setWordCount] = useState(0)
   const [charCount, setCharCount] = useState(0)
   const [readingTime, setReadingTime] = useState(0)
+  const [showFrontmatter, setShowFrontmatter] = useState(() => {
+    // 从 localStorage 读取用户偏好，默认隐藏
+    const saved = localStorage.getItem('showFrontmatter')
+    return saved === 'true'
+  })
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
   const onSaveRef = useRef<typeof onSave>()
@@ -54,10 +60,44 @@ const EnhancedMonacoEditor = forwardRef<EnhancedMonacoEditorRef, EnhancedMonacoE
       }
       editor.executeEdits("ai-insert", [op])
       editor.focus()
-      // Trigger change event manually since executeEdits doesn't always trigger model content change event handled by @monaco-editor/react in the same way? 
-      // Actually @monaco-editor/react handles onChange via model event. keybinding isn't triggered but model change is.
+    },
+    toggleFrontmatter: () => {
+      toggleFrontmatterVisibility()
     }
   }))
+
+  const toggleFrontmatterVisibility = () => {
+    const editor = editorRef.current
+    if (!editor) return
+
+    const model = editor.getModel()
+    if (!model) return
+
+    const text = model.getValue()
+    const fmMatch = text.match(/^---\n([\s\S]*?)\n---\n/)
+
+    if (fmMatch) {
+      const endLine = fmMatch[0].split('\n').length - 1
+
+      // 使用 setHiddenAreas API（需要类型断言）
+      const editorWithHiddenAreas = editor as any
+
+      if (!showFrontmatter) {
+        // 当前隐藏，要显示
+        editorWithHiddenAreas.setHiddenAreas([])
+      } else {
+        // 当前显示，要隐藏
+        editorWithHiddenAreas.setHiddenAreas([{
+          startLineNumber: 1,
+          endLineNumber: endLine
+        }])
+      }
+
+      const newState = !showFrontmatter
+      setShowFrontmatter(newState)
+      localStorage.setItem('showFrontmatter', String(newState))
+    }
+  }
 
   const updateStatistics = (text: string) => {
     // ... existing logic ...
@@ -177,7 +217,7 @@ const EnhancedMonacoEditor = forwardRef<EnhancedMonacoEditorRef, EnhancedMonacoE
           smoothScrolling: true,
           mouseWheelZoom: true,
           contextmenu: true,
-          rulers: [80, 100],
+          rulers: [],  // 移除竖线标尺
           selectOnLineNumbers: true,
           matchBrackets: 'never',
           quickSuggestions: false,
@@ -187,6 +227,12 @@ const EnhancedMonacoEditor = forwardRef<EnhancedMonacoEditorRef, EnhancedMonacoE
           links: false,
           colorDecorators: false,
           acceptSuggestionOnEnter: 'off',
+          'semanticHighlighting.enabled': false,  // 禁用语义高亮
+          unicodeHighlight: {
+            ambiguousCharacters: false,  // 禁用模糊字符高亮
+            invisibleCharacters: false,  // 禁用不可见字符高亮
+            nonBasicASCII: false,  // 禁用非基本ASCII字符高亮
+          },
         }}
       />
 

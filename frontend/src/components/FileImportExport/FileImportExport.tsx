@@ -3,10 +3,14 @@ import { useDropzone } from 'react-dropzone'
 import { Upload as UploadIcon, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react'
 import { projectsApi } from '../../services/api'
 import { useNavigate } from 'react-router-dom'
+import { MetadataReviewModal } from '../import/MetadataReviewModal'
+import { useNotifications } from '../../hooks/useNotifications'
 
 export const FileImportExport: React.FC = () => {
     const navigate = useNavigate()
+    const { success, error } = useNotifications()
     const [step, setStep] = useState<'upload' | 'preview' | 'importing' | 'success'>('upload')
+    const [rawContent, setRawContent] = useState<string>('')  // 保存原始内容
     const [parsedData, setParsedData] = useState<{
         title: string;
         chapters: { title: string; content: string }[];
@@ -14,40 +18,35 @@ export const FileImportExport: React.FC = () => {
         warnings: string[];
     } | null>(null)
     const [importError, setImportError] = useState<string | null>(null)
+    
+    // 元数据确认相关状态
+    const [importedProjectId, setImportedProjectId] = useState<string | null>(null)
+    const [showMetadataReview, setShowMetadataReview] = useState(false)
+    const [extractedMetadata, setExtractedMetadata] = useState<any>(null)
 
-    // Helper: Parse and Clean Text
+    // Helper: Parse and Clean Text (仅用于预览)
     const processFile = async (file: File) => {
         const text = await file.text()
+        setRawContent(text)  // 保存原始内容
         
-        // 1. H1 Check
+        // 1. H1 Check (简单预检查)
         const h1Matches = text.match(/^#\s+[^\n]+/gm) || []
-        if (h1Matches.length > 1) {
-            setImportError(`检测到 ${h1Matches.length} 个一级标题（如 ${h1Matches[0]}...）。为保证项目结构清晰，请将文件拆分后分别导入。`)
-            return
-        }
-
-        // 2. Cleaning Pipeline
+        
+        // 2. Cleaning Pipeline (仅用于预览)
         let cleanText = text
-            // Remove full-width spaces at start of lines
             .replace(/^　+/gm, '') 
-            // Remove leading spaces/tabs
             .replace(/^[ \t]+/gm, '')
-            // Compress multiple newlines to max 2
             .replace(/\n{3,}/g, '\n\n')
 
-        // 3. Extraction
-        let title = file.name.replace(/\.[^/.]+$/, "") // Default to filename
+        // 3. Extraction (仅用于预览)
+        let title = file.name.replace(/\.[^/.]+$/, "")
         if (h1Matches.length === 1) {
             title = h1Matches[0].replace(/^#\s+/, '').trim()
         }
 
-        // Split by H2 (## )
-        // "## Chapter 1" -> split result
         const parts = cleanText.split(/^##\s+/m)
         const chapters: { title: string; content: string }[] = []
         
-        // Handle "Preamble" (text before first H2)
-        // If there is H1, usually H1 is at top. If parts[0] contains H1, we remove H1 line.
         if (parts.length > 0) {
             let preamble = parts[0].trim()
             const h1 = h1Matches[0]
@@ -59,7 +58,6 @@ export const FileImportExport: React.FC = () => {
             }
         }
 
-        // Handle Chapters (parts 1..n)
         for (let i = 1; i < parts.length; i++) {
             const lines = parts[i].split('\n')
             const chTitle = lines[0].trim()
@@ -73,7 +71,7 @@ export const FileImportExport: React.FC = () => {
             title,
             chapters,
             stats: { 
-                wordCount: cleanText.length, // Simple count
+                wordCount: cleanText.length,
                 charCount: cleanText.length 
             },
             warnings: []
@@ -94,23 +92,84 @@ export const FileImportExport: React.FC = () => {
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
-        accept: { 'text/plain': ['.txt'], 'text/markdown': ['.md'] }, // Strict text/md
+        accept: { 'text/plain': ['.txt'], 'text/markdown': ['.md'] },
         maxFiles: 1
     })
 
     const handleConfirmImport = async () => {
-        if (!parsedData) return
+        if (!rawContent) return
         setStep('importing')
+        setImportError(null) // 清除之前的错误
         try {
-            await projectsApi.importProject({
-                title: parsedData.title,
-                chapters: parsedData.chapters
+            const response = await projectsApi.importProject({
+                content: rawContent
             })
+            
+            // 新的响应格式: { project, hasPendingMetadata }
+            const { project, hasPendingMetadata } = response as any
+            
+            // 保存项目 ID
+            setImportedProjectId(project.id)
             setStep('success')
+            
+            // 显示成功通知
+            success(
+                '导入成功！',
+                `《${project.title}》已导入到暂存池，请在"外部导入"区域查看`
+            )
+            
+            // 如果有待确认的元数据，等待一下让 AI 提取完成
+            if (hasPendingMetadata) {
+                // 轮询检查元数据是否提取完成
+                const checkMetadata = async () => {
+                    try {
+                        const updatedProject = await projectsApi.getById(project.id)
+                        if (updatedProject.metadata?._draft) {
+                            setExtractedMetadata(updatedProject.metadata._draft)
+                            setShowMetadataReview(true)
+                        } else {
+                            // 如果还没提取完成，2秒后再检查
+                            setTimeout(checkMetadata, 2000)
+                        }
+                    } catch (err) {
+                        console.error('Failed to check metadata:', err)
+                    }
+                }
+                
+                // 延迟3秒后开始检查（给 AI 一些处理时间）
+                setTimeout(checkMetadata, 3000)
+            }
         } catch (e: any) {
-            setImportError(e.message || '导入失败，请稍后重试')
+            // 详细日志来调试错误对象结构
+            console.error('Import error - full object:', e)
+            console.error('Import error - type:', typeof e)
+            console.error('Import error - message:', e.message)
+            console.error('Import error - constructor:', e.constructor?.name)
+            
+            // ApiError 已经被 handleApiError 处理过
+            // 错误信息在 e.message 中
+            const errorMessage = (typeof e === 'string' ? e : e.message) || '导入失败，请稍后重试'
+            
+            setImportError(errorMessage)
             setStep('preview')
+            
+            // 显示错误通知
+            error(
+                '导入失败',
+                errorMessage,
+                8000  // 8秒
+            )
         }
+    }
+    
+    const handleMetadataConfirm = () => {
+        setShowMetadataReview(false)
+        // 元数据已确认，可以继续
+    }
+    
+    const handleMetadataReject = () => {
+        setShowMetadataReview(false)
+        // 元数据已拒绝，可以继续
     }
 
     // UI Renders...
@@ -213,6 +272,19 @@ export const FileImportExport: React.FC = () => {
                     <li>推荐使用 standard Markdown 格式 (## 章节名)</li>
                 </ul>
             </div>
+            
+            {/* 元数据确认模态框 */}
+            {importedProjectId && showMetadataReview && extractedMetadata && (
+                <MetadataReviewModal
+                    isOpen={showMetadataReview}
+                    projectId={importedProjectId}
+                    projectTitle={parsedData?.title || '未命名作品'}
+                    extractedMetadata={extractedMetadata}
+                    onConfirm={handleMetadataConfirm}
+                    onReject={handleMetadataReject}
+                    onClose={() => setShowMetadataReview(false)}
+                />
+            )}
         </div>
     )
 }

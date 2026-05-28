@@ -30,20 +30,24 @@ export const GlobalReviewModal: React.FC<GlobalReviewModalProps> = ({
     setLoading(true);
     setError(null);
     try {
-      // Trigger Global Review
-      const response = await aiApi.chat([
-        { role: 'user', content: '请对当前作品进行【全书体检】，检查逻辑一致性、人物OOC风险和剧情节奏问题。' }
-      ], { 
-        projectId, 
-        contextType: 'global' 
-      });
-      setReport(response);
+      // Use the new dedicated Global Review API endpoint
+      const response = await aiApi.reviewGlobal(projectId);
+      
+      console.log('Global Review Response:', response); // Debug log
+      
+      if (response.success && response.data?.report) {
+        setReport(response.data.report);
+      } else {
+        console.error('Response format issue:', response); // Debug log
+        setError(response.error?.message || '审阅失败，请稍后重试');
+      }
     } catch (err: any) {
-        if (err.response?.status === 429) {
-            setError("AI 服务繁忙 (429)。由于全书审阅消耗较大，请稍后再试。");
-        } else {
-            setError("审阅失败，请检查网络连接。");
-        }
+      console.error('Global Review Error:', err); // Debug log
+      if (err.response?.status === 429) {
+        setError("AI 服务繁忙 (429)。由于全书审阅消耗较大，请稍后再试。");
+      } else {
+        setError(err.message || "审阅失败，请检查网络连接。");
+      }
     } finally {
       setLoading(false);
     }

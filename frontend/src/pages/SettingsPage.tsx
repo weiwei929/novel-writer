@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Save, AlertCircle, Server, Key, Box, Globe } from 'lucide-react'
-import { settingsApi } from '../services/api'
+import { settingsApi, aiApi } from '../services/api'
 import { useNotifications } from '../hooks/useNotifications'
 import Layout from '../components/Layout'
 import { PageWrapper } from '../components/layout/PageWrapper'
@@ -9,6 +9,8 @@ const SettingsPage: React.FC = () => {
   const { success, error } = useNotifications()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [testing, setTesting] = useState(false)
+  const [testResult, setTestResult] = useState<{ success: boolean; message?: string; provider?: string; model?: string; error?: string } | null>(null)
   
   const [config, setConfig] = useState({
     provider: 'gemini',
@@ -51,6 +53,25 @@ const SettingsPage: React.FC = () => {
       error('保存失败')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleTestConnection = async () => {
+    setTesting(true)
+    setTestResult(null)
+    try {
+      const result = await aiApi.testConnection()
+      setTestResult(result)
+      if (result.success) {
+        success('连接成功', `模型: ${result.model || '未知'}`)
+      } else {
+        error('连接失败', result.error || '未知错误')
+      }
+    } catch (err) {
+      setTestResult({ success: false, error: '测试失败' })
+      error('测试失败')
+    } finally {
+      setTesting(false)
     }
   }
 
@@ -150,6 +171,49 @@ const SettingsPage: React.FC = () => {
                <AlertCircle size={12} />
                注意：如果您的网络无法直接连接 Google，请填写可用的反代地址。保持为空将使用默认官方地址。
             </p>
+          </div>
+
+          {/* Test Connection Section */}
+          <div className="pt-4 border-t border-gray-100">
+            <button
+              onClick={handleTestConnection}
+              disabled={testing || !config.apiKey}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm font-medium"
+            >
+              {testing ? (
+                <>测试中...</>
+              ) : (
+                <>
+                  <AlertCircle size={18} />
+                  测试连接
+                </>
+              )}
+            </button>
+            
+            {testResult && (
+              <div className={`mt-3 p-3 rounded-lg ${testResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                <div className="flex items-start gap-2">
+                  <div className={`mt-0.5 ${testResult.success ? 'text-green-600' : 'text-red-600'}`}>
+                    {testResult.success ? '✅' : '❌'}
+                  </div>
+                  <div className="flex-1">
+                    <p className={`font-medium ${testResult.success ? 'text-green-800' : 'text-red-800'}`}>
+                      {testResult.success ? '连接成功!' : '连接失败'}
+                    </p>
+                    {testResult.success && testResult.model && (
+                      <p className="text-sm text-green-700 mt-1">
+                        模型: {testResult.model}
+                      </p>
+                    )}
+                    {!testResult.success && testResult.error && (
+                      <p className="text-sm text-red-700 mt-1">
+                        {testResult.error}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Save Button */}

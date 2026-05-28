@@ -1,0 +1,15 @@
+{
+  "title": "测试字数统计",
+  "chapters": [
+    {
+      "title": "第一章",
+      "content": "这是一个测试章节。This is a test chapter. 总共应该有大约15个字。中文和English混合测试。",
+      "order": 1
+    },
+    {
+      "title": "第二章",
+      "content": "第二章内容更长一些。包含更多的中文字符和English words。我们需要验证字数统计是否准确。Word count should be calculated correctly for mixed content.",
+      "order": 2
+    }
+  ]
+}

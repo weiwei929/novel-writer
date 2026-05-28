@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
-import { Save, Eye, EyeOff, Maximize2, Minimize2, FileText, Palette } from 'lucide-react'
+import { Save, Eye, EyeOff, Maximize2, Minimize2, FileText, Palette, FileCode } from 'lucide-react'
 import EnhancedMonacoEditor, { EnhancedMonacoEditorRef } from './EnhancedMonacoEditor'
 
 
@@ -225,7 +225,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
   const editorHeight = isFullscreen ? 'calc(100vh - 60px)' : 'calc(100vh - 220px)'
 
   return (
-    <div className={containerClasses}>
+    <div className={`flex flex-col ${containerClasses}`}>
       {/* 工具栏 */}
       <div className="border-b bg-gray-50 p-3">
         <div className="flex items-center justify-between">
@@ -291,6 +291,15 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
                   <Palette size={16} />
                   <span>主题</span>
                 </button>
+                
+                <button
+                  onClick={() => monacoEditorRef.current?.toggleFrontmatter()}
+                  className="flex items-center space-x-1 px-3 py-1 text-sm border rounded hover:bg-gray-100"
+                  title="切换文档属性显示"
+                >
+                  <FileCode size={16} />
+                  <span>属性</span>
+                </button>
               </>
             )}
           </div>
@@ -341,7 +350,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
       </div>
 
       {/* 编辑器区域 */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-auto">
         {displayMode === 'edit' ? (
           /* 编辑模式 - 全宽编辑器 */
           <div className="w-full">

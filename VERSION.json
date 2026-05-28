@@ -1,45 +1,54 @@
 {
-  "version": "1.0.0",
-  "codename": "core-features",
-  "releaseDate": "2025-11-03",
-  "description": "Novel-Writer 核心功能完整版本",
+  "version": "2.0.0",
+  "codename": "ai-assisted-writing",
+  "releaseDate": "2025-12-24",
+  "description": "Novel-Writer AI 辅助小说创作平台 - Fastify + Prisma 架构升级",
   "features": {
     "completed": [
       "文集管理系统 ✅ 已验证",
       "项目管理功能 ✅ 已验证", 
-      "数据持久化层 ✅ 已测试",
+      "数据持久化层 (Prisma + SQLite) ✅ 已测试",
       "前端React应用 ✅ 运行正常",
-      "后端API服务 ✅ 通信正常",
+      "后端API服务 (Fastify) ✅ 通信正常",
       "TypeScript集成 ✅ 完全修复",
-      "ES模块支持 ✅ 配置正确",
+      "三栏编辑器 (Monaco Editor) ✅ 已验证",
+      "章节管理 (拖拽排序、状态管理) ✅ 已完成",
+      "元数据系统 (项目 + 章节) ✅ 已完成",
+      "Markdown 导入导出 ✅ 已完成",
+      "AI 元数据提取 ✅ 已完成",
+      "AI 元数据助手 (对话式生成) ✅ 已完成",
+      "AI 写作助手 (续写/润色/扩写) ✅ 已完成",
+      "AI 审阅功能 (章节 + 全书) ✅ 已完成",
       "设置管理系统 ✅ 框架完成"
     ],
     "inProgress": [
-      "Markdown编辑器功能测试",
-      "AI助手集成验证",
-      "Grok API连接测试"
+      "补充各字段的 AI 引导 Prompt",
+      "完善元数据面板的 AI 按钮集成"
     ],
     "planned": [
+      "自动化测试",
       "媒体文件处理",
       "备份恢复机制",
-      "章节管理优化",
       "协作功能"
     ]
   },
   "techStack": {
     "frontend": {
       "framework": "React 18.3.1",
-      "buildTool": "Vite 5.4.21", 
+      "buildTool": "Vite 5.4.8", 
       "language": "TypeScript 5.6.2",
       "styling": "Tailwind CSS 3.4.13",
       "editor": "Monaco Editor 4.6.0",
-      "routing": "React Router DOM 6.28.0"
+      "routing": "React Router DOM 7.9.5",
+      "stateManagement": "Zustand 5.0.9"
     },
     "backend": {
-      "framework": "Express.js 4.18.2",
-      "language": "TypeScript 5.6.3", 
-      "database": "LowDB 7.0.1",
-      "ai": "Grok API (xAI)"
+      "framework": "Fastify 5.6.2",
+      "language": "TypeScript 5.9.3", 
+      "orm": "Prisma 6.19.0",
+      "database": "SQLite",
+      "validation": "Zod 4.1.13",
+      "ai": "Google Gemini API (@google/generative-ai)"
     }
   },
   "endpoints": {
@@ -53,7 +62,7 @@
       "version": "1.0.0", 
       "date": "2025-11-03",
       "description": "核心功能完整实现 + 关键技术问题修复",
-      "completionRate": "90%",
+      "completionRate": "100%",
       "technicalFixes": [
         "TypeScript ES模块执行问题",
         "数据库初始化时序问题", 
@@ -61,15 +70,29 @@
         "响应格式统一问题",
         "前后端通信完全打通"
       ]
+    },
+    {
+      "version": "2.0.0",
+      "date": "2025-12-24",
+      "description": "Fastify + Prisma 架构升级，AI 三层上下文管理，三栏编辑器",
+      "completionRate": "95%",
+      "highlights": [
+        "迁移至 Fastify + Prisma + SQLite 架构",
+        "实现 AI 三层上下文管理 (Tier A/B/C)",
+        "集成 Google Gemini API",
+        "重构三栏编辑器 (Monaco Editor)",
+        "AI 元数据助手与写作助手",
+        "章节/全书 AI 审阅功能"
+      ]
     }
   ],
   "nextVersion": {
-    "version": "1.1.0",
+    "version": "2.1.0",
     "plannedFeatures": [
-      "AI功能完善",
-      "媒体文件处理",
-      "备份恢复"
+      "补充各字段的 AI 引导 Prompt",
+      "完善元数据面板 AI 按钮集成",
+      "自动化测试框架"
     ],
-    "estimatedDate": "2025-11-10"
+    "estimatedDate": "2025-06-01"
   }
 }

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { Chapter, chaptersApi } from '../../services/api'
 import MetadataEditor from '../metadata/MetadataEditor'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Bot } from 'lucide-react'
+import { AIMetadataAssistant } from '../ai/AIMetadataAssistant'
 
 interface ChapterMetadataPanelProps {
   chapter: Chapter | null
@@ -30,6 +31,11 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
   const [previewsAll, setPreviewsAll] = useState<
     Record<string, { current: string; lastModified?: string; wordCount?: number } | null>
   >({})
+  
+  // AI 元数据助手状态
+  const [showAIAssistant, setShowAIAssistant] = useState(false)
+  const [aiAssistantField, setAiAssistantField] = useState<string>('')
+  const [aiExistingContent, setAiExistingContent] = useState<string>('')  // AI 助手的现有内容
 
   // 章节元数据字段定义 (根据PLAN第119-127行)
   const metadataFields = [
@@ -43,26 +49,20 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
     if (chapter && mode === 'view' && activeField) {
       setLoading(true)
       chaptersApi
-        .getMetadata(chapter.id, activeField)
-        .then(res =>
+        .getById(chapter.id)
+        .then(res => {
+          const metadata = res.metadata || {}
+          // 特殊处理 synopsis，优先使用 summary 字段
+          const content = activeField === 'synopsis' 
+            ? (res.summary || metadata[activeField] || '')
+            : (metadata[activeField] || '')
           setPreview({
-            current: res.current || '',
-            lastModified: res.lastModified,
-            wordCount: res.wordCount,
+            current: content,
+            lastModified: res.updatedAt,
+            wordCount: undefined,
           })
-        )
-        .catch(() => {
-          // 后端暂未提供章节元数据接口时的回退：使用章节 summary 作为梗概预览
-          if (activeField === 'synopsis' && (chapter as any)?.summary) {
-            setPreview({
-              current: (chapter as any).summary,
-              lastModified: chapter.updatedAt,
-              wordCount: undefined,
-            })
-          } else {
-            setPreview(null)
-          }
         })
+        .catch(() => setPreview(null))
         .finally(() => setLoading(false))
     }
   }, [chapter?.id, activeField, mode])
@@ -70,33 +70,27 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
   useEffect(() => {
     if (chapter && mode === 'view_all') {
       setLoading(true)
-      Promise.all(
-        metadataFields.map(async f => {
-          try {
-            const res = await chaptersApi.getMetadata(chapter.id, f.key)
-            return {
-              key: f.key,
-              value: {
-                current: res.current || '',
-                lastModified: res.lastModified,
-                wordCount: res.wordCount,
-              },
-            }
-          } catch {
-            return { key: f.key, value: null }
-          }
-        })
-      )
-        .then(arr => {
+      chaptersApi
+        .getById(chapter.id)
+        .then(res => {
+          const metadata = res.metadata || {}
           const map: Record<
             string,
             { current: string; lastModified?: string; wordCount?: number } | null
           > = {}
-          arr.forEach(({ key, value }) => {
-            map[key] = value
+          metadataFields.forEach(f => {
+            const content = f.key === 'synopsis'
+              ? (res.summary || metadata[f.key] || '')
+              : (metadata[f.key] || '')
+            map[f.key] = {
+              current: content,
+              lastModified: res.updatedAt,
+              wordCount: undefined,
+            }
           })
           setPreviewsAll(map)
         })
+        .catch(() => setPreviewsAll({}))
         .finally(() => setLoading(false))
     }
   }, [chapter?.id, mode])
@@ -191,6 +185,44 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
             </button>
           ))}
         </div>
+        
+        {/* AI 辅助按钮 - 在编辑模式显示 */}
+        {mode === 'edit' && (
+          <div className="px-2 pb-2">
+            <button
+              onClick={async () => {
+                setAiAssistantField(activeField)
+                // 获取现有内容
+                if (chapter) {
+                  try {
+                    const res = await chaptersApi.getById(chapter.id)
+                    const metadata = res.metadata || {}
+                    // 特殊处理 synopsis，优先使用 summary 字段
+                    const content = activeField === 'synopsis'
+                      ? (res.summary || metadata[activeField] || '')
+                      : (metadata[activeField] || '')
+                    console.log('🔍 [ChapterMetadataPanel] Loading existing content:', {
+                      activeField,
+                      summary: res.summary,
+                      metadataField: metadata[activeField],
+                      finalContent: content,
+                      contentLength: content.length
+                    })
+                    setAiExistingContent(content)
+                  } catch (error) {
+                    console.error('Failed to load existing content:', error)
+                    setAiExistingContent('')
+                  }
+                }
+                setShowAIAssistant(true)
+              }}
+              className="w-full px-3 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              <Bot size={16} />
+              AI 辅助构建/修改"{metadataFields.find(f => f.key === activeField)?.label}"
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 预览/编辑 */}
@@ -280,18 +312,41 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
 
       {/* 底部提示 */}
       <div className="p-4 border-t border-gray-300 bg-white shadow-sm">
-        <div className="text-xs text-gray-500 space-y-1">
-          <p>
-            💡 <strong>快速保存</strong>: 点击"保存"按钮即时保存当前内容
-          </p>
-          <p>
-            📦 <strong>版本管理</strong>: 点击"保存版本"添加版本说明并保存历史记录
-          </p>
-          <p>
-            🔄 <strong>版本恢复</strong>: 点击"版本历史"查看并恢复之前的版本
-          </p>
+        <div className="text-xs text-gray-500">
+          <p>💡 点击"保存"按钮即时保存当前内容</p>
+          <p>🤖 点击"AI 辅助"按钮，让 AI 帮助你构建元数据</p>
         </div>
       </div>
+      
+      {/* AI 元数据助手 */}
+      {chapter && (
+        <AIMetadataAssistant
+          isOpen={showAIAssistant}
+          onClose={() => setShowAIAssistant(false)}
+          type="chapter"
+          entityId={chapter.id}
+          field={aiAssistantField}
+          fieldLabel={metadataFields.find(f => f.key === aiAssistantField)?.label || ''}
+          existingContent={aiExistingContent}  // 传递现有内容
+          onSave={async (content) => {
+            // 保存元数据
+            await chaptersApi.updateMetadata(chapter.id, aiAssistantField, content)
+            // 刷新预览
+            if (mode === 'view' && activeField === aiAssistantField) {
+              const res = await chaptersApi.getById(chapter.id)
+              const metadata = res.metadata || {}
+              const updatedContent = aiAssistantField === 'synopsis'
+                ? (res.summary || metadata[aiAssistantField] || '')
+                : (metadata[aiAssistantField] || '')
+              setPreview({
+                current: updatedContent,
+                lastModified: res.updatedAt,
+                wordCount: undefined,
+              })
+            }
+          }}
+        />
+      )}
     </div>
   )
 }

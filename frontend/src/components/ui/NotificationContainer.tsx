@@ -64,7 +64,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification }) => 
   return (
     <div
       className={`
-        min-w-80 max-w-md p-4 rounded-lg border shadow-lg
+        min-w-80 max-w-lg p-4 rounded-lg border shadow-lg
         animate-in slide-in-from-right duration-300
         ${getStyles()}
       `}
@@ -76,7 +76,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification }) => 
           <h4 className="text-sm font-medium">{notification.title}</h4>
 
           {notification.message && (
-            <p className="mt-1 text-sm opacity-90">{notification.message}</p>
+            <p className="mt-1 text-sm opacity-90 whitespace-pre-wrap break-words">{notification.message}</p>
           )}
 
           {notification.actions && notification.actions.length > 0 && (

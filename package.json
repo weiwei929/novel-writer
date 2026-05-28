@@ -1,6 +1,6 @@
 {
   "name": "novel-writer",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "AI-powered novel writing tool with collection management",
   "main": "backend/src/index.js",
   "scripts": {

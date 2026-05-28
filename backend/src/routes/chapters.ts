@@ -140,3 +140,6 @@ async function updateProjectStats(projectId: string) {
     data: { wordCount: aggregations._sum.wordCount || 0 }
   })
 }
+
+// Export utility functions for use in other routes
+export { countWords, updateProjectStats }

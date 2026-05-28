@@ -76,6 +76,17 @@ export function handleApiError(error: any): Promise<never> {
   if (error.response) {
     const { status, data } = error.response
 
+    // 如果后端返回的是 { success: false, error: "错误信息" } 格式（扁平字符串）
+    if (data && typeof data === 'object' && 'error' in data && typeof data.error === 'string') {
+      return Promise.reject(
+        new ApiError(
+          `HTTP_${status}`,
+          data.error,
+          { status, data }
+        )
+      )
+    }
+
     // 如果后端返回的是ApiResponse格式
     if (data && typeof data === 'object' && 'error' in data) {
       return Promise.reject(

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { Project, projectsApi } from '../../services/api'
 import MetadataEditor from '../metadata/MetadataEditor'
-import { X } from 'lucide-react'
+import { X, Bot } from 'lucide-react'
+import { AIMetadataAssistant } from '../ai/AIMetadataAssistant'
 
 interface ProjectMetadataPanelProps {
   project: Project
@@ -29,6 +30,11 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({
   const [previewsAll, setPreviewsAll] = useState<
     Record<string, { current: string; lastModified?: string; wordCount?: number } | null>
   >({})
+  
+  // AI 元数据助手状态
+  const [showAIAssistant, setShowAIAssistant] = useState(false)
+  const [aiAssistantField, setAiAssistantField] = useState<string>('')
+  const [aiExistingContent, setAiExistingContent] = useState<string>('')  // AI 助手的现有内容
 
   // 项目元数据字段定义（与后端白名单一致；章节规划使用单独入口）
   const metadataFields = [
@@ -44,14 +50,15 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({
     if (mode === 'view' && activeField) {
       setLoading(true)
       projectsApi
-        .getMetadata(project.id, activeField)
-        .then(res =>
+        .getById(project.id)
+        .then(res => {
+          const metadata = res.metadata || {}
           setPreview({
-            current: res.current || '',
-            lastModified: res.lastModified,
-            wordCount: res.wordCount,
+            current: metadata[activeField] || '',
+            lastModified: res.updatedAt,
+            wordCount: undefined,
           })
-        )
+        })
         .catch(() => setPreview(null))
         .finally(() => setLoading(false))
     }
@@ -60,33 +67,24 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({
   useEffect(() => {
     if (mode === 'view_all') {
       setLoading(true)
-      Promise.all(
-        metadataFields.map(async f => {
-          try {
-            const res = await projectsApi.getMetadata(project.id, f.key)
-            return {
-              key: f.key,
-              value: {
-                current: res.current || '',
-                lastModified: res.lastModified,
-                wordCount: res.wordCount,
-              },
-            }
-          } catch {
-            return { key: f.key, value: null }
-          }
-        })
-      )
-        .then(arr => {
+      projectsApi
+        .getById(project.id)
+        .then(res => {
+          const metadata = res.metadata || {}
           const map: Record<
             string,
             { current: string; lastModified?: string; wordCount?: number } | null
           > = {}
-          arr.forEach(({ key, value }) => {
-            map[key] = value
+          metadataFields.forEach(f => {
+            map[f.key] = {
+              current: metadata[f.key] || '',
+              lastModified: res.updatedAt,
+              wordCount: undefined,
+            }
           })
           setPreviewsAll(map)
         })
+        .catch(() => setPreviewsAll({}))
         .finally(() => setLoading(false))
     }
   }, [project.id, mode])
@@ -147,6 +145,31 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({
               </button>
             ))}
           </div>
+          
+          {/* AI 辅助按钮 - 在编辑模式显示 */}
+          {mode === 'edit' && (
+            <div className="px-2 pb-2">
+              <button
+                onClick={async () => {
+                  setAiAssistantField(activeField)
+                  // 获取现有内容
+                  try {
+                    const res = await projectsApi.getById(project.id)
+                    const metadata = res.metadata || {}
+                    setAiExistingContent(metadata[activeField] || '')
+                  } catch (error) {
+                    console.error('Failed to load existing content:', error)
+                    setAiExistingContent('')
+                  }
+                  setShowAIAssistant(true)
+                }}
+                className="w-full px-3 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all flex items-center justify-center gap-2 text-sm font-medium"
+              >
+                <Bot size={16} />
+                AI 辅助构建/修改"{metadataFields.find(f => f.key === activeField)?.label}"
+              </button>
+            </div>
+          )}
         </div>
 
         {/* 预览/编辑 */}
@@ -235,13 +258,36 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({
 
         {/* 底部提示 */}
         <div className="p-3 border-t bg-white">
-          <div className="text-xs text-gray-500 space-y-1">
-            <p>💡 快速保存：点击“保存”按钮即时保存当前内容</p>
-            <p>📦 版本管理：点击“保存版本”添加说明并保存历史记录</p>
-            <p>🔄 版本恢复：点击“版本历史”查看并恢复之前的版本</p>
+          <div className="text-xs text-gray-500">
+            <p>💡 点击"保存"按钮即时保存当前内容</p>
+            <p>🤖 点击"AI 辅助"按钮，让 AI 帮助你构建元数据</p>
           </div>
         </div>
       </div>
+      
+      {/* AI 元数据助手 */}
+      <AIMetadataAssistant
+        isOpen={showAIAssistant}
+        onClose={() => setShowAIAssistant(false)}
+        type="project"
+        entityId={project.id}
+        field={aiAssistantField}
+        fieldLabel={metadataFields.find(f => f.key === aiAssistantField)?.label || ''}
+        existingContent={aiExistingContent}  // 传递现有内容
+        onSave={async (content) => {
+          // 保存元数据
+          await projectsApi.updateMetadata(project.id, aiAssistantField, content)
+          // 刷新预览
+          if (mode === 'view' && activeField === aiAssistantField) {
+            const res = await projectsApi.getById(project.id)
+            const metadata = res.metadata || {}
+            setPreview({
+              current: metadata[aiAssistantField] || '',
+              lastModified: res.updatedAt,
+            })
+          }
+        }}
+      />
     </div>
   )
 }

@@ -11,6 +11,7 @@ import { Plus, FileText, LayoutGrid, LayoutList } from 'lucide-react'
 import { ProjectCard } from './ProjectCard'
 import { KanbanBoard } from './KanbanBoard'
 import { CreateProjectModal } from './CreateProjectModal'
+import { DeleteConfirmModal } from './DeleteConfirmModal'
 import { readMetadataFieldValue } from '../../utils/metadataField'
 
 const ProjectsList: React.FC = () => {
@@ -26,6 +27,13 @@ const ProjectsList: React.FC = () => {
   const [previewChapters, setPreviewChapters] = useState<any[]>([])
   const [previewLoading, setPreviewLoading] = useState(false)
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban')
+  
+  // Delete confirmation modal state
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; projectId: string; projectTitle: string }>({
+    show: false,
+    projectId: '',
+    projectTitle: ''
+  })
 
   useEffect(() => {
     ;(async () => {
@@ -85,16 +93,28 @@ const ProjectsList: React.FC = () => {
 
   // ... (handlers)
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('确定要删除这个项目吗？')) return
+  const handleDelete = (id: string) => {
+    const project = projects.find(p => p.id === id)
+    setDeleteConfirm({
+      show: true,
+      projectId: id,
+      projectTitle: project?.title || '该项目'
+    })
+  }
 
+  const confirmDelete = async () => {
     try {
-      await projectsApi.delete(id)
-      setProjects(projects.filter(p => p.id !== id))
+      await projectsApi.delete(deleteConfirm.projectId)
+      setProjects(projects.filter(p => p.id !== deleteConfirm.projectId))
+      setDeleteConfirm({ show: false, projectId: '', projectTitle: '' })
     } catch (err) {
       setError('删除项目失败')
       console.error('Error deleting project:', err)
     }
+  }
+
+  const cancelDelete = () => {
+    setDeleteConfirm({ show: false, projectId: '', projectTitle: '' })
   }
 
   const handleExport = async (project: Project) => {
@@ -313,6 +333,14 @@ const ProjectsList: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={deleteConfirm.show}
+        projectTitle={deleteConfirm.projectTitle}
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+      />
     </div>
   )
 }

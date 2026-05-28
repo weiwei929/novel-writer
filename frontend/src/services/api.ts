@@ -20,8 +20,9 @@ api.interceptors.response.use(
     return { ...response, data: handleApiResponse(response.data) }
   },
   (error) => {
-    // Handle network or 4xx/5xx errors
-    return Promise.reject(handleApiError(error))
+    // handleApiError already returns Promise.reject(ApiError)
+    // So we just return it directly, not wrap it again
+    return handleApiError(error)
   }
 )
 
@@ -189,13 +190,32 @@ export const projectsApi = {
     await api.delete(`/projects/${id}`)
   },
 
-  async importProject(data: { title: string; chapters: any[]; createdAt?: string }): Promise<Project> {
+  async importProject(data: { content: string; createdAt?: string }): Promise<Project> {
     const response = await api.post('/projects/import', data)
     return response.data
   },
 
   async exportProject(id: string): Promise<Blob> {
     const response = await api.get(`/projects/${id}/export`, { responseType: 'blob' })
+    return response.data
+  },
+
+  async confirmMetadata(id: string, confirmed: boolean, editedMetadata?: Record<string, any>): Promise<void> {
+    await api.post(`/projects/${id}/confirm-metadata`, { confirmed, editedMetadata })
+  },
+
+  async moveToDraft(id: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/move-to-draft`)
+    return response.data
+  },
+
+  async getImported(): Promise<Project[]> {
+    const response = await api.get('/projects')
+    return (response.data || []).filter((p: Project) => p.status === 'imported')
+  },
+
+  async extractMetadata(id: string): Promise<{ hasPendingMetadata: boolean }> {
+    const response = await api.post(`/projects/${id}/extract-metadata`)
     return response.data
   },
 
@@ -417,13 +437,10 @@ export const aiApi = {
       }
   },
 
-  async generateCharacter(description: string): Promise<ApiResponse<{ character: string }>> { 
+  async generateCharacter(projectId: string, description: string): Promise<ApiResponse<{ character: string }>> { 
       try {
-        const content = await this.chat([
-            { role: 'system', content: 'Generate a character profile JSON based on the description.' },
-            { role: 'user', content: description }
-        ]) 
-        return { success: true, data: { character: content } }
+        const response = await api.post('/ai/generate/character', { projectId, description });
+        return { success: true, data: response.data.data };
       } catch (error: any) {
         return {
           success: false,
@@ -450,6 +467,24 @@ export const aiApi = {
     }
   },
 
+  async reviewGlobal(projectId: string): Promise<ApiResponse<{ report: string }>> {
+    try {
+      const response = await api.post('/ai/review/global', { projectId });
+      // response.data is already unwrapped by handleApiResponse
+      // Backend returns: { success: true, data: { report: "..." } }
+      // After handleApiResponse: { report: "..." }
+      return { success: true, data: response.data };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: {
+          code: error.response?.status || 500,
+          message: error.response?.data?.error || 'Global review failed'
+        }
+      };
+    }
+  },
+
   async reviewChapter(chapterId: string, content: string): Promise<ApiResponse<{ report: string }>> {
     try {
       const response = await api.post('/ai/review/chapter', { chapterId, content });
@@ -464,6 +499,86 @@ export const aiApi = {
       };
     }
   },
+
+  // ===== AI 元数据助手 (NEW) =====
+  
+  async metadataChat(data: {
+    type: 'project' | 'chapter'
+    entityId: string
+    field: string
+    conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>
+    userMessage: string
+  }): Promise<ApiResponse<{ content: string }>> {
+    try {
+      const response = await api.post('/ai/metadata/chat', data)
+      return { success: true, data: response.data }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: {
+          code: error.response?.status || 500,
+          message: error.response?.data?.error || 'Metadata chat failed'
+        }
+      }
+    }
+  },
+
+  async metadataExtract(data: {
+    type: 'project' | 'chapter'
+    entityId: string
+    content: string
+  }): Promise<ApiResponse<{ extractedMetadata: string }>> {
+    try {
+      const response = await api.post('/ai/metadata/extract', data)
+      return { success: true, data: response.data }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: {
+          code: error.response?.status || 500,
+          message: error.response?.data?.error || 'Metadata extraction failed'
+        }
+      }
+    }
+  },
+
+  // ===== AI 章节大纲生成 (NEW) =====
+  
+  async generateChapterOutline(data: {
+    projectId: string
+    chapterCount?: number
+    userRequirements?: string
+  }): Promise<ApiResponse<{ outline: any }>> {
+    try {
+      const response = await api.post('/ai/chapters/generate-outline', data)
+      return { success: true, data: response.data }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: {
+          code: error.response?.status || 500,
+          message: error.response?.data?.error || 'Chapter outline generation failed'
+        }
+      }
+    }
+  },
+
+  async testConnection(): Promise<{ success: boolean; message?: string; provider?: string; model?: string; error?: string; details?: string }> {
+    try {
+      const response = await api.post('/ai/test-connection');
+      // handleApiResponse unwraps { success: true, data: {...} } to just {...}
+      return {
+        success: true,
+        ...response.data
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'API 连接失败',
+        details: error.details || error.toString()
+      };
+    }
+  }
 }
 
 export const statsApi = {

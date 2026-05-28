@@ -10,6 +10,8 @@ import AIReviewPanel from '../components/writer/AIReviewPanel'
 import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
 import { ArrowLeft, Save } from 'lucide-react'
 import { useNotifications } from '../hooks/useNotifications'
+import { MetadataMissingPrompt } from '../components/project/MetadataMissingPrompt'
+import { MetadataReviewModal } from '../components/import/MetadataReviewModal'
 import { readMetadataFieldValue } from '../utils/metadataField'
 
 const EnhancedEditorPageContent: React.FC = () => {
@@ -36,6 +38,12 @@ const EnhancedEditorPageContent: React.FC = () => {
   const [showChapterMetadata, setShowChapterMetadata] = useState(false)
   const [exitStatus, setExitStatus] = useState<'writing' | 'completed'>('writing')
   const [editorMode, setEditorMode] = useState<EditorMode>('pure')
+  
+  // 元数据提示相关状态
+  const [showMetadataPrompt, setShowMetadataPrompt] = useState(false)
+  const [showMetadataReview, setShowMetadataReview] = useState(false)
+  const [extractedMetadata, setExtractedMetadata] = useState<any>(null)
+  const [isAIAnalyzing, setIsAIAnalyzing] = useState(false)
 
   // 初始化加载：并行获取项目和章节
   useEffect(() => {
@@ -63,16 +71,22 @@ const EnhancedEditorPageContent: React.FC = () => {
       setChapters(chaptersData)
       setChapter(chapterData)
       
+      // 检查是否需要显示元数据提示 - 检查多个关键字段
+      const hasBasicMetadata = projectData.metadata?.synopsis || 
+                               projectData.metadata?.characters ||
+                               projectData.metadata?.plotStructure
+      const needsMetadata = projectData.status === 'draft' && !hasBasicMetadata
+      setShowMetadataPrompt(needsMetadata)
+      
       // 2. 构造编辑器内容
       const raw = chapterData.content || ''
       const hasHeader = /^#\s/.test(raw.trim()) || /^---\n/.test(raw.trim())
       let header = ''
       
       // 总是使用最新的项目和章节元数据构造
-      const projSynopsis = (projectData as any)?.metadata?.synopsis?.current || ''
-      const chapSynopsis = (chapterData as any)?.summary || (chapterData as any)?.metadata?.synopsis?.current || ''
+      // 注意：frontmatter 不应该包含大段元数据内容，只保留基本信息
       
-      header += `---\nprojectTitle: ${projectData.title}\nprojectAuthor: ${projectData.author}\nprojectCreatedAt: ${new Date(projectData.createdAt).toLocaleDateString()}\nprojectUpdatedAt: ${new Date(projectData.updatedAt).toLocaleDateString()}\nprojectSynopsis: ${projSynopsis}\nchapterOrder: ${chapterData.order}\nchapterTitle: ${chapterData.title}\nchapterAuthor: ${projectData.author}\nchapterCreatedAt: ${new Date(chapterData.createdAt).toLocaleDateString()}\nchapterUpdatedAt: ${new Date(chapterData.updatedAt).toLocaleDateString()}\nchapterSynopsis: ${chapSynopsis}\n---\n\n# ${projectData.title}\n\n`
+      header += `---\nprojectTitle: ${projectData.title}\nprojectAuthor: ${projectData.author}\nprojectCreatedAt: ${new Date(projectData.createdAt).toLocaleDateString()}\nprojectUpdatedAt: ${new Date(projectData.updatedAt).toLocaleDateString()}\nchapterOrder: ${chapterData.order}\nchapterTitle: ${chapterData.title}\nchapterAuthor: ${projectData.author}\nchapterCreatedAt: ${new Date(chapterData.createdAt).toLocaleDateString()}\nchapterUpdatedAt: ${new Date(chapterData.updatedAt).toLocaleDateString()}\n---\n\n# ${projectData.title}\n\n`
       header += `## 第 ${chapterData.order} 章：${chapterData.title}\n\n`
       
       const composed = hasHeader ? raw : `${header}${raw}`
@@ -130,10 +144,10 @@ const EnhancedEditorPageContent: React.FC = () => {
             kv[key] = val
           }
         }
+        // 保存元数据到数据库，但不写入 frontmatter
         if (kv['chapterSynopsis']) {
           try {
             await chaptersApi.update(chapter.id, { summary: kv['chapterSynopsis'] })
-            await chaptersApi.updateMetadata(chapter.id, 'synopsis', kv['chapterSynopsis'])
           } catch {}
         }
         if (kv['projectSynopsis'] && project) {
@@ -141,12 +155,14 @@ const EnhancedEditorPageContent: React.FC = () => {
             await projectsApi.updateMetadata(project.id, 'synopsis', kv['projectSynopsis'])
           } catch {}
         }
+        
+        // 重新构造 frontmatter，不包含元数据内容
         const nowStr = new Date().toISOString()
         kv['projectUpdatedAt'] = nowStr
         kv['chapterUpdatedAt'] = nowStr
         const pTitle = kv['projectTitle'] || project?.title || ''
         const cTitle = kv['chapterTitle'] || chapter.title
-        const header = `---\nprojectTitle: ${pTitle}\nprojectAuthor: ${kv['projectAuthor'] || project?.author || ''}\nprojectCreatedAt: ${kv['projectCreatedAt'] || new Date(project!.createdAt).toLocaleDateString()}\nprojectUpdatedAt: ${kv['projectUpdatedAt']}\nprojectSynopsis: ${kv['projectSynopsis'] || (project as any)?.metadata?.synopsis?.current || ''}\nchapterOrder: ${kv['chapterOrder'] || chapter.order}\nchapterTitle: ${cTitle}\nchapterAuthor: ${kv['chapterAuthor'] || project?.author || ''}\nchapterCreatedAt: ${kv['chapterCreatedAt'] || new Date(chapter.createdAt).toLocaleDateString()}\nchapterUpdatedAt: ${kv['chapterUpdatedAt']}\nchapterSynopsis: ${kv['chapterSynopsis'] || (chapter as any)?.summary || ''}\n---\n`
+        const header = `---\nprojectTitle: ${pTitle}\nprojectAuthor: ${kv['projectAuthor'] || project?.author || ''}\nprojectCreatedAt: ${kv['projectCreatedAt'] || new Date(project!.createdAt).toLocaleDateString()}\nprojectUpdatedAt: ${kv['projectUpdatedAt']}\nchapterOrder: ${kv['chapterOrder'] || chapter.order}\nchapterTitle: ${cTitle}\nchapterAuthor: ${kv['chapterAuthor'] || project?.author || ''}\nchapterCreatedAt: ${kv['chapterCreatedAt'] || new Date(chapter.createdAt).toLocaleDateString()}\nchapterUpdatedAt: ${kv['chapterUpdatedAt']}\n---\n`
         contentToSave = contentToSave.replace(fmMatch[0], header)
       }
 
@@ -230,6 +246,28 @@ const EnhancedEditorPageContent: React.FC = () => {
         notifySuccess('已插入内容', 'AI 生成内容已插入编辑器')
     }
   }
+  
+  // 元数据轮询函数
+  const pollForMetadata = async (projectId: string) => {
+    const checkMetadata = async () => {
+      try {
+        const project = await projectsApi.getById(projectId)
+        if (project.metadata?._draft) {
+          setExtractedMetadata(project.metadata._draft)
+          setIsAIAnalyzing(false) // 停止分析状态
+          setShowMetadataReview(true)
+        } else {
+          setTimeout(checkMetadata, 2000)
+        }
+      } catch (err) {
+        console.error('Failed to check metadata:', err)
+      }
+    }
+    
+    setTimeout(checkMetadata, 3000)
+  }
+  
+
 
   // 退出保存提醒（关闭页面或刷新时提示）
   useEffect(() => {
@@ -321,16 +359,27 @@ const EnhancedEditorPageContent: React.FC = () => {
                 <span className="text-gray-800">{readMetadataFieldValue(project?.metadata?.synopsis)}</span>
               </div>
             )}
-            {(readMetadataFieldValue((chapter as any)?.metadata?.synopsis) || chapter?.summary) && (
-              <div className="mt-1 text-xs line-clamp-1">
-                <span className="px-2 py-0.5 mr-2 rounded bg-green-100 text-green-700 border border-green-200">
-                  章节梗概
-                </span>
-                <span className="text-gray-700">
-                  {readMetadataFieldValue((chapter as any)?.metadata?.synopsis) || chapter?.summary}
-                </span>
-              </div>
-            )}
+            {(readMetadataFieldValue((chapter as any)?.metadata?.synopsis) || chapter?.summary) && (() => {
+              const fullSynopsis = readMetadataFieldValue((chapter as any)?.metadata?.synopsis) || chapter?.summary || ''
+              // 移除 Markdown 标题和多余空行
+              const cleanText = fullSynopsis
+                .replace(/^##?\s+.*$/gm, '')  // 移除 # 和 ## 标题
+                .replace(/^\*\*.*\*\*$/gm, '')  // 移除粗体标题
+                .replace(/\n{2,}/g, '\n')  // 多个换行替换为单个
+                .trim()
+              
+              return (
+                <div className="mt-1 text-xs group relative inline-block">
+                  <span className="px-2 py-0.5 rounded bg-green-100 text-green-700 border border-green-200 cursor-help">
+                    章节梗概
+                  </span>
+                  {/* 悬停显示完整内容 */}
+                  <div className="hidden group-hover:block absolute left-0 top-full mt-1 p-3 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-w-md whitespace-pre-wrap text-sm">
+                    {cleanText}
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         </div>
         <div className="flex items-center space-x-3">
@@ -443,6 +492,32 @@ const EnhancedEditorPageContent: React.FC = () => {
 
         {/* 中间主编辑区域 */}
         <div className="flex-1 flex flex-col overflow-hidden bg-white relative z-20 shadow-xl border-y border-gray-200">
+          {/* 元数据缺失提示 */}
+          {project && showMetadataPrompt && (
+            <div className="px-4 pt-4">
+              <MetadataMissingPrompt
+                projectId={project.id}
+                onAIStarted={() => {
+                  setShowMetadataPrompt(false)
+                  setIsAIAnalyzing(true) // 开始分析状态
+                  pollForMetadata(project.id)
+                }}
+                onDismiss={() => setShowMetadataPrompt(false)}
+              />
+            </div>
+          )}
+
+          {/* AI 分析中提示横幅 */}
+          {isAIAnalyzing && (
+            <div className="bg-blue-50 border-b border-blue-200 px-4 py-3 flex items-center justify-center gap-3 animate-pulse">
+              <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-blue-800 font-medium tracking-wide">
+                AI 正在深度阅读并分析您的作品，请稍候...
+              </span>
+            </div>
+          )}
+
+          
           <MarkdownEditor
             ref={editorRef}
             key={chapterId}
@@ -527,6 +602,37 @@ const EnhancedEditorPageContent: React.FC = () => {
           onClose={() => setShowProjectMetadata(false)}
           initialField={projectMetadataField}
           initialMode={'view_all'}
+        />
+      )}
+      
+      {/* 元数据确认模态框 */}
+      {showMetadataReview && extractedMetadata && project && (
+        <MetadataReviewModal
+          isOpen={showMetadataReview}
+          projectId={project.id}
+          projectTitle={project.title}
+          extractedMetadata={extractedMetadata}
+          onConfirm={async () => {
+            setShowMetadataReview(false)
+            setExtractedMetadata(null)
+            // 重新加载项目数据
+            try {
+              const updatedProject = await projectsApi.getById(project.id)
+              setProject(updatedProject)
+              setShowMetadataPrompt(false)
+              notifySuccess(
+                '元数据已保存',
+                'AI 分析结果已应用。您随时可以在顶部的"项目元数据"面板中查看和修改。'
+              )
+            } catch (error) {
+              console.error('Failed to refresh project data:', error)
+            }
+          }}
+          onReject={() => {
+            setShowMetadataReview(false)
+            setExtractedMetadata(null)
+          }}
+          onClose={() => setShowMetadataReview(false)}
         />
       )}
     </div>

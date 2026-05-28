@@ -20,7 +20,10 @@ export class ContextManager {
   
   /**
    * Build Tier A Context (Core Project Metadata)
-   * Must be included in ALL AI requests to ensure consistency.
+   * 
+   * ⚠️ 元数据 = 宪法
+   * 这些设定必须在所有 AI 请求中包含，并且必须严格遵守。
+   * AI 生成的任何内容都不得违反这些设定。
    */
   async buildProjectContext(projectId: string): Promise<string> {
     const project = await prisma.project.findUnique({
@@ -35,26 +38,61 @@ export class ContextManager {
     if (!project) throw new Error(`Project ${projectId} not found`);
 
     const meta = (project.metadata as any) || {};
-    const worldview = meta.worldview || '暂无世界观设定';
-    const logline = meta.logline || project.description || '暂无核心梗概';
-    const mainCharacters = project.characters || [];
-
-    let context = `--- 核心元数据 (TIER A) ---\n`;
-    context += `【书名】: ${project.title}\n`;
-    context += `【作者】: ${project.author || '未知'}\n`;
-    context += `【核心梗概】: ${logline}\n`;
-    context += `【世界观】: ${worldview}\n`;
     
-    if (mainCharacters.length > 0) {
-      context += `\n【核心人物表】:\n`;
-      // Limit to top 10 characters to save tokens, prioritized by role if possible
-      // For now, just take first 10
-      mainCharacters.slice(0, 10).forEach(char => {
+    // 构建上下文，明确标注元数据的"宪法"地位
+    let context = `=== 核心元数据 (TIER A - 宪法级约束) ===\n`;
+    context += `⚠️ 以下设定必须严格遵守，不得偏离！\n\n`;
+    
+    context += `【书名】: ${project.title}\n`;
+    context += `【作者】: ${project.author || '未知'}\n\n`;
+    
+    // 项目梗概（核心冲突、主题、走向）
+    if (meta.synopsis) {
+      context += `【项目梗概】:\n${meta.synopsis}\n\n`;
+    } else {
+      context += `【项目梗概】: ⚠️ 未设置（建议先完善元数据）\n`;
+      if (project.description) {
+        context += `  简介: ${project.description}\n\n`;
+      } else {
+        context += `\n`;
+      }
+    }
+    
+    // 人物设定
+    if (meta.characters) {
+      context += `【人物设定】:\n${meta.characters}\n\n`;
+    } else if (project.characters.length > 0) {
+      // 回退：使用 Character 表数据
+      context += `【人物设定】: (从人物库读取)\n`;
+      project.characters.slice(0, 10).forEach(char => {
         const desc = char.description || (char.profile ? JSON.stringify(char.profile).slice(0, 100) : '无描述');
         context += `- ${char.name} (${char.role || '角色'}): ${desc}\n`;
       });
+      context += `\n`;
     } else {
-        context += `\n【核心人物表】: 暂无人物设定\n`;
+      context += `【人物设定】: ⚠️ 未设置\n\n`;
+    }
+    
+    // 世界观/设定
+    if (meta.settings || meta.worldview) {
+      context += `【世界观/设定】:\n${meta.settings || meta.worldview}\n\n`;
+    } else {
+      context += `【世界观/设定】: ⚠️ 未设置\n\n`;
+    }
+    
+    // 时间线（可选）
+    if (meta.timeline) {
+      context += `【时间线】:\n${meta.timeline}\n\n`;
+    }
+    
+    // 关系网（可选）
+    if (meta.relationships) {
+      context += `【关系网】:\n${meta.relationships}\n\n`;
+    }
+    
+    // 情节结构（可选）
+    if (meta.plotStructure) {
+      context += `【情节结构】:\n${meta.plotStructure}\n\n`;
     }
 
     return context;
@@ -78,7 +116,10 @@ export class ContextManager {
     // 1. Get Tier A Context
     const tierA = await this.buildProjectContext(chapter.projectId);
 
-    // 2. Get Previous Chapter Summary (Context Continuity)
+    // 2. 章节元数据
+    const chapterMeta = (chapter.metadata as any) || {};
+    
+    // 3. Get Previous Chapter Summary (Context Continuity)
     const prevChapter = await prisma.chapter.findFirst({
         where: {
             projectId: chapter.projectId,
@@ -89,15 +130,39 @@ export class ContextManager {
     });
 
     let context = tierA;
-    context += `\n--- 章节作业环境 (TIER B) ---\n`;
-    context += `【当前章节】: 第${chapter.order}章 - ${chapter.title}\n`;
-    context += `【章节目标/摘要】: ${chapter.summary || '暂无摘要'}\n`;
+    context += `\n=== 章节元数据 (TIER B - 执行级约束) ===\n`;
+    context += `【当前章节】: 第${chapter.order}章 - ${chapter.title}\n\n`;
     
+    // 章节梗概（必填）
+    if (chapterMeta.synopsis) {
+      context += `【章节梗概】:\n${chapterMeta.synopsis}\n\n`;
+    } else if (chapter.summary) {
+      context += `【章节梗概】: ${chapter.summary}\n\n`;
+    } else {
+      context += `【章节梗概】: ⚠️ 未设置（建议先完善章节元数据）\n\n`;
+    }
+    
+    // 涉及人物
+    if (chapterMeta.characters) {
+      context += `【涉及人物】:\n${chapterMeta.characters}\n\n`;
+    }
+    
+    // 时间设定
+    if (chapterMeta.timeSetting) {
+      context += `【时间设定】: ${chapterMeta.timeSetting}\n\n`;
+    }
+    
+    // 场景设定
+    if (chapterMeta.sceneSettings) {
+      context += `【场景设定】:\n${chapterMeta.sceneSettings}\n\n`;
+    }
+    
+    // 前情提要
     if (prevChapter) {
-        context += `【前情提要】: (第${prevChapter.title}) ${prevChapter.summary || '暂无'}\n`;
+        context += `【前情提要】: (${prevChapter.title}) ${prevChapter.summary || '暂无'}\n\n`;
     }
 
-    context += `\n--- 当前正文 (截取末尾) ---\n`;
+    context += `=== 当前正文 (截取末尾) ===\n`;
     
     // Simple Token Management Strategy:
     // Limit context window to approx 8000 chars (~4000 tokens) to leave room for generation

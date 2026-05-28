@@ -4,8 +4,9 @@ import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
 import { PlannerBoard } from '../components/planner/PlannerBoard'
 import { ProjectOutline } from '../types/planner'
 import { useNotifications } from '../hooks/useNotifications'
-import { ArrowLeft, FileText, Play, Layout, Settings, List } from 'lucide-react'
+import { ArrowLeft, FileText, Play, Layout, Settings, List, Bot } from 'lucide-react'
 import ProjectManagementPanel from '../components/project/ProjectManagementPanel'
+import { ChapterOutlineGenerator } from '../components/ai/ChapterOutlineGenerator'
 
 const ProjectDetailPage: React.FC = () => {
   const navigate = useNavigate()
@@ -17,6 +18,9 @@ const ProjectDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'chapters' | 'planner' | 'settings'>('chapters')
+  
+  // AI 章节大纲生成器状态
+  const [showOutlineGenerator, setShowOutlineGenerator] = useState(false)
 
   const load = async () => {
     if (!id) return
@@ -138,12 +142,26 @@ const ProjectDetailPage: React.FC = () => {
              <div className="bg-white rounded-lg shadow-sm border">
                 <div className="p-4 border-b flex items-center justify-between">
                 <h2 className="text-lg font-semibold">章节列表</h2>
+                <button
+                  onClick={() => setShowOutlineGenerator(true)}
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all flex items-center gap-2 text-sm font-medium"
+                >
+                  <Bot size={16} />
+                  AI 生成章节大纲
+                </button>
                 </div>
 
                 {chapters.length === 0 ? (
                 <div className="p-10 text-center text-gray-500">
                     <FileText className="w-10 h-10 mx-auto mb-3 text-gray-400" />
-                    <div>该项目暂时没有章节，请使用"管理章节规划"（待集成）或直接创建</div>
+                    <div className="mb-4">该项目暂时没有章节</div>
+                    <button
+                      onClick={() => setShowOutlineGenerator(true)}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-medium"
+                    >
+                      <Bot size={18} />
+                      使用 AI 生成章节大纲
+                    </button>
                 </div>
                 ) : (
                 <div className="divide-y">
@@ -187,6 +205,19 @@ const ProjectDetailPage: React.FC = () => {
               />
           )}
       </div>
+      
+      {/* AI 章节大纲生成器 */}
+      {project && (
+        <ChapterOutlineGenerator
+          isOpen={showOutlineGenerator}
+          onClose={() => setShowOutlineGenerator(false)}
+          projectId={project.id}
+          onSuccess={() => {
+            load() // 重新加载章节列表
+            notifySuccess('章节大纲已成功导入！')
+          }}
+        />
+      )}
     </div>
   )
 }
