@@ -151,7 +151,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
           <div class="font-medium text-gray-900 mb-2">文档属性</div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <div class="text-xs text-gray-500 mb-1">项目</div>
+              <div class="text-xs text-gray-500 mb-1">作品</div>
               <div class="space-y-1 text-gray-700">
                 <div>标题：${pTitle}</div>
                 <div>作者：${kv['projectAuthor'] || ''}</div>

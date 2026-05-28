@@ -50,10 +50,10 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const handleMoveToDraft = async (projectId: string) => {
     try {
       await projectsApi.moveToDraft(projectId)
-      success('已转入原创构思', '项目已移动到创作区域')
+      success('已转入原创构思', '作品已移动到创作区域')
       onProjectUpdate()
     } catch (err: any) {
-      error('转移失败', err.message || '无法转移项目')
+      error('转移失败', err.message || '无法转移作品')
       console.error('Failed to move to draft:', err)
     }
   }
@@ -79,7 +79,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
           ))}
           {columns.imported.length === 0 && (
              <div className="text-center py-8 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-lg">
-                暂无导入项目
+                暂无导入作品
              </div>
           )}
         </div>
@@ -105,7 +105,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
           ))}
            {columns.original.length === 0 && (
              <div className="text-center py-8 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-lg">
-                点击上方 + 创建新项目
+                点击上方 + 创建新作品
              </div>
           )}
         </div>

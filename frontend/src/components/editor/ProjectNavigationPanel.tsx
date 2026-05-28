@@ -62,13 +62,13 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
     <div className={`w-80 h-full bg-gray-100 flex flex-col overflow-hidden ${className}`}>
       {/* 顶部工具栏 */}
       <div className="flex items-center justify-between p-4 border-b border-gray-300 bg-white shadow-sm">
-        <h2 className="font-semibold text-gray-900 truncate flex-1">项目导航</h2>
+        <h2 className="font-semibold text-gray-900 truncate flex-1">作品导航</h2>
         <div className="flex items-center gap-1">
           {onProjectSettings && (
             <button
               onClick={() => onProjectSettings()}
               className="p-1.5 hover:bg-gray-100 rounded"
-              title="项目设置"
+              title="作品设置"
             >
               <Settings className="w-4 h-4" />
             </button>

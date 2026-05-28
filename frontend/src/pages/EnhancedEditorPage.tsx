@@ -323,7 +323,7 @@ const EnhancedEditorPageContent: React.FC = () => {
             onClick={() => navigate('/projects')}
             className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
-            返回项目列表
+            返回作品列表
           </button>
         </div>
       </div>
@@ -339,7 +339,7 @@ const EnhancedEditorPageContent: React.FC = () => {
             className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft size={20} />
-            <span>返回项目</span>
+            <span>返回作品</span>
           </button>
           <div className="h-5 w-px bg-gray-300"></div>
           <div className="flex flex-col">
@@ -399,7 +399,7 @@ const EnhancedEditorPageContent: React.FC = () => {
             onClick={() => setShowProjectMetadata(true)}
             className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50"
           >
-            项目元数据
+            作品元数据
           </button>
           {chapter && (
             <button
@@ -467,7 +467,7 @@ const EnhancedEditorPageContent: React.FC = () => {
         </div>
       </div>
       <div className="flex-1 flex overflow-hidden">
-        {/* 左侧边栏 - 项目导航 */}
+        {/* 左侧边栏 - 作品导航 */}
         {project && (
           <div className="bg-gray-100 border-r border-gray-300 shadow-lg h-full">
             <ProjectNavigationPanel
@@ -551,7 +551,7 @@ const EnhancedEditorPageContent: React.FC = () => {
                               : content
 
                         await projectsApi.updateMetadata(project.id, field, newVal);
-                        notifySuccess('设定已更新', `已更新项目的 ${field}`);
+                        notifySuccess('设定已更新', `已更新作品的 ${field}`);
                         // Refresh project data to update context
                         const updated = await projectsApi.getById(project.id);
                         setProject(updated);

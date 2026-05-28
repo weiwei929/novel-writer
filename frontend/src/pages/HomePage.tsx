@@ -29,8 +29,8 @@ const HomePage: React.FC = () => {
         />
         <FeatureCard
           icon={<FileText className="w-8 h-8" />}
-          title="项目管理"
-          description="创建和跟踪小说项目，管理章节和创作进度"
+          title="作品管理"
+          description="创建和跟踪小说作品，管理章节和创作进度"
           linkTo="/projects"
           color="green"
         />
@@ -63,7 +63,7 @@ const HomePage: React.FC = () => {
             </div>
             <div>
               <h3 className="font-medium">创建新文集</h3>
-              <p className="text-sm text-gray-600">开始一个新的创作项目</p>
+              <p className="text-sm text-gray-600">开始一个新的创作</p>
             </div>
           </Link>
           <Link
@@ -74,8 +74,8 @@ const HomePage: React.FC = () => {
               <FileText className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <h3 className="font-medium">查看所有项目</h3>
-              <p className="text-sm text-gray-600">管理现有的小说项目</p>
+              <h3 className="font-medium">查看所有作品</h3>
+              <p className="text-sm text-gray-600">管理现有的小说作品</p>
             </div>
           </Link>
           <Link

@@ -59,11 +59,11 @@ const StatsPage: React.FC = () => {
       description: '已创建的文集数量',
     },
     {
-      title: '项目总数',
+      title: '作品总数',
       value: stats.projects,
       icon: FileText,
       color: 'green',
-      description: '正在进行的创作项目',
+      description: '正在进行的创作',
     },
     {
       title: '章节总数',
@@ -195,7 +195,7 @@ const StatsPage: React.FC = () => {
                     ? Math.round(stats.totalWords / stats.projects).toLocaleString()
                     : '0'}
                 </div>
-                <div className="text-sm text-blue-700">每项目平均字数</div>
+                <div className="text-sm text-blue-700">每部作品平均字数</div>
               </div>
 
               <div className="bg-green-50 p-4 rounded-lg">
@@ -204,7 +204,7 @@ const StatsPage: React.FC = () => {
                     ? Math.round((stats.chapters / stats.projects) * 10) / 10
                     : '0'}
                 </div>
-                <div className="text-sm text-green-700">每项目平均章节</div>
+                <div className="text-sm text-green-700">每部作品平均章节</div>
               </div>
 
               <div className="bg-purple-50 p-4 rounded-lg">

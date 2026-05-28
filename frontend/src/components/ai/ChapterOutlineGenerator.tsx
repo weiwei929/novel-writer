@@ -128,7 +128,7 @@ export const ChapterOutlineGenerator: React.FC<ChapterOutlineGeneratorProps> = (
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-800">AI 章节大纲生成</h2>
-              <p className="text-sm text-gray-500">基于项目元数据，一次性生成完整的章节规划</p>
+              <p className="text-sm text-gray-500">基于作品元数据，一次性生成完整的章节规划</p>
             </div>
           </div>
           <button onClick={handleClose} className="p-2 hover:bg-white/50 rounded-full transition-colors">

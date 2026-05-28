@@ -169,6 +169,7 @@ novel-writer/
 
 ## 📖 文档
 
+- **[变更日志](./CHANGELOG.md)** - 版本变更记录
 - **[文档索引](./docs/INDEX.md)** - 所有文档的导航
 - **[架构说明](./docs/ARCHITECTURE.md)** - 系统架构和设计决策
 - **[开发指南](./docs/DEVELOPMENT.md)** - 开发环境和工作流程

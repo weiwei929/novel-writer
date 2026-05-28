@@ -99,7 +99,7 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({
         {/* 顶部工具栏 */}
         <div className="flex items-center justify-between p-3 border-b bg-white">
           <div className="min-w-0">
-            <h2 className="font-semibold text-gray-900 truncate">项目元数据</h2>
+            <h2 className="font-semibold text-gray-900 truncate">作品元数据</h2>
             <div className="text-xs text-gray-500 truncate">{project.title}</div>
           </div>
           <div className="flex items-center gap-2">

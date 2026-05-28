@@ -56,7 +56,12 @@ const SCHEMAS: Record<string, string> = {
   }`
 };
 
-
+/** OpenAI-compatible 提供商的默认 Base URL */
+const DEFAULT_BASE_URLS: Record<string, string> = {
+  openai: 'https://api.openai.com',
+  deepseek: 'https://api.deepseek.com',
+  ollama: 'http://localhost:11434',
+};
 
 import { settingsManager } from '../SettingsManager';
 
@@ -96,6 +101,77 @@ export class AIService {
       return settingsManager.getSettings().ai;
   }
 
+  /** 判断是否为 OpenAI-compatible 提供商 */
+  private isOpenAICompat(provider: string): boolean {
+    return ['openai', 'deepseek', 'ollama'].includes(provider);
+  }
+
+  // ========== OpenAI-compatible Chat ==========
+
+  private async openaiCompatChat(messages: AIChatMessage[]): Promise<string> {
+    const config = this.getConfig();
+    const baseUrl = config.baseUrl || DEFAULT_BASE_URLS[config.provider] || '';
+    const model = config.model || 'gpt-3.5-turbo';
+
+    logDebug('openaiCompatChat', { provider: config.provider, baseUrl, model });
+
+    const res = await axios.post(
+      `${baseUrl}/v1/chat/completions`,
+      {
+        model,
+        messages: messages.map(m => ({ role: m.role, content: m.content })),
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${config.apiKey}`,
+        },
+        timeout: 60000,
+      }
+    );
+
+    return res.data.choices?.[0]?.message?.content || '';
+  }
+
+  private async openaiCompatStructured(prompt: string, schemaDescription: string): Promise<string> {
+    const config = this.getConfig();
+    const baseUrl = config.baseUrl || DEFAULT_BASE_URLS[config.provider] || '';
+    const model = config.model || 'gpt-3.5-turbo';
+    const schemaDef = SCHEMAS[schemaDescription] || schemaDescription;
+
+    const res = await axios.post(
+      `${baseUrl}/v1/chat/completions`,
+      {
+        model,
+        messages: [
+          {
+            role: 'system',
+            content: `You are a specialized AI designed to output strictly valid JSON.
+
+Output Schema:
+${schemaDef}
+
+Ensure the response is a valid JSON object matching this schema. Do not include markdown formatting.`
+          },
+          { role: 'user', content: `User Request: ${prompt}` }
+        ],
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${config.apiKey}`,
+        },
+        timeout: 60000,
+      }
+    );
+
+    const text = res.data.choices?.[0]?.message?.content || '';
+    const cleanText = text.replace(/```json\n|\n```/g, '').trim();
+    return cleanText;
+  }
+
+  // ========== Chat ==========
+
   async chat(messages: AIChatMessage[]): Promise<string> {
     const config = this.getConfig();
     logDebug('chat called', { provider: config.provider, messageCount: messages.length });
@@ -104,6 +180,7 @@ export class AIService {
       return this.mockChat(messages);
     }
     
+    // Gemini
     if (config.provider === 'gemini' && this.model) {
       try {
         const systemMsg = messages.find(m => m.role === 'system')?.content;
@@ -114,8 +191,6 @@ export class AIService {
             parts: [{ text: m.content }]
           }));
 
-        // Gemini requires history to start with 'user'
-        // If the first message is 'model', remove it (often the "Hi I'm AI" greeting)
         if (conversation.length > 0 && conversation[0].role === 'model') {
             conversation = conversation.slice(1);
         }
@@ -135,8 +210,21 @@ export class AIService {
       }
     }
 
+    // OpenAI-compatible (openai / deepseek / ollama)
+    if (this.isOpenAICompat(config.provider) && config.apiKey) {
+      try {
+        return await this.openaiCompatChat(messages);
+      } catch (e: any) {
+        console.error(`${config.provider} Chat Error`, e);
+        const detail = e.response?.data?.error?.message || e.message;
+        return `Error: ${detail}`;
+      }
+    }
+
     return "Provider not implemented or configured";
   }
+
+  // ========== Structured Generation ==========
 
   async generateStructured<T>(prompt: string, schemaDescription: string): Promise<T> {
     const config = this.getConfig();
@@ -146,6 +234,7 @@ export class AIService {
        if (schemaDescription.includes('ReviewReport')) return this.mockReview(prompt) as unknown as T;
     }
     
+    // Gemini
     if (config.provider === 'gemini' && this.model) {
        try {
          const jsonModel = this.genAI!.getGenerativeModel({
@@ -178,8 +267,22 @@ export class AIService {
        }
     }
 
+    // OpenAI-compatible (openai / deepseek / ollama)
+    if (this.isOpenAICompat(config.provider) && config.apiKey) {
+      try {
+        const jsonStr = await this.openaiCompatStructured(prompt, schemaDescription);
+        return JSON.parse(jsonStr) as T;
+      } catch (e: any) {
+        logDebug(`${config.provider} Structured Error`, { message: e.message });
+        console.error(`${config.provider} Structured Error`, e);
+        throw e;
+      }
+    }
+
     throw new Error('Provider not supported or schema unknown');
   }
+
+  // ========== Mock ==========
 
   private async mockChat(messages: AIChatMessage[]): Promise<string> {
     const systemMsg = messages.find(m => m.role === 'system')?.content || '';
@@ -194,10 +297,9 @@ export class AIService {
      return { premise: prompt, acts: [] };
   }
 
-  private mockReview(content: string): any {
+  private mockReview(_content: string): any {
      return { overallScore: 7.5, issues: [] };
   }
 }
 
 export const aiService = new AIService();
-

@@ -152,8 +152,8 @@ const ProjectsList: React.FC = () => {
     <div className="h-full flex flex-col">
       <div className="flex justify-between items-center mb-6 flex-shrink-0">
         <div>
-          <h1 className="text-2xl font-bold">项目管理</h1>
-          <p className="text-gray-600 mt-1">管理你的小说创作项目</p>
+          <h1 className="text-2xl font-bold">作品管理</h1>
+          <p className="text-gray-600 mt-1">管理你的小说作品</p>
         </div>
         <div className="flex gap-3">
            {/* View Toggles */}
@@ -179,7 +179,7 @@ const ProjectsList: React.FC = () => {
             className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-blue-600 text-sm font-medium"
           >
             <Plus size={20} />
-            创建项目
+            创建作品
           </button>
         </div>
       </div>
@@ -212,25 +212,25 @@ const ProjectsList: React.FC = () => {
              <>
                 <FileText size={64} className="mx-auto text-gray-400 mb-4" />
                 <p className="text-gray-500 text-lg mb-4">
-                  {selectedCollection ? '该文集中还没有项目' : '还没有项目'}
+                  {selectedCollection ? '该文集中还没有作品' : '还没有作品'}
                 </p>
                 <button
                   onClick={() => setShowCreateModal(true)}
                   className="bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-600"
                 >
-                  创建第一个项目
+                  创建第一个作品
                 </button>
              </>
           ) : (
              // Projects exist but filtered out by tag
              <>
                 <div className="text-gray-400 mb-4 text-6xl">🏷️</div>
-                <p className="text-gray-500 text-lg mb-4">没有找到标签为 #{selectedTag} 的项目</p>
+                <p className="text-gray-500 text-lg mb-4">没有找到标签为 #{selectedTag} 的作品</p>
                 <button
                   onClick={() => setSelectedTag('')}
                   className="text-blue-500 hover:underline"
                 >
-                  查看所有项目
+                  查看所有作品
                 </button>
              </>
           )}

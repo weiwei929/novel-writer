@@ -20,7 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const navItems = [
     { path: '/', label: '首页', icon: Home },
-    { path: '/projects', label: '项目管理', icon: FileText },
+    { path: '/projects', label: '作品管理', icon: FileText },
     { path: '/collections', label: '素材/设定', icon: Archive },
     { path: '/scraps', label: '灵感碎片', icon: StickyNote },
     { path: '/editor', label: '写作编辑器', icon: Edit },

@@ -17,6 +17,7 @@ const StatsPage = lazy(() => import('./pages/StatsPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const FileManagerPage = lazy(() => import('./pages/FileManagerPage'))
 const ApiTestPage = lazy(() => import('./pages/ApiTestPage'))
+const ScrapsPage = lazy(() => import('./pages/ScrapsPage'))
 
 import { PageWrapper as UI_PageWrapper } from './components/layout/PageWrapper'
 
@@ -35,115 +36,122 @@ const SuspenseWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) 
   </Suspense>
 )
 
-function App() {
+// 路由配置（模块级单例，避免每次渲染重新创建）
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <HomePage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/settings',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <SettingsPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/collections',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <CollectionsPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/projects',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <ProjectsPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/projects/:id',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <ProjectDetailPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/editor/:projectId/:chapterId',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <EnhancedEditorPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/editor',
+    element: <Navigate to="/projects" replace />,
+  },
+  {
+    path: '/scraps',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <ScrapsPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/stats',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <StatsPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/files',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <FileManagerPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/api-test',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <ApiTestPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+])
+
+export default function App() {
   return (
     <ErrorBoundary>
       <AuthGuard>
-        <RouterProvider
-          router={createBrowserRouter([
-            {
-              path: '/',
-              element: (
-                <Layout>
-                  <SuspenseWrapper>
-                    <HomePage />
-                  </SuspenseWrapper>
-                </Layout>
-              ),
-            },
-            {
-              path: '/settings',
-              element: (
-                <Layout>
-                  <SuspenseWrapper>
-                    <SettingsPage />
-                  </SuspenseWrapper>
-                </Layout>
-              ),
-            },
-            {
-              path: '/collections',
-              element: (
-                <Layout>
-                  <SuspenseWrapper>
-                    <CollectionsPage />
-                  </SuspenseWrapper>
-                </Layout>
-              ),
-            },
-            {
-              path: '/projects',
-              element: (
-                <Layout>
-                  <SuspenseWrapper>
-                    <ProjectsPage />
-                  </SuspenseWrapper>
-                </Layout>
-              ),
-            },
-            {
-              path: '/projects/:id',
-              element: (
-                <Layout>
-                  <SuspenseWrapper>
-                    <ProjectDetailPage />
-                  </SuspenseWrapper>
-                </Layout>
-              ),
-            },
-            {
-              path: '/editor/:projectId/:chapterId',
-              element: (
-                <Layout>
-                  <SuspenseWrapper>
-                    <EnhancedEditorPage />
-                  </SuspenseWrapper>
-                </Layout>
-              ),
-            },
-            {
-              path: '/editor',
-              element: <Navigate to="/projects" replace />,
-            },
-            {
-              path: '/stats',
-              element: (
-                <Layout>
-                  <SuspenseWrapper>
-                    <StatsPage />
-                  </SuspenseWrapper>
-                </Layout>
-              ),
-            },
-            {
-              path: '/files',
-              element: (
-                <Layout>
-                  <SuspenseWrapper>
-                    <FileManagerPage />
-                  </SuspenseWrapper>
-                </Layout>
-              ),
-            },
-            {
-              path: '/api-test',
-              element: (
-                <Layout>
-                  <SuspenseWrapper>
-                    <ApiTestPage />
-                  </SuspenseWrapper>
-                </Layout>
-              ),
-            },
-          ])}
-        />
-
-        {/* 全局UI组件 */}
+        <RouterProvider router={router} />
         <NotificationContainer />
         <LoadingOverlay />
       </AuthGuard>
     </ErrorBoundary>
   )
 }
-
-export default App

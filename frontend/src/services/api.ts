@@ -111,11 +111,12 @@ export interface CreateChapterData {
 
 export interface Scrap {
   id: string
-  projectId: string
+  projectId?: string
   content: string
   note?: string
   tags?: string[] | string // Can be array or string depending on usage, DB is Json
   originalChapterId?: string
+  project?: { title: string }   // Included via backend `include`
   createdAt: string
 }
 
@@ -311,13 +312,23 @@ export const chaptersApi = {
 }
 
 export const scrapsApi = {
+  async getAll(): Promise<Scrap[]> {
+    const response = await api.get('/scraps')
+    return response.data
+  },
+
   async getByProjectId(projectId: string): Promise<Scrap[]> {
     const response = await api.get(`/scraps/project/${projectId}`)
     return response.data
   },
   
-  async create(data: { projectId: string; content: string; tags?: string[]; note?: string }): Promise<Scrap> {
+  async create(data: { projectId?: string; content: string; tags?: string[]; note?: string }): Promise<Scrap> {
     const response = await api.post('/scraps', data)
+    return response.data
+  },
+
+  async update(id: string, data: { content?: string; tags?: string[]; note?: string; projectId?: string }): Promise<Scrap> {
+    const response = await api.put(`/scraps/${id}`, data)
     return response.data
   },
 

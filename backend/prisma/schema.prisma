@@ -89,8 +89,8 @@ model Scrap {
   tags      Json?    // JSON string or comma-separated tags
   
   // Where did this come from?
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String?
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
   
   // Optional linkage to original chapter context
   originalChapterId String?

@@ -3,6 +3,7 @@ import { aiService } from '../services/ai/AIService';
 
 import { promptManager } from '../services/ai/PromptManager';
 import { contextManager } from '../services/ai/ContextManager';
+import { settingsManager } from '../services/SettingsManager';
 
 interface ChatRequest {
   messages: { role: 'user' | 'assistant' | 'system', content: string }[];
@@ -91,8 +92,14 @@ export async function aiRoutes(fastify: FastifyInstance) {
   });
 
   // 3. Status
-  fastify.get('/status', async (request, reply) => {
-    return { status: 'available', provider: 'mock' };
+  fastify.get('/status', async (_request, _reply) => {
+    const config = settingsManager.getSettings().ai;
+    const hasKey = !!config.apiKey;
+    return {
+      status: hasKey ? 'available' : 'unconfigured',
+      provider: config.provider,
+      model: config.model || 'gemini-1.5-pro',
+    };
   });
 
   // 4. Test Connection
@@ -106,7 +113,7 @@ export async function aiRoutes(fastify: FastifyInstance) {
       const response = await aiService.chat(testMessages);
       
       // If we get here, the connection is successful
-      const config = (await import('../services/SettingsManager')).settingsManager.getSettings().ai;
+      const config = settingsManager.getSettings().ai;
       
       return { 
         success: true, 

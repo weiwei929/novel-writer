@@ -78,13 +78,13 @@ const ProjectDetailPage: React.FC = () => {
     return (
       <div className="p-6">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 text-red-700">
-          {error || '项目不存在'}
+          {error || '作品不存在'}
         </div>
         <button
           onClick={() => navigate('/projects')}
           className="px-4 py-2 bg-gray-600 text-white rounded"
         >
-          返回项目列表
+          返回作品列表
         </button>
       </div>
     )
@@ -130,7 +130,7 @@ const ProjectDetailPage: React.FC = () => {
             >
                 <div className="flex items-center gap-2">
                     <Settings size={16} />
-                    项目设置
+                    作品设置
                 </div>
             </button>
         </div>
@@ -154,7 +154,7 @@ const ProjectDetailPage: React.FC = () => {
                 {chapters.length === 0 ? (
                 <div className="p-10 text-center text-gray-500">
                     <FileText className="w-10 h-10 mx-auto mb-3 text-gray-400" />
-                    <div className="mb-4">该项目暂时没有章节</div>
+                    <div className="mb-4">该作品暂时没有章节</div>
                     <button
                       onClick={() => setShowOutlineGenerator(true)}
                       className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-medium"

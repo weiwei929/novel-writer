@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { Save, AlertCircle, Server, Key, Box, Globe } from 'lucide-react'
 import { settingsApi, aiApi } from '../services/api'
 import { useNotifications } from '../hooks/useNotifications'
-import Layout from '../components/Layout'
-import { PageWrapper } from '../components/layout/PageWrapper'
 
 const SettingsPage: React.FC = () => {
   const { success, error } = useNotifications()
@@ -239,13 +237,4 @@ const SettingsPage: React.FC = () => {
   )
 }
 
-// Wrap with Layout for direct route usage if needed, or imported
-export default function SettingsPageWrapper() {
-    return (
-        <Layout>
-            <PageWrapper>
-                <SettingsPage />
-            </PageWrapper>
-        </Layout>
-    )
-}
+export default SettingsPage

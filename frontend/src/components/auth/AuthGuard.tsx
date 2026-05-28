@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import { Lock, Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { Lock, Eye, EyeOff, AlertCircle, X } from 'lucide-react'
 import api from '../../services/api'
 
 interface AuthGuardProps {
@@ -23,6 +23,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [bannerDismissed, setBannerDismissed] = useState(false)
 
   // 检查认证状态
   const checkAuthStatus = async () => {
@@ -108,16 +109,25 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     return (
       <div>
         {/* 认证状态栏 */}
-        {authStatus.requireAuth && (
+        {authStatus.requireAuth && !bannerDismissed && (
           <div className="bg-green-50 border-b border-green-200 px-4 py-2 text-sm">
             <div className="flex justify-between items-center max-w-7xl mx-auto">
               <span className="text-green-800">✅ 已通过认证</span>
-              <button
-                onClick={handleLogout}
-                className="text-green-600 hover:text-green-800 font-medium"
-              >
-                退出登录
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleLogout}
+                  className="text-green-600 hover:text-green-800 font-medium"
+                >
+                  退出登录
+                </button>
+                <button
+                  onClick={() => setBannerDismissed(true)}
+                  className="p-0.5 rounded hover:bg-green-100 text-green-500 hover:text-green-700 transition-colors"
+                  title="关闭"
+                >
+                  <X size={14} />
+                </button>
+              </div>
             </div>
           </div>
         )}
