@@ -1,6 +1,6 @@
 /**
  * 加载状态 Hook - 兼容层
- * 提供与旧 UIContext 相同的 API，但使用 Zustand store
+ * Zustand store 封装 —— 统一状态管理入口
  */
 import { useUIStore } from '../stores/uiStore'
 import { LoadingState } from '../stores/uiStore'
