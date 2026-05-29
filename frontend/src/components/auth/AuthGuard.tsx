@@ -207,9 +207,8 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
             </button>
           </div>
 
-          <div className="text-xs text-gray-500 text-center space-y-1">
-            <p>💡 提示：默认密码是 "novel2024"</p>
-            <p>🔒 这是本地单用户应用，密码仅用于防止误操作</p>
+          <div className="text-xs text-gray-500 text-center">
+            <p>🔒 单用户应用，请输入密码继续</p>
           </div>
         </form>
       </div>
