@@ -52,7 +52,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         // 2. 写入初始项目元数据（梗概）
         try {
           await projectsApi.updateMetadata(newProject.id, 'synopsis', initialSynopsis.trim())
-        } catch {}
+        } catch (e) { console.error('Failed to save initial synopsis:', e) }
 
         // 3. 默认生成第1章（可开关）
         if (autoCreateFirstChapter) {
@@ -65,7 +65,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             })
             await chaptersApi.update(created.id, { summary: initialSynopsis.trim() })
             await chaptersApi.updateMetadata(created.id, 'synopsis', initialSynopsis.trim())
-          } catch {}
+          } catch (e) { console.error('Failed to save initial synopsis:', e) }
         }
 
         navigate(`/projects/${newProject.id}`)

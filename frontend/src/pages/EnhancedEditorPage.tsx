@@ -148,12 +148,12 @@ const EnhancedEditorPageContent: React.FC = () => {
         if (kv['chapterSynopsis']) {
           try {
             await chaptersApi.update(chapter.id, { summary: kv['chapterSynopsis'] })
-          } catch {}
+          } catch (e) { console.error('Failed to save chapter synopsis:', e) }
         }
         if (kv['projectSynopsis'] && project) {
           try {
             await projectsApi.updateMetadata(project.id, 'synopsis', kv['projectSynopsis'])
-          } catch {}
+          } catch (e) { console.error('Failed to save project synopsis:', e) }
         }
         
         // 重新构造 frontmatter，不包含元数据内容
@@ -413,9 +413,17 @@ const EnhancedEditorPageContent: React.FC = () => {
               <button
                 onClick={async () => {
                   const navigateProjectId = project?.id || chapter?.projectId
-                  try { await handleSave() } catch {}
+                  try {
+                    await handleSave()
+                  } catch {
+                    notifyError('保存失败', '请复制内容后再退出，避免丢失')
+                  }
                   if (chapter) {
-                    try { await chaptersApi.update(chapter.id, { status: exitStatus }) } catch {}
+                    try {
+                      await chaptersApi.update(chapter.id, { status: exitStatus })
+                    } catch {
+                      notifyError('更新状态失败', '章节内容已保存，但状态更新失败')
+                    }
                   }
                   if (navigateProjectId) {
                     navigate(`/projects/${navigateProjectId}`)

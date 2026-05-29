@@ -15,16 +15,14 @@
       "章节管理 (拖拽排序、状态管理) ✅ 已完成",
       "元数据系统 (项目 + 章节) ✅ 已完成",
       "Markdown 导入导出 ✅ 已完成",
-      "AI 元数据提取 ✅ 已完成",
-      "AI 元数据助手 (对话式生成) ✅ 已完成",
+      "AI 多 Provider 架构 (DeepSeek/OpenAI/Ollama) ✅ 已完成",
       "AI 写作助手 (续写/润色/扩写) ✅ 已完成",
       "AI 审阅功能 (章节 + 全书) ✅ 已完成",
-      "设置管理系统 ✅ 框架完成"
+      "灵感碎片模块 (Scraps) ✅ 已完成",
+      "设置管理系统 ✅ 已完成",
+      "认证系统 (Session Token) ✅ 已完成"
     ],
-    "inProgress": [
-      "补充各字段的 AI 引导 Prompt",
-      "完善元数据面板的 AI 按钮集成"
-    ],
+    "inProgress": [],
     "planned": [
       "自动化测试",
       "媒体文件处理",
@@ -39,7 +37,7 @@
       "language": "TypeScript 5.6.2",
       "styling": "Tailwind CSS 3.4.13",
       "editor": "Monaco Editor 4.6.0",
-      "routing": "React Router DOM 7.9.5",
+      "routing": "React Router DOM 6.30.1",
       "stateManagement": "Zustand 5.0.9"
     },
     "backend": {
@@ -48,13 +46,16 @@
       "orm": "Prisma 6.19.0",
       "database": "SQLite",
       "validation": "Zod 4.1.13",
-      "ai": "Google Gemini API (@google/generative-ai)"
+      "ai": "DeepSeek / OpenAI / Ollama (多 Provider)"
     }
   },
   "endpoints": {
     "development": {
       "frontend": "http://localhost:3000",
       "backend": "http://localhost:5000"
+    },
+    "production": {
+      "domain": "novel.pennfly.com"
     }
   },
   "milestones": [
@@ -62,14 +63,7 @@
       "version": "1.0.0", 
       "date": "2025-11-03",
       "description": "核心功能完整实现 + 关键技术问题修复",
-      "completionRate": "100%",
-      "technicalFixes": [
-        "TypeScript ES模块执行问题",
-        "数据库初始化时序问题", 
-        "API路径匹配问题",
-        "响应格式统一问题",
-        "前后端通信完全打通"
-      ]
+      "completionRate": "100%"
     },
     {
       "version": "2.0.0",
@@ -78,21 +72,12 @@
       "completionRate": "95%",
       "highlights": [
         "迁移至 Fastify + Prisma + SQLite 架构",
-        "实现 AI 三层上下文管理 (Tier A/B/C)",
-        "集成 Google Gemini API",
+        "实现 AI 多层上下文管理",
+        "集成多 Provider AI (DeepSeek/OpenAI/Ollama)",
         "重构三栏编辑器 (Monaco Editor)",
-        "AI 元数据助手与写作助手",
-        "章节/全书 AI 审阅功能"
+        "灵感碎片模块 (Scraps)",
+        "Session Token 认证系统"
       ]
     }
-  ],
-  "nextVersion": {
-    "version": "2.1.0",
-    "plannedFeatures": [
-      "补充各字段的 AI 引导 Prompt",
-      "完善元数据面板 AI 按钮集成",
-      "自动化测试框架"
-    ],
-    "estimatedDate": "2025-06-01"
-  }
+  ]
 }
