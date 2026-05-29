@@ -18,6 +18,7 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const FileManagerPage = lazy(() => import('./pages/FileManagerPage'))
 const ApiTestPage = lazy(() => import('./pages/ApiTestPage'))
 const ScrapsPage = lazy(() => import('./pages/ScrapsPage'))
+const ReviewPage = lazy(() => import('./pages/ReviewPage'))
 
 import { PageWrapper as UI_PageWrapper } from './components/layout/PageWrapper'
 
@@ -118,6 +119,16 @@ const router = createBrowserRouter([
       <Layout>
         <SuspenseWrapper>
           <ScrapsPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/review',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <ReviewPage />
         </SuspenseWrapper>
       </Layout>
     ),

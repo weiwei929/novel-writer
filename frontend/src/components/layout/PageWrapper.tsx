@@ -6,5 +6,5 @@ interface PageWrapperProps {
 }
 
 export const PageWrapper: React.FC<PageWrapperProps> = ({ children }) => {
-  return <div className="animate-fade-in">{children}</div>
+  return <div className="animate-fade-in h-full">{children}</div>
 }

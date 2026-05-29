@@ -283,7 +283,7 @@ const EnhancedEditorPageContent: React.FC = () => {
 
   if (loading)
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">加载中...</p>
@@ -293,7 +293,7 @@ const EnhancedEditorPageContent: React.FC = () => {
 
   if (error)
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-500 text-xl mb-4">{error}</div>
           <div className="space-x-2">
@@ -316,7 +316,7 @@ const EnhancedEditorPageContent: React.FC = () => {
 
   if ((!chapter && !loading) || !chapterId) {
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="h-full flex items-center justify-center">
         <div className="text-center text-gray-500">
           <p>请选择要编辑的章节</p>
           <button
@@ -331,7 +331,7 @@ const EnhancedEditorPageContent: React.FC = () => {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
+    <div className="h-full flex flex-col bg-gray-100">
       {/* 顶栏 - 精简版 */}
       <div className="bg-white border-b px-4 py-2 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3 min-w-0">
