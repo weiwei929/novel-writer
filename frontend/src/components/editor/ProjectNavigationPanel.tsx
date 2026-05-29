@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Project, Chapter } from '../../services/api'
-import { ChevronRight, FileText, Settings, BookOpen } from 'lucide-react'
+import { FileText, Settings, BookOpen } from 'lucide-react'
 import { useNotifications } from '../../hooks/useNotifications'
 import { readMetadataFieldValue } from '../../utils/metadataField'
 import ChapterPlanningEditor from './ChapterPlanningEditor'
@@ -24,7 +24,6 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
   onChaptersRefresh,
   className = '',
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false)
   const { success: notifySuccess } = useNotifications()
   const [showPlanning, setShowPlanning] = useState(false)
 
@@ -45,20 +44,6 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
     return statusMap[status] || status
   }
 
-  if (isCollapsed) {
-    return (
-      <div className={`w-12 border-r bg-gray-50 flex flex-col items-center py-4 ${className}`}>
-        <button
-          onClick={() => setIsCollapsed(false)}
-          className="p-2 hover:bg-gray-200 rounded"
-          title="展开项目面板"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
-    )
-  }
-
   return (
     <div className={`w-80 h-full bg-gray-100 flex flex-col overflow-hidden ${className}`}>
       {/* 作品基本信息（合入原顶部工具栏功能） */}
@@ -76,13 +61,6 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
                 <span>元数据</span>
               </button>
             )}
-            <button
-              onClick={() => setIsCollapsed(true)}
-              className="p-1.5 hover:bg-gray-100 rounded"
-              title="收起面板"
-            >
-              <ChevronRight size={14} />
-            </button>
           </div>
         </div>
         
