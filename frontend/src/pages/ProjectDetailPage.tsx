@@ -3,10 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
 import { useNotifications } from '../hooks/useNotifications'
 import { readMetadataFieldValue } from '../utils/metadataField'
-import { ArrowLeft, FileText, Play, Bot, X } from 'lucide-react'
+import { ArrowLeft, FileText, Play, Bot, X, List } from 'lucide-react'
 import { ChapterOutlineGenerator } from '../components/ai/ChapterOutlineGenerator'
 import ContentMetadataCard from '../components/metadata/ContentMetadataCard'
 import ChapterContentModal from '../components/editor/ChapterContentModal'
+import ChapterPlanningEditor from '../components/editor/ChapterPlanningEditor'
+import ProjectMetadataPanel from '../components/editor/ProjectMetadataPanel'
 
 const ProjectDetailPage: React.FC = () => {
   const navigate = useNavigate()
@@ -20,6 +22,10 @@ const ProjectDetailPage: React.FC = () => {
 
   // AI 章节大纲生成器
   const [showOutlineGenerator, setShowOutlineGenerator] = useState(false)
+  // 章节规划
+  const [showPlanning, setShowPlanning] = useState(false)
+  // 内容元数据编辑
+  const [showMetadataEditor, setShowMetadataEditor] = useState(false)
 
   // 梗概弹窗
   const [synopsisModal, setSynopsisModal] = useState<{
@@ -119,6 +125,13 @@ const ProjectDetailPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 shrink-0 ml-4">
+          <button
+            onClick={() => setShowPlanning(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-all text-sm"
+          >
+            <List size={14} />
+            管理章节规划
+          </button>
           <button
             onClick={() => navigate(`/editor/${project.id}`)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
@@ -268,7 +281,11 @@ const ProjectDetailPage: React.FC = () => {
         {/* 右侧栏：内容元数据 */}
         {hasContentMetadata && (
           <div className="w-72 flex-shrink-0 hidden xl:block">
-            <ContentMetadataCard metadata={project.metadata} className="h-full" />
+            <ContentMetadataCard
+              metadata={project.metadata}
+              className="h-full"
+              onEdit={() => setShowMetadataEditor(true)}
+            />
           </div>
         )}
       </div>
@@ -326,6 +343,39 @@ const ProjectDetailPage: React.FC = () => {
             notifySuccess('章节大纲已成功导入！')
           }}
         />
+      )}
+
+      {/* 章节规划编辑器 */}
+      {showPlanning && project && (
+        <ChapterPlanningEditor
+          projectId={project.id}
+          initialPlans={(project.metadata as any)?.chapterPlanning || []}
+          onClose={() => setShowPlanning(false)}
+          onSaved={() => {
+            setShowPlanning(false)
+            notifySuccess('章节规划已更新')
+            load()
+          }}
+        />
+      )}
+
+      {/* 内容元数据编辑弹窗 */}
+      {showMetadataEditor && project && (
+        <div className="fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowMetadataEditor(false)} />
+          <div className="absolute inset-4 md:inset-8 bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden">
+            <ProjectMetadataPanel
+              project={project}
+              onClose={async () => {
+                setShowMetadataEditor(false)
+                // 重新加载项目以刷新元数据
+                await load()
+              }}
+              initialField="synopsis"
+              initialMode="view_all"
+            />
+          </div>
+        </div>
       )}
     </div>
   )

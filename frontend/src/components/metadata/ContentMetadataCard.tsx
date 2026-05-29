@@ -1,9 +1,12 @@
 import React, { useState } from 'react'
+import { Settings } from 'lucide-react'
 import { readMetadataFieldValue } from '../../utils/metadataField'
 
 interface ContentMetadataCardProps {
   metadata: Record<string, any> | null | undefined
   className?: string
+  /** 提供时在右上角显示编辑按钮 */
+  onEdit?: () => void
 }
 
 type MetadataField = {
@@ -23,10 +26,12 @@ const FIELDS: MetadataField[] = [
 /**
  * 内容元数据只读卡片
  * 在作品详情页右侧栏展示，作者自建、AI 不参与构建。
+ * 提供 onEdit 时显示编辑入口。
  */
 const ContentMetadataCard: React.FC<ContentMetadataCardProps> = ({
   metadata,
   className = '',
+  onEdit,
 }) => {
   const [activeTab, setActiveTab] = useState<string>(FIELDS[0].key)
   const activeContent = readMetadataFieldValue(metadata?.[activeTab])
@@ -34,9 +39,21 @@ const ContentMetadataCard: React.FC<ContentMetadataCardProps> = ({
   return (
     <div className={`bg-white rounded-lg border shadow-sm flex flex-col overflow-hidden ${className}`}>
       {/* 标题 */}
-      <div className="px-4 py-3 border-b shrink-0">
-        <h3 className="text-sm font-semibold text-gray-900">内容元数据</h3>
-        <p className="text-xs text-gray-400 mt-0.5">作者自建 · 只读</p>
+      <div className="px-4 py-3 border-b shrink-0 flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900">内容元数据</h3>
+          <p className="text-xs text-gray-400 mt-0.5">{onEdit ? '作者自建' : '只读参考'}</p>
+        </div>
+        {onEdit && (
+          <button
+            onClick={onEdit}
+            className="flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+            title="编辑内容元数据"
+          >
+            <Settings size={13} />
+            编辑
+          </button>
+        )}
       </div>
 
       {/* 标签切换 */}
@@ -74,7 +91,7 @@ const ContentMetadataCard: React.FC<ContentMetadataCardProps> = ({
       {/* 底部提示 */}
       <div className="px-4 py-2 border-t bg-gray-50 shrink-0">
         <p className="text-xs text-gray-400">
-          内容元数据由作者设定，在编辑器中编辑
+          {onEdit ? '点击右上角编辑按钮进行编辑' : '在作品详情页编辑内容元数据'}
         </p>
       </div>
     </div>

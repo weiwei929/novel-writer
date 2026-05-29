@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import MarkdownEditor, { MarkdownEditorRef } from '../components/editor/MarkdownEditor'
 import ProjectNavigationPanel from '../components/editor/ProjectNavigationPanel'
-import ProjectMetadataPanel from '../components/editor/ProjectMetadataPanel'
+import ContentMetadataCard from '../components/metadata/ContentMetadataCard'
 import ChapterMetadataPanel from '../components/editor/ChapterMetadataPanel'
 import AIAssistantPanel from '../components/writer/AIAssistantPanel'
 import AIReviewPanel from '../components/writer/AIReviewPanel'
@@ -561,12 +561,29 @@ const EnhancedEditorPageContent: React.FC = () => {
         )}
       </div>
       {showProjectMetadata && project && (
-        <ProjectMetadataPanel
-          project={project}
-          onClose={() => setShowProjectMetadata(false)}
-          initialField={projectMetadataField}
-          initialMode={'view_all'}
-        />
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => setShowProjectMetadata(false)}
+        >
+          <div className="absolute inset-0 bg-black/40" />
+          <div
+            className="relative bg-white rounded-lg shadow-2xl w-[600px] h-[70vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="absolute top-3 right-3 z-10">
+              <button
+                onClick={() => setShowProjectMetadata(false)}
+                className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <ContentMetadataCard
+              metadata={project.metadata}
+              className="h-full border-0 shadow-none rounded-lg"
+            />
+          </div>
+        </div>
       )}
       
       {/* 元数据确认模态框 */}
