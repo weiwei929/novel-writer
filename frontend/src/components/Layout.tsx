@@ -29,6 +29,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/settings', label: '系统设置', icon: Settings },
   ]
 
+  // 编辑器模式：沉浸式全屏，不显示导航栏
+  if (location.pathname.startsWith('/editor')) {
+    return <div className="min-h-screen bg-gray-50">{children}</div>
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 顶部导航栏 */}

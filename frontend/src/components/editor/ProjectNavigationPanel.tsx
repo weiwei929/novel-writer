@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { Project, Chapter } from '../../services/api'
-import { ChevronRight, FileText, Settings } from 'lucide-react'
+import { ChevronRight, FileText, Settings, BookOpen } from 'lucide-react'
 import { useNotifications } from '../../hooks/useNotifications'
+import { readMetadataFieldValue } from '../../utils/metadataField'
 import ChapterPlanningEditor from './ChapterPlanningEditor'
 
 interface ProjectNavigationPanelProps {
@@ -83,41 +84,41 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
         </div>
       </div>
 
-      {/* 项目信息 */}
+      {/* 作品基本信息 */}
       <div className="p-4 border-b border-gray-300 bg-white shadow-sm">
-        <h3 className="font-medium text-lg text-gray-900 mb-2">{project.title}</h3>
-        <div className="space-y-1.5 text-sm text-gray-600">
-          <div className="flex items-center justify-between">
-            <span>作者:</span>
-            <span className="font-medium">{project.author}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>状态:</span>
-            <span className="font-medium">{getStatusText(project.status)}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>字数:</span>
-            <span className="font-medium">{project.wordCount.toLocaleString()}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>章节:</span>
-            <span className="font-medium">{project.chapterCount}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>创建时间:</span>
-            <span className="text-xs">{formatDate(project.createdAt)}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>更新时间:</span>
-            <span className="text-xs">{formatDate(project.updatedAt)}</span>
-          </div>
+        <h3 className="font-medium text-lg text-gray-900 mb-2 truncate">{project.title}</h3>
+        
+        {/* 紧凑状态行 */}
+        <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
+          <span>{project.wordCount.toLocaleString()} 字</span>
+          <span className="text-gray-300">·</span>
+          <span>{chapters.length} 章</span>
+          <span className="text-gray-300">·</span>
+          <span>{getStatusText(project.status)}</span>
         </div>
 
-        {/* 章节规划入口（始终可见） */}
+        {/* 作品梗概 */}
+        {(() => {
+          const synopsis = readMetadataFieldValue(project.metadata?.synopsis)
+          if (!synopsis) return null
+          return (
+            <div className="border border-gray-100 rounded-lg bg-gray-50/50 overflow-hidden">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-gray-100 text-xs text-gray-500">
+                <BookOpen size={12} />
+                作品梗概
+              </div>
+              <div className="px-3 py-2 text-xs text-gray-700 leading-relaxed max-h-40 overflow-y-auto custom-scrollbar whitespace-pre-wrap">
+                {synopsis}
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* 章节规划入口 */}
         <div className="mt-3 p-3 bg-gray-50 rounded">
-          <div className="font-medium text-gray-700 mb-2">章节规划</div>
+          <div className="font-medium text-gray-700 mb-2 text-sm">章节规划</div>
           <button
-            className="w-full px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="w-full px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
             onClick={() => setShowPlanning(true)}
           >
             管理章节规划
