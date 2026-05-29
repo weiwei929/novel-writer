@@ -8,6 +8,7 @@ export default defineConfig({
     logLevel: 'error',
   },
   server: {
+    host: true,
     port: 3000,
     proxy: {
       '/api': {
