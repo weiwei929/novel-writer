@@ -440,7 +440,7 @@ const EnhancedEditorPageContent: React.FC = () => {
               chapters={chapters}
               currentChapter={chapter}
               onChapterSelect={handleChapterSelect}
-              onProjectSettings={field => {
+              onProjectSettings={() => {
                 setShowProjectMetadata(true)
               }}
               onChaptersRefresh={refreshChapters}
