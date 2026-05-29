@@ -4,15 +4,16 @@ import MarkdownEditor, { MarkdownEditorRef } from '../components/editor/Markdown
 import ProjectNavigationPanel from '../components/editor/ProjectNavigationPanel'
 import ProjectMetadataPanel from '../components/editor/ProjectMetadataPanel'
 import ChapterMetadataPanel from '../components/editor/ChapterMetadataPanel'
-import DualModeSwitch, { EditorMode } from '../components/writer/DualModeSwitch'
 import AIAssistantPanel from '../components/writer/AIAssistantPanel'
 import AIReviewPanel from '../components/writer/AIReviewPanel'
 import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft, Save, Sparkles, Search } from 'lucide-react'
 import { useNotifications } from '../hooks/useNotifications'
 import { MetadataMissingPrompt } from '../components/project/MetadataMissingPrompt'
 import { MetadataReviewModal } from '../components/import/MetadataReviewModal'
 import { readMetadataFieldValue } from '../utils/metadataField'
+
+type EditorMode = 'pure' | 'ai' | 'review'
 
 const EnhancedEditorPageContent: React.FC = () => {
   const { error: notifyError, success: notifySuccess } = useNotifications()
@@ -332,100 +333,80 @@ const EnhancedEditorPageContent: React.FC = () => {
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
-      <div className="bg-white border-b px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      {/* 顶栏 - 精简版 */}
+      <div className="bg-white border-b px-4 py-2 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={handleGoBack}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+            className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700 shrink-0"
+            title="返回作品列表"
           >
-            <ArrowLeft size={20} />
-            <span>返回作品</span>
+            <ArrowLeft size={18} />
           </button>
-          <div className="h-5 w-px bg-gray-300"></div>
-          <div className="flex flex-col">
-            <h1 className="font-semibold text-gray-900">{project ? project.title : '加载中...'}</h1>
+          <div className="h-5 w-px bg-gray-200"></div>
+          <div className="min-w-0">
+            <h1 className="text-sm font-semibold text-gray-900 truncate">
+              {project?.title || '加载中...'}
+            </h1>
             {chapter && (
-              <div className="text-xs text-gray-500">
-                第 {chapter.order} 章: {chapter.title}
-                {hasUnsavedChanges && ' · 有未保存更改'}
-                {lastSaved && !hasUnsavedChanges && ` · ${lastSaved.toLocaleTimeString()} 已保存`}
+              <div className="text-xs text-gray-400">
+                第 {chapter.order} 章 · {chapter.title}
+                {hasUnsavedChanges && <span className="text-amber-500 ml-1">● 未保存</span>}
+                {lastSaved && !hasUnsavedChanges && <span className="ml-1">· {lastSaved.toLocaleTimeString()}</span>}
+                <span className="ml-1">· {chapter.wordCount?.toLocaleString() || 0} 字</span>
               </div>
             )}
-            {readMetadataFieldValue(project?.metadata?.synopsis) && (
-              <div className="mt-2 text-sm line-clamp-2">
-                <span className="px-2 py-0.5 mr-2 rounded bg-blue-100 text-blue-700 border border-blue-200 text-xs">
-                  作品梗概
-                </span>
-                <span className="text-gray-800">{readMetadataFieldValue(project?.metadata?.synopsis)}</span>
-              </div>
-            )}
-            {(readMetadataFieldValue((chapter as any)?.metadata?.synopsis) || chapter?.summary) && (() => {
-              const fullSynopsis = readMetadataFieldValue((chapter as any)?.metadata?.synopsis) || chapter?.summary || ''
-              // 移除 Markdown 标题和多余空行
-              const cleanText = fullSynopsis
-                .replace(/^##?\s+.*$/gm, '')  // 移除 # 和 ## 标题
-                .replace(/^\*\*.*\*\*$/gm, '')  // 移除粗体标题
-                .replace(/\n{2,}/g, '\n')  // 多个换行替换为单个
-                .trim()
-              
-              return (
-                <div className="mt-1 text-xs group relative inline-block">
-                  <span className="px-2 py-0.5 rounded bg-green-100 text-green-700 border border-green-200 cursor-help">
-                    章节梗概
-                  </span>
-                  {/* 悬停显示完整内容 */}
-                  <div className="hidden group-hover:block absolute left-0 top-full mt-1 p-3 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-w-md whitespace-pre-wrap text-sm">
-                    {cleanText}
-                  </div>
-                </div>
-              )
-            })()}
           </div>
         </div>
-        <div className="flex items-center space-x-3">
-          <DualModeSwitch mode={editorMode} onChange={setEditorMode} />
-          
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* AI 助手 */}
           <button
-             onClick={() => setEditorMode(editorMode === 'review' ? 'pure' : 'review')}
-             className={`px-3 py-1.5 text-sm border rounded-lg flex items-center gap-1 transition-colors ${editorMode === 'review' ? 'bg-indigo-50 text-indigo-600 border-indigo-200' : 'text-gray-600 hover:bg-gray-50'}`}
-             title="AI 审阅"
+            onClick={() => setEditorMode(editorMode === 'ai' ? 'pure' : 'ai')}
+            className={`px-2.5 py-1.5 text-xs rounded-md flex items-center gap-1.5 transition-colors ${
+              editorMode === 'ai'
+                ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                : 'text-gray-500 hover:bg-gray-50 border border-transparent'
+            }`}
           >
-             <span>🔍 审阅</span>
+            <Sparkles size={14} />
+            AI 助手
           </button>
 
-          <div className="h-5 w-px bg-gray-300"></div>
-
+          {/* 审阅 */}
           <button
-            onClick={() => setShowProjectMetadata(true)}
-            className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50"
+            onClick={() => setEditorMode(editorMode === 'review' ? 'pure' : 'review')}
+            className={`px-2.5 py-1.5 text-xs rounded-md flex items-center gap-1.5 transition-colors ${
+              editorMode === 'review'
+                ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                : 'text-gray-500 hover:bg-gray-50 border border-transparent'
+            }`}
           >
-            作品元数据
+            <Search size={14} />
+            审阅
           </button>
-          {chapter && (
-            <button
-              onClick={() => setShowChapterMetadata(true)}
-              className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50"
-            >
-              章节元数据
-            </button>
-          )}
+
+          <div className="h-5 w-px bg-gray-200 mx-1"></div>
+
+          {/* 保存 */}
           {chapter && (
             <button
               onClick={() => handleSave()}
               disabled={saving || !hasUnsavedChanges}
-              className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-medium transition-colors"
             >
-              <Save size={16} />
-              {saving ? '保存中...' : '保存'}
+              <Save size={14} />
+              {saving ? '...' : '保存'}
             </button>
           )}
 
+          {/* 退出 */}
           {chapter && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <select
                 value={exitStatus}
                 onChange={e => setExitStatus(e.target.value as 'writing' | 'completed')}
-                className="px-2 py-1 text-sm border rounded"
+                className="px-1.5 py-1.5 text-xs border rounded-md bg-white"
               >
                 <option value="writing">写作中</option>
                 <option value="completed">已完成</option>
@@ -433,24 +414,9 @@ const EnhancedEditorPageContent: React.FC = () => {
               <button
                 onClick={async () => {
                   const navigateProjectId = project?.id || chapter?.projectId
-                  try {
-                    await handleSave()
-                  } catch (err) {
-                    notifyError('章节保存失败', '将尝试仅更新状态并继续退出')
-                  }
+                  try { await handleSave() } catch {}
                   if (chapter) {
-                    try {
-                      await chaptersApi.update(chapter.id, { status: exitStatus })
-                      notifySuccess(
-                        '章节状态已更新',
-                        exitStatus === 'completed' ? '状态：已完成' : '状态：写作中'
-                      )
-                    } catch (err) {
-                      console.error('更新章节状态失败:', err)
-                      notifyError('更新章节状态失败', '请稍后在章节列表重试。')
-                    }
-                  } else {
-                    notifyError('无有效章节', '无法更新章节状态')
+                    try { await chaptersApi.update(chapter.id, { status: exitStatus }) } catch {}
                   }
                   if (navigateProjectId) {
                     navigate(`/projects/${navigateProjectId}`)
@@ -458,9 +424,9 @@ const EnhancedEditorPageContent: React.FC = () => {
                     navigate('/projects')
                   }
                 }}
-                className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50"
+                className="px-3 py-1.5 text-xs border rounded-md hover:bg-gray-50 text-gray-600"
               >
-                保存并退出
+                退出
               </button>
             </div>
           )}
@@ -499,7 +465,7 @@ const EnhancedEditorPageContent: React.FC = () => {
                 projectId={project.id}
                 onAIStarted={() => {
                   setShowMetadataPrompt(false)
-                  setIsAIAnalyzing(true) // 开始分析状态
+                  setIsAIAnalyzing(true)
                   pollForMetadata(project.id)
                 }}
                 onDismiss={() => setShowMetadataPrompt(false)}
@@ -517,7 +483,6 @@ const EnhancedEditorPageContent: React.FC = () => {
             </div>
           )}
 
-          
           <MarkdownEditor
             ref={editorRef}
             key={chapterId}
@@ -552,7 +517,6 @@ const EnhancedEditorPageContent: React.FC = () => {
 
                         await projectsApi.updateMetadata(project.id, field, newVal);
                         notifySuccess('设定已更新', `已更新作品的 ${field}`);
-                        // Refresh project data to update context
                         const updated = await projectsApi.getById(project.id);
                         setProject(updated);
                     } catch (e) {
@@ -577,7 +541,7 @@ const EnhancedEditorPageContent: React.FC = () => {
            </>
         )}
 
-        {/* 章节元数据弹窗（与项目元数据一致的固定遮罩抽屉） */}
+        {/* 章节元数据弹窗 */}
         {showChapterMetadata && (
           <div className="fixed inset-0 z-50 flex">
             <div
@@ -615,7 +579,6 @@ const EnhancedEditorPageContent: React.FC = () => {
           onConfirm={async () => {
             setShowMetadataReview(false)
             setExtractedMetadata(null)
-            // 重新加载项目数据
             try {
               const updatedProject = await projectsApi.getById(project.id)
               setProject(updatedProject)
