@@ -4,7 +4,7 @@ import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
 import { PlannerBoard } from '../components/planner/PlannerBoard'
 import { ProjectOutline } from '../types/planner'
 import { useNotifications } from '../hooks/useNotifications'
-import { ArrowLeft, FileText, Play, Layout, Settings, List, Bot } from 'lucide-react'
+import { ArrowLeft, FileText, Play, Layout, Settings, List, Bot, Plus, X } from 'lucide-react'
 import ProjectManagementPanel from '../components/project/ProjectManagementPanel'
 import { ChapterOutlineGenerator } from '../components/ai/ChapterOutlineGenerator'
 
@@ -21,6 +21,11 @@ const ProjectDetailPage: React.FC = () => {
   
   // AI 章节大纲生成器状态
   const [showOutlineGenerator, setShowOutlineGenerator] = useState(false)
+  
+  // 手动创建章节状态
+  const [showCreateChapter, setShowCreateChapter] = useState(false)
+  const [newChapterTitle, setNewChapterTitle] = useState('')
+  const [creating, setCreating] = useState(false)
 
   const load = async () => {
     if (!id) return
@@ -41,6 +46,30 @@ const ProjectDetailPage: React.FC = () => {
   useEffect(() => {
     load()
   }, [id])
+
+  // 手动创建章节
+  const handleCreateChapter = async () => {
+    if (!project || !newChapterTitle.trim()) return
+    setCreating(true)
+    try {
+      const nextOrder = chapters.length > 0
+        ? Math.max(...chapters.map(c => c.order)) + 1
+        : 1
+      await chaptersApi.create({
+        projectId: project.id,
+        title: newChapterTitle.trim(),
+        order: nextOrder,
+      })
+      notifySuccess('章节已创建', `已创建「${newChapterTitle.trim()}」`)
+      setNewChapterTitle('')
+      setShowCreateChapter(false)
+      await load()
+    } catch (err) {
+      notifyError('创建失败', '无法创建章节')
+    } finally {
+      setCreating(false)
+    }
+  }
 
   // Planner Save Handler
   const handleOutlineSave = async (outline: ProjectOutline) => {
@@ -142,28 +171,78 @@ const ProjectDetailPage: React.FC = () => {
              <div className="bg-white rounded-lg shadow-sm border">
                 <div className="p-4 border-b flex items-center justify-between">
                 <h2 className="text-lg font-semibold">章节列表</h2>
-                <button
-                  onClick={() => setShowOutlineGenerator(true)}
-                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all flex items-center gap-2 text-sm font-medium"
-                >
-                  <Bot size={16} />
-                  AI 生成章节大纲
-                </button>
+                <div className="flex items-center gap-2">
+                  {/* 手动创建 */}
+                  <button
+                    onClick={() => setShowCreateChapter(true)}
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5 text-sm font-medium"
+                  >
+                    <Plus size={16} />
+                    手动创建章节
+                  </button>
+                  {/* AI 辅助（次要） */}
+                  <button
+                    onClick={() => setShowOutlineGenerator(true)}
+                    className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center gap-1.5 text-sm"
+                  >
+                    <Bot size={16} />
+                    AI 生成大纲
+                  </button>
+                </div>
                 </div>
 
-                {chapters.length === 0 ? (
+                {/* 手动创建表单 */}
+                {showCreateChapter && (
+                  <div className="p-4 border-b border-gray-100 bg-gray-50/50">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="text"
+                        value={newChapterTitle}
+                        onChange={e => setNewChapterTitle(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') handleCreateChapter() }}
+                        placeholder="输入章节标题，如：第1章 风雪夜归人"
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        autoFocus
+                      />
+                      <button
+                        onClick={handleCreateChapter}
+                        disabled={!newChapterTitle.trim() || creating}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+                      >
+                        {creating ? '创建中...' : '创建'}
+                      </button>
+                      <button
+                        onClick={() => { setShowCreateChapter(false); setNewChapterTitle('') }}
+                        className="p-2 rounded-lg hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {chapters.length === 0 && !showCreateChapter ? (
                 <div className="p-10 text-center text-gray-500">
                     <FileText className="w-10 h-10 mx-auto mb-3 text-gray-400" />
-                    <div className="mb-4">该作品暂时没有章节</div>
-                    <button
-                      onClick={() => setShowOutlineGenerator(true)}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-medium"
-                    >
-                      <Bot size={18} />
-                      使用 AI 生成章节大纲
-                    </button>
+                    <div className="mb-6">该作品暂时没有章节</div>
+                    <div className="flex items-center justify-center gap-3">
+                      <button
+                        onClick={() => setShowCreateChapter(true)}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-medium"
+                      >
+                        <Plus size={18} />
+                        手动创建章节
+                      </button>
+                      <button
+                        onClick={() => setShowOutlineGenerator(true)}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all font-medium"
+                      >
+                        <Bot size={18} />
+                        AI 生成大纲
+                      </button>
+                    </div>
                 </div>
-                ) : (
+                ) : chapters.length > 0 ? (
                 <div className="divide-y">
                     {chapters.map(c => (
                     <div key={c.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
@@ -183,7 +262,7 @@ const ProjectDetailPage: React.FC = () => {
                     </div>
                     ))}
                 </div>
-                )}
+                ) : null}
              </div>
           )}
 
@@ -223,4 +302,3 @@ const ProjectDetailPage: React.FC = () => {
 }
 
 export default ProjectDetailPage
-
