@@ -61,32 +61,30 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
 
   return (
     <div className={`w-80 h-full bg-gray-100 flex flex-col overflow-hidden ${className}`}>
-      {/* 顶部工具栏 */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-300 bg-white shadow-sm">
-        <h2 className="font-semibold text-gray-900 truncate flex-1">作品导航</h2>
-        <div className="flex items-center gap-1">
-          {onProjectSettings && (
-            <button
-              onClick={() => onProjectSettings()}
-              className="p-1.5 hover:bg-gray-100 rounded"
-              title="作品设置"
-            >
-              <Settings className="w-4 h-4" />
-            </button>
-          )}
-          <button
-            onClick={() => setIsCollapsed(true)}
-            className="p-1.5 hover:bg-gray-100 rounded"
-            title="收起面板"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* 作品基本信息 */}
+      {/* 作品基本信息（合入原顶部工具栏功能） */}
       <div className="p-4 border-b border-gray-300 bg-white shadow-sm">
-        <h3 className="font-medium text-lg text-gray-900 mb-2 truncate">{project.title}</h3>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-medium text-lg text-gray-900 truncate flex-1">{project.title}</h3>
+          <div className="flex items-center gap-0.5 shrink-0 ml-2">
+            {onProjectSettings && (
+              <button
+                onClick={() => onProjectSettings()}
+                className="flex items-center gap-1 px-2 py-1 hover:bg-gray-100 rounded text-xs text-gray-500"
+                title="元数据设置"
+              >
+                <Settings size={14} />
+                <span>元数据</span>
+              </button>
+            )}
+            <button
+              onClick={() => setIsCollapsed(true)}
+              className="p-1.5 hover:bg-gray-100 rounded"
+              title="收起面板"
+            >
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
         
         {/* 紧凑状态行 */}
         <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
@@ -113,32 +111,15 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
             </div>
           )
         })()}
-
-        {/* 章节规划入口 */}
-        <div className="mt-3 p-3 bg-gray-50 rounded">
-          <div className="font-medium text-gray-700 mb-2 text-sm">章节规划</div>
-          <button
-            className="w-full px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-            onClick={() => setShowPlanning(true)}
-          >
-            管理章节规划
-          </button>
-        </div>
       </div>
 
       {/* 章节列表 */}
       <div className="flex-1 overflow-y-auto">
-        <div className="p-3 border-b bg-white flex items-center justify-between">
-          <h4 className="font-medium text-sm text-gray-700">章节列表</h4>
-          {/* 已移除“+”新建入口，统一通过“管理章节规划”进行新建/规划 */}
-        </div>
-
         <div className="divide-y">
           {chapters.length === 0 ? (
             <div className="p-6 text-center text-gray-400 text-sm">
               <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <p>暂无章节</p>
-              {/* 取消空状态下的新建按钮入口 */}
             </div>
           ) : (
             chapters.map(chapter => {
@@ -181,9 +162,17 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
         </div>
       </div>
 
-      {/* 底部提示 */}
-      <div className="p-3 border-t bg-white text-xs text-gray-500 text-center">
-        按顺序选择章节进行编辑
+      {/* 底部操作区 */}
+      <div className="p-3 border-t bg-white space-y-2">
+        <button
+          className="w-full px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium"
+          onClick={() => setShowPlanning(true)}
+        >
+          管理章节规划
+        </button>
+        <div className="text-xs text-gray-400 text-center">
+          按顺序选择章节进行编辑
+        </div>
       </div>
 
       {showPlanning && (
