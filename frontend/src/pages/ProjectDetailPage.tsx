@@ -3,8 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
 import { useNotifications } from '../hooks/useNotifications'
 import { readMetadataFieldValue } from '../utils/metadataField'
-import { ArrowLeft, FileText, Play, Bot, X, List } from 'lucide-react'
-import { ChapterOutlineGenerator } from '../components/ai/ChapterOutlineGenerator'
+import { ArrowLeft, FileText, Play, X, List } from 'lucide-react'
 import ContentMetadataCard from '../components/metadata/ContentMetadataCard'
 import ChapterContentModal from '../components/editor/ChapterContentModal'
 import ChapterPlanningEditor from '../components/editor/ChapterPlanningEditor'
@@ -20,8 +19,6 @@ const ProjectDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // AI 章节大纲生成器
-  const [showOutlineGenerator, setShowOutlineGenerator] = useState(false)
   // 章节规划
   const [showPlanning, setShowPlanning] = useState(false)
   // 内容元数据编辑
@@ -142,13 +139,6 @@ const ProjectDetailPage: React.FC = () => {
           >
             <Play size={14} />
             进入编辑器
-          </button>
-          <button
-            onClick={() => setShowOutlineGenerator(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-all text-sm"
-          >
-            <Bot size={14} />
-            AI 生成大纲
           </button>
         </div>
       </div>
@@ -335,19 +325,6 @@ const ProjectDetailPage: React.FC = () => {
         wordCount={contentModal?.wordCount ?? 0}
         onClose={() => setContentModal(null)}
       />
-
-      {/* AI 章节大纲生成器 */}
-      {project && (
-        <ChapterOutlineGenerator
-          isOpen={showOutlineGenerator}
-          onClose={() => setShowOutlineGenerator(false)}
-          projectId={project.id}
-          onSuccess={() => {
-            load()
-            notifySuccess('章节大纲已成功导入！')
-          }}
-        />
-      )}
 
       {/* 章节规划编辑器 */}
       {showPlanning && project && (
