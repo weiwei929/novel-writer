@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, Navigate, RouterProvider, useParams } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import ErrorBoundary from './components/ui/ErrorBoundary'
 import NotificationContainer from './components/ui/NotificationContainer'
@@ -20,6 +20,12 @@ const ApiTestPage = lazy(() => import('./pages/ApiTestPage'))
 const ScrapsPage = lazy(() => import('./pages/ScrapsPage'))
 
 import { PageWrapper as UI_PageWrapper } from './components/layout/PageWrapper'
+
+// 编辑器回退：无章节时重定向到作品详情页
+const EditorFallback: React.FC = () => {
+  const { projectId } = useParams()
+  return <Navigate to={`/projects/${projectId}`} replace />
+}
 
 // 页面加载包装组件 - 处理 Suspense
 const SuspenseWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -97,6 +103,10 @@ const router = createBrowserRouter([
         </SuspenseWrapper>
       </Layout>
     ),
+  },
+  {
+    path: '/editor/:projectId',
+    element: <EditorFallback />,
   },
   {
     path: '/editor',

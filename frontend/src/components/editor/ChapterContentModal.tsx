@@ -39,7 +39,7 @@ const ChapterContentModal: React.FC<ChapterContentModalProps> = ({
       <div className="absolute inset-0 bg-black/40" />
       {/* 弹窗 */}
       <div
-        className="relative bg-white rounded-lg shadow-2xl w-[640px] max-h-[80vh] flex flex-col"
+        className="relative bg-white rounded-lg shadow-2xl w-[720px] max-h-[85vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 头部 */}

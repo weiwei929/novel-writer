@@ -133,7 +133,11 @@ const ProjectDetailPage: React.FC = () => {
             管理章节规划
           </button>
           <button
-            onClick={() => navigate(`/editor/${project.id}`)}
+            onClick={() => {
+              if (chapters.length > 0) {
+                navigate(`/editor/${project.id}/${chapters[0].id}`)
+              }
+            }}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
           >
             <Play size={14} />
@@ -300,7 +304,7 @@ const ProjectDetailPage: React.FC = () => {
         >
           <div className="absolute inset-0 bg-black/40" />
           <div
-            className="relative bg-white rounded-lg shadow-2xl w-[520px] max-h-[70vh] flex flex-col"
+            className="relative bg-white rounded-lg shadow-2xl w-[640px] max-h-[80vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-5 py-3 border-b">
@@ -363,7 +367,7 @@ const ProjectDetailPage: React.FC = () => {
       {showMetadataEditor && project && (
         <div className="fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowMetadataEditor(false)} />
-          <div className="absolute inset-4 md:inset-8 bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden">
+          <div className="absolute inset-8 md:inset-16 bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden">
             <ProjectMetadataPanel
               project={project}
               onClose={async () => {

@@ -42,7 +42,7 @@ const ContentMetadataCard: React.FC<ContentMetadataCardProps> = ({
       <div className="px-4 py-3 border-b shrink-0 flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold text-gray-900">内容元数据</h3>
-          <p className="text-xs text-gray-400 mt-0.5">{onEdit ? '作者自建' : '只读参考'}</p>
+          <p className="text-xs text-gray-400 mt-0.5">{onEdit ? '' : '只读参考'}</p>
         </div>
         {onEdit && (
           <button

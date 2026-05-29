@@ -565,7 +565,7 @@ const EnhancedEditorPageContent: React.FC = () => {
         >
           <div className="absolute inset-0 bg-black/40" />
           <div
-            className="relative bg-white rounded-lg shadow-2xl w-[600px] h-[70vh] flex flex-col"
+            className="relative bg-white rounded-lg shadow-2xl w-[680px] h-[75vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="absolute top-3 right-3 z-10">
