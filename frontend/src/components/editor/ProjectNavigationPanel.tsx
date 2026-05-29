@@ -174,8 +174,6 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
       {/* 底部提示 */}
       <div className="p-3 border-t bg-white text-xs text-gray-500 text-center">
         按顺序选择章节进行编辑
-        >
-          管理章节规划
       </div>
 
       {showPlanning && (
