@@ -55,7 +55,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     <div className={`bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow ${compact ? 'p-4' : 'p-6'} border border-gray-100`}>
       <div className="flex justify-between items-start mb-2">
         <h3 className={`font-semibold text-gray-900 ${compact ? 'text-base' : 'text-xl'} line-clamp-2`}>
-          {project.title}
+          <button
+            onClick={() => navigate(`/projects/${project.id}`)}
+            className="hover:text-blue-600 hover:underline transition-colors text-left"
+            title="查看作品详情"
+          >
+            {project.title}
+          </button>
         </h3>
         
         {/* Status Badge */}
