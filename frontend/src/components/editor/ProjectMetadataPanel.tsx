@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Project, projectsApi } from '../../services/api'
 import MetadataEditor from '../metadata/MetadataEditor'
-import { X, Bot } from 'lucide-react'
-import { AIMetadataAssistant } from '../ai/AIMetadataAssistant'
+import { X } from 'lucide-react'
 
 interface ProjectMetadataPanelProps {
   project: Project
@@ -30,11 +29,6 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({
   const [previewsAll, setPreviewsAll] = useState<
     Record<string, { current: string; lastModified?: string; wordCount?: number } | null>
   >({})
-  
-  // AI 元数据助手状态
-  const [showAIAssistant, setShowAIAssistant] = useState(false)
-  const [aiAssistantField, setAiAssistantField] = useState<string>('')
-  const [aiExistingContent, setAiExistingContent] = useState<string>('')  // AI 助手的现有内容
 
   // 项目元数据字段定义（与后端白名单一致；章节规划使用单独入口）
   const metadataFields = [
@@ -95,7 +89,7 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({
       <div className="absolute inset-0 bg-black bg-opacity-30" onClick={onClose} />
 
       {/* 右侧抽屉 */}
-      <div className="relative ml-auto h-full w-[28rem] bg-gray-50 border-l shadow-xl flex flex-col">
+      <div className="relative ml-auto h-full w-[42rem] bg-gray-50 border-l shadow-xl flex flex-col">
         {/* 顶部工具栏 */}
         <div className="flex items-center justify-between p-3 border-b bg-white">
           <div className="min-w-0">
@@ -145,31 +139,6 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({
               </button>
             ))}
           </div>
-          
-          {/* AI 辅助按钮 - 在编辑模式显示 */}
-          {mode === 'edit' && (
-            <div className="px-2 pb-2">
-              <button
-                onClick={async () => {
-                  setAiAssistantField(activeField)
-                  // 获取现有内容
-                  try {
-                    const res = await projectsApi.getById(project.id)
-                    const metadata = res.metadata || {}
-                    setAiExistingContent(metadata[activeField] || '')
-                  } catch (error) {
-                    console.error('Failed to load existing content:', error)
-                    setAiExistingContent('')
-                  }
-                  setShowAIAssistant(true)
-                }}
-                className="w-full px-3 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all flex items-center justify-center gap-2 text-sm font-medium"
-              >
-                <Bot size={16} />
-                AI 辅助构建/修改"{metadataFields.find(f => f.key === activeField)?.label}"
-              </button>
-            </div>
-          )}
         </div>
 
         {/* 预览/编辑 */}
@@ -260,34 +229,9 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({
         <div className="p-3 border-t bg-white">
           <div className="text-xs text-gray-500">
             <p>💡 点击"保存"按钮即时保存当前内容</p>
-            <p>🤖 点击"AI 辅助"按钮，让 AI 帮助你构建元数据</p>
           </div>
         </div>
       </div>
-      
-      {/* AI 元数据助手 */}
-      <AIMetadataAssistant
-        isOpen={showAIAssistant}
-        onClose={() => setShowAIAssistant(false)}
-        type="project"
-        entityId={project.id}
-        field={aiAssistantField}
-        fieldLabel={metadataFields.find(f => f.key === aiAssistantField)?.label || ''}
-        existingContent={aiExistingContent}  // 传递现有内容
-        onSave={async (content) => {
-          // 保存元数据
-          await projectsApi.updateMetadata(project.id, aiAssistantField, content)
-          // 刷新预览
-          if (mode === 'view' && activeField === aiAssistantField) {
-            const res = await projectsApi.getById(project.id)
-            const metadata = res.metadata || {}
-            setPreview({
-              current: metadata[aiAssistantField] || '',
-              lastModified: res.updatedAt,
-            })
-          }
-        }}
-      />
     </div>
   )
 }

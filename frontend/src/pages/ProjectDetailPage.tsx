@@ -365,21 +365,15 @@ const ProjectDetailPage: React.FC = () => {
 
       {/* 内容元数据编辑弹窗 */}
       {showMetadataEditor && project && (
-        <div className="fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowMetadataEditor(false)} />
-          <div className="absolute inset-8 md:inset-16 bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden">
-            <ProjectMetadataPanel
-              project={project}
-              onClose={async () => {
-                setShowMetadataEditor(false)
-                // 重新加载项目以刷新元数据
-                await load()
-              }}
-              initialField="synopsis"
-              initialMode="view_all"
-            />
-          </div>
-        </div>
+        <ProjectMetadataPanel
+          project={project}
+          onClose={async () => {
+            setShowMetadataEditor(false)
+            await load()
+          }}
+          initialField="synopsis"
+          initialMode="view_all"
+        />
       )}
     </div>
   )
