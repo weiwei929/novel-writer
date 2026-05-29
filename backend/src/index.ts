@@ -8,6 +8,8 @@ import { scrapRoutes } from './routes/scraps'
 import { authRoutes } from './routes/auth'
 import { aiRoutes } from './routes/ai'
 import { collectionRoutes } from './routes/collections'
+import { settingsRoutes } from './routes/settings'
+import { authMiddleware } from './middleware/auth'
 
 const server = Fastify({
   logger: true,
@@ -15,15 +17,14 @@ const server = Fastify({
 
 // Plugins
 server.register(cors, {
-  origin: true, // Allow all origins for local dev
+  origin: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 })
 server.register(sensible)
 
-// Health Check
+// Health Check（公开）
 server.get('/health', async (request, reply) => {
   try {
-    // Check DB connection
     await prisma.$queryRaw`SELECT 1`
     return { status: 'ok', database: 'connected', version: '2.0.0-alpha' }
   } catch (error) {
@@ -33,8 +34,8 @@ server.get('/health', async (request, reply) => {
   }
 })
 
-// Register Routes
-import { settingsRoutes } from './routes/settings'
+// 全局鉴权中间件：拦截所有非公开路由
+server.addHook('preHandler', authMiddleware)
 
 // Register Routes
 server.register(projectRoutes, { prefix: '/api/v2/projects' })

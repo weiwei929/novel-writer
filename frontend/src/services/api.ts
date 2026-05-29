@@ -29,8 +29,12 @@ api.interceptors.response.use(
     return { ...response, data: handleApiResponse(response.data) }
   },
   (error) => {
-    // handleApiError already returns Promise.reject(ApiError)
-    // So we just return it directly, not wrap it again
+    // 401 → token 失效，清空并跳转到登录页
+    if (error.response?.status === 401) {
+      localStorage.removeItem('novel_auth_token')
+      window.location.href = '/'
+      return Promise.reject(error)
+    }
     return handleApiError(error)
   }
 )
