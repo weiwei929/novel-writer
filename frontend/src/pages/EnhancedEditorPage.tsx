@@ -35,7 +35,6 @@ const EnhancedEditorPageContent: React.FC = () => {
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [showProjectMetadata, setShowProjectMetadata] = useState(false)
-  const [projectMetadataField, setProjectMetadataField] = useState<string>('synopsis')
   const [showChapterMetadata, setShowChapterMetadata] = useState(false)
   const [exitStatus, setExitStatus] = useState<'writing' | 'completed'>('writing')
   const [editorMode, setEditorMode] = useState<EditorMode>('pure')
@@ -442,7 +441,6 @@ const EnhancedEditorPageContent: React.FC = () => {
               currentChapter={chapter}
               onChapterSelect={handleChapterSelect}
               onProjectSettings={field => {
-                setProjectMetadataField(field || 'synopsis')
                 setShowProjectMetadata(true)
               }}
               onChaptersRefresh={refreshChapters}
