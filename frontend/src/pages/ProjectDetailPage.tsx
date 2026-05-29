@@ -11,7 +11,7 @@ import { ChapterOutlineGenerator } from '../components/ai/ChapterOutlineGenerato
 const ProjectDetailPage: React.FC = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  const { success: notifySuccess } = useNotifications()
+  const { success: notifySuccess, error: notifyError } = useNotifications()
 
   const [project, setProject] = useState<Project | null>(null)
   const [chapters, setChapters] = useState<Chapter[]>([])
