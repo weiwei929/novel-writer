@@ -224,6 +224,19 @@ const ConfirmMetadataSchema = z.object({
   editedMetadata: z.record(z.string(), z.any()).optional()  // 允许用户编辑后的元数据
 })
 
+// Chapter Planning Schemas
+const ChapterPlanItemSchema = z.object({
+  id: z.string(),
+  order: z.number().int().min(1),
+  title: z.string().min(1, "标题不可为空"),
+  plannedLength: z.number().int().min(0),
+  synopsisText: z.string().optional(),
+  keyPlotPoints: z.array(z.string()).optional(),
+  status: z.enum(['planned', 'started', 'completed']),
+})
+
+const UpdateChapterPlanningSchema = z.array(ChapterPlanItemSchema)
+
 type GetByIdParams = { Params: { id: string } }
 type CreateProjectBody = { Body: z.infer<typeof CreateProjectSchema> }
 type UpdateProjectBody = { Params: { id: string }, Body: z.infer<typeof UpdateProjectSchema> }
@@ -579,6 +592,63 @@ export async function projectRoutes(app: FastifyInstance) {
       return { success: true, message: 'Project deleted' }
     } catch (e) {
       return reply.status(404).send({ success: false, error: 'Project not found' })
+    }
+  })
+
+  // GET /projects/:id/chapter-planning - 获取章节规划
+  app.get('/:id/chapter-planning', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    try {
+      const project = await prisma.project.findUnique({
+        where: { id: req.params.id },
+        select: { id: true, metadata: true }
+      })
+
+      if (!project) {
+        return reply.status(404).send(ApiResponse.error('Project not found', 404))
+      }
+
+      const metadata = (project.metadata as Record<string, any>) || {}
+      const plans = metadata.chapterPlanning || []
+
+      return ApiResponse.success(plans)
+    } catch (e: any) {
+      req.log.error(e)
+      return reply.status(500).send(ApiResponse.error(e.message, 500))
+    }
+  })
+
+  // PUT /projects/:id/chapter-planning - 保存章节规划
+  app.put('/:id/chapter-planning', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    const result = UpdateChapterPlanningSchema.safeParse(req.body)
+    if (!result.success) {
+      return reply.status(400).send({
+        success: false,
+        error: { code: 400, message: 'Invalid chapter planning data', details: result.error.format() }
+      })
+    }
+
+    try {
+      const project = await prisma.project.findUnique({
+        where: { id: req.params.id },
+        select: { id: true, metadata: true }
+      })
+
+      if (!project) {
+        return reply.status(404).send(ApiResponse.error('Project not found', 404))
+      }
+
+      const metadata = (project.metadata as Record<string, any>) || {}
+      const updatedMetadata = { ...metadata, chapterPlanning: result.data }
+
+      await prisma.project.update({
+        where: { id: req.params.id },
+        data: { metadata: updatedMetadata }
+      })
+
+      return ApiResponse.success(result.data, '章节规划已保存')
+    } catch (e: any) {
+      req.log.error(e)
+      return reply.status(500).send(ApiResponse.error(e.message, 500))
     }
   })
 }

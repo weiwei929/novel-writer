@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Project, Chapter } from '../../services/api'
-import { FileText, Settings, BookOpen } from 'lucide-react'
+import { FileText, Settings, BookOpen, ChevronDown } from 'lucide-react'
 import { useNotifications } from '../../hooks/useNotifications'
 import { readMetadataFieldValue } from '../../utils/metadataField'
 import ChapterPlanningEditor from './ChapterPlanningEditor'
@@ -26,6 +26,7 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
 }) => {
   const { success: notifySuccess } = useNotifications()
   const [showPlanning, setShowPlanning] = useState(false)
+  const [expandedSynopsisId, setExpandedSynopsisId] = useState<string | null>(null)
 
   // 格式化日期
   const formatDate = (dateString: string) => {
@@ -111,6 +112,8 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
           ) : (
             chapters.map(chapter => {
               const isActive = currentChapter?.id === chapter.id
+              const hasSynopsis = !!(chapter.summary && chapter.summary.trim())
+              const isSynopsisOpen = expandedSynopsisId === chapter.id
               return (
                 <button
                   key={chapter.id}
@@ -125,6 +128,26 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
                         <span className="text-xs font-medium text-gray-500">
                           第 {chapter.order} 章
                         </span>
+                        {hasSynopsis && (
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setExpandedSynopsisId(isSynopsisOpen ? null : chapter.id)
+                            }}
+                            className={`inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded cursor-pointer transition-colors ${
+                              isSynopsisOpen
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'text-gray-400 hover:text-amber-600 hover:bg-amber-50'
+                            }`}
+                            title="章节梗概"
+                          >
+                            梗概
+                            <ChevronDown
+                              size={10}
+                              className={`transition-transform ${isSynopsisOpen ? 'rotate-180' : ''}`}
+                            />
+                          </span>
+                        )}
                         {chapter.status !== 'draft' && (
                           <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded">
                             {getStatusText(chapter.status)}
@@ -140,6 +163,17 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
                         <span>{chapter.wordCount.toLocaleString()} 字</span>
                         <span>{formatDate(chapter.updatedAt)}</span>
                       </div>
+                      {/* 展开的梗概 */}
+                      {isSynopsisOpen && hasSynopsis && (
+                        <div
+                          className="mt-2 border-t border-gray-100 pt-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="text-xs text-gray-600 leading-relaxed max-h-32 overflow-y-auto custom-scrollbar whitespace-pre-wrap">
+                            {chapter.summary}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </button>
@@ -157,7 +191,7 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
       {showPlanning && (
         <ChapterPlanningEditor
           projectId={project.id}
-          initialPlans={(project as any).chapterPlanning || []}
+          initialPlans={(project.metadata as any)?.chapterPlanning || []}
           onClose={() => setShowPlanning(false)}
           onSaved={() => {
             setShowPlanning(false)

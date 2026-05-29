@@ -101,6 +101,16 @@ export interface Chapter {
   notes?: string // Mapped from metadata.notes
 }
 
+export interface ChapterPlanItem {
+  id: string
+  order: number
+  title: string
+  plannedLength: number
+  synopsisText?: string
+  keyPlotPoints?: string[]
+  status: 'planned' | 'started' | 'completed'
+}
+
 export interface CreateChapterData {
   projectId: string
   title: string
@@ -232,9 +242,14 @@ export const projectsApi = {
       }
   },
 
-  /** @experimental Blocker B2 — backend endpoint not implemented */
-  async updateChapterPlanning(_projectId: string, _plans: unknown[]): Promise<unknown> {
-    throw new Error('updateChapterPlanning is not implemented')
+  async getChapterPlanning(projectId: string): Promise<ChapterPlanItem[]> {
+    const response = await api.get(`/projects/${projectId}/chapter-planning`)
+    return response.data || []
+  },
+
+  async updateChapterPlanning(projectId: string, plans: ChapterPlanItem[]): Promise<ChapterPlanItem[]> {
+    const response = await api.put(`/projects/${projectId}/chapter-planning`, plans)
+    return response.data
   },
 }
 

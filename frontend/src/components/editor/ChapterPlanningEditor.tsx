@@ -1,19 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { X, Plus, Trash2, ArrowUp, ArrowDown, Copy } from 'lucide-react'
-import { projectsApi, chaptersApi, Chapter } from '../../services/api'
+import { projectsApi, chaptersApi, Chapter, ChapterPlanItem } from '../../services/api'
 import { useNotifications } from '../../hooks/useNotifications'
 
 type PlanStatus = 'planned' | 'started' | 'completed'
-
-export interface ChapterPlanItem {
-  id: string
-  order: number
-  title: string
-  plannedLength: number
-  synopsisText?: string
-  keyPlotPoints?: string[]
-  status: PlanStatus
-}
 
 interface ChapterPlanningEditorProps {
   projectId: string
