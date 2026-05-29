@@ -1,3 +1,8 @@
+/**
+ * @deprecated 章节级内容元数据已废弃（2026-05-29）
+ * 内容元数据统一在作品级管理，章节仅保留 summary（梗概叙事文本）。
+ * 该组件当前为死代码（无触发入口），保留仅供参考，后续可安全删除。
+ */
 import React, { useEffect, useState } from 'react'
 import { Chapter, chaptersApi } from '../../services/api'
 import MetadataEditor from '../metadata/MetadataEditor'
