@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Project, Chapter } from '../../services/api'
-import { FileText, Settings, BookOpen, ChevronDown } from 'lucide-react'
+import { FileText, Settings, BookOpen, X } from 'lucide-react'
 import { useNotifications } from '../../hooks/useNotifications'
 import { readMetadataFieldValue } from '../../utils/metadataField'
 import ChapterPlanningEditor from './ChapterPlanningEditor'
@@ -26,7 +26,21 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
 }) => {
   const { success: notifySuccess } = useNotifications()
   const [showPlanning, setShowPlanning] = useState(false)
-  const [expandedSynopsisId, setExpandedSynopsisId] = useState<string | null>(null)
+  const [synopsisModal, setSynopsisModal] = useState<{
+    order: number
+    title: string
+    synopsis: string
+  } | null>(null)
+
+  // Esc 关闭弹窗
+  useEffect(() => {
+    if (!synopsisModal) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSynopsisModal(null)
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [synopsisModal])
 
   // 格式化日期
   const formatDate = (dateString: string) => {
@@ -113,7 +127,6 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
             chapters.map(chapter => {
               const isActive = currentChapter?.id === chapter.id
               const hasSynopsis = !!(chapter.summary && chapter.summary.trim())
-              const isSynopsisOpen = expandedSynopsisId === chapter.id
               return (
                 <button
                   key={chapter.id}
@@ -122,32 +135,12 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
                     isActive ? 'bg-blue-50 border-l-4 border-blue-500' : ''
                   }`}
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xs font-medium text-gray-500">
                           第 {chapter.order} 章
                         </span>
-                        {hasSynopsis && (
-                          <span
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setExpandedSynopsisId(isSynopsisOpen ? null : chapter.id)
-                            }}
-                            className={`inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded cursor-pointer transition-colors ${
-                              isSynopsisOpen
-                                ? 'bg-amber-100 text-amber-700'
-                                : 'text-gray-400 hover:text-amber-600 hover:bg-amber-50'
-                            }`}
-                            title="章节梗概"
-                          >
-                            梗概
-                            <ChevronDown
-                              size={10}
-                              className={`transition-transform ${isSynopsisOpen ? 'rotate-180' : ''}`}
-                            />
-                          </span>
-                        )}
                         {chapter.status !== 'draft' && (
                           <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded">
                             {getStatusText(chapter.status)}
@@ -163,18 +156,23 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
                         <span>{chapter.wordCount.toLocaleString()} 字</span>
                         <span>{formatDate(chapter.updatedAt)}</span>
                       </div>
-                      {/* 展开的梗概 */}
-                      {isSynopsisOpen && hasSynopsis && (
-                        <div
-                          className="mt-2 border-t border-gray-100 pt-2"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="text-xs text-gray-600 leading-relaxed max-h-32 overflow-y-auto custom-scrollbar whitespace-pre-wrap">
-                            {chapter.summary}
-                          </div>
-                        </div>
-                      )}
                     </div>
+                    {hasSynopsis && (
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSynopsisModal({
+                            order: chapter.order,
+                            title: chapter.title,
+                            synopsis: chapter.summary!,
+                          })
+                        }}
+                        className="shrink-0 text-xs px-1.5 py-0.5 rounded cursor-pointer text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                        title="查看章节梗概"
+                      >
+                        梗概
+                      </span>
+                    )}
                   </div>
                 </button>
               )
@@ -199,6 +197,40 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
             onChaptersRefresh?.()
           }}
         />
+      )}
+
+      {/* 章节梗概弹窗 */}
+      {synopsisModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => setSynopsisModal(null)}
+        >
+          {/* 遮罩 */}
+          <div className="absolute inset-0 bg-black/40" />
+          {/* 弹窗主体 */}
+          <div
+            className="relative bg-white rounded-lg shadow-2xl w-[520px] max-h-[70vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 头部 */}
+            <div className="flex items-center justify-between px-5 py-3 border-b">
+              <h3 className="text-sm font-medium text-gray-900">
+                第 {synopsisModal.order} 章 · {synopsisModal.title}
+                <span className="text-gray-400 font-normal ml-2">— 章节梗概</span>
+              </h3>
+              <button
+                onClick={() => setSynopsisModal(null)}
+                className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            {/* 内容 */}
+            <div className="px-5 py-4 overflow-y-auto text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+              {synopsisModal.synopsis}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
