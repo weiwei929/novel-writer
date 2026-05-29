@@ -426,7 +426,7 @@ const EnhancedEditorPageContent: React.FC = () => {
                 }}
                 className="px-3 py-1.5 text-xs border rounded-md hover:bg-gray-50 text-gray-600"
               >
-                退出
+                返回作品
               </button>
             </div>
           )}
