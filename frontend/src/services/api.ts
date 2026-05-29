@@ -12,6 +12,15 @@ const api = axios.create({
   },
 })
 
+// Request Interceptor — 携带认证 token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('novel_auth_token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
 // Response Interceptor
 api.interceptors.response.use(
   (response) => {

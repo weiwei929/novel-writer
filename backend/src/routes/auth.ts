@@ -1,32 +1,49 @@
-import { FastifyInstance } from 'fastify'
+import { FastifyInstance, FastifyRequest } from 'fastify'
 import { z } from 'zod'
+import crypto from 'crypto'
 
 const LoginSchema = z.object({
   password: z.string(),
 })
 
-// Simple hardcoded password for local single-user mode
-// Simple authentication for single-user mode
 const APP_PASSWORD = process.env.APP_PASSWORD || 'novel2024'
 
 if (!process.env.APP_PASSWORD) {
   console.warn('⚠️  WARNING: APP_PASSWORD not set. Using default insecure password.')
 }
 
+// 简单的内存会话存储（单用户模式）
+const sessions = new Map<string, number>()
+
+// 清理过期会话（24小时）
+setInterval(() => {
+  const now = Date.now()
+  for (const [token, time] of sessions) {
+    if (now - time > 24 * 60 * 60 * 1000) {
+      sessions.delete(token)
+    }
+  }
+}, 60 * 60 * 1000)
+
+function getToken(req: FastifyRequest): string | null {
+  const auth = req.headers.authorization
+  if (!auth || !auth.startsWith('Bearer ')) return null
+  return auth.slice(7)
+}
+
 export async function authRoutes(app: FastifyInstance) {
   // GET /auth/status
   app.get('/status', async (req, reply) => {
-    // In a real app, verify JWT here. 
-    // For now, if they have a header 'x-auth-token' or 'Authorization', assume it's valid if it matches a pattern?
-    // Or just checking if server is up?
-    // The frontend logic checks if response.success is true.
-    return { 
-      success: true, 
-      data: { 
-        requireAuth: true, 
-        authenticated: true, // Optimistic for now, or check header?
-        message: '已连接' 
-      } 
+    const token = getToken(req)
+    const authenticated = token ? sessions.has(token) : false
+
+    return {
+      success: true,
+      data: {
+        requireAuth: true,
+        authenticated,
+        message: authenticated ? '已认证' : '需要登录',
+      },
     }
   })
 
@@ -38,23 +55,30 @@ export async function authRoutes(app: FastifyInstance) {
     }
 
     if (result.data.password === APP_PASSWORD) {
+      const sessionId = crypto.randomBytes(32).toString('hex')
+      sessions.set(sessionId, Date.now())
+
       return {
         success: true,
         data: {
-          sessionId: 'mock-session-id-' + Date.now(),
-          message: '登录成功'
-        }
+          sessionId,
+          message: '登录成功',
+        },
       }
     } else {
       return reply.status(401).send({
         success: false,
-        error: { message: '密码错误' }
+        error: { code: 401, message: '密码错误' },
       })
     }
   })
 
   // POST /auth/logout
   app.post('/logout', async (req, reply) => {
-    return { success: true, message: '已登出' }
+    const token = getToken(req)
+    if (token) {
+      sessions.delete(token)
+    }
+    return { success: true, data: { message: '已登出' } }
   })
 }
