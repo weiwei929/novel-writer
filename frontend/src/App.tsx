@@ -22,6 +22,9 @@ const ReferencesPage = lazy(() => import('./pages/creative/ReferencesPage'))
 const AiSearchPage = lazy(() => import('./pages/creative/AiSearchPage'))
 const ChatPage = lazy(() => import('./pages/creative/ChatPage'))
 const ProposalsPage = lazy(() => import('./pages/creative/ProposalsPage'))
+const ProposalReviewPage = lazy(() => import('./pages/planning/ProposalReviewPage'))
+const MetadataPage = lazy(() => import('./pages/planning/MetadataPage'))
+const EvaluationPage = lazy(() => import('./pages/planning/EvaluationPage'))
 
 import { PageWrapper as UI_PageWrapper } from './components/layout/PageWrapper'
 
@@ -79,7 +82,37 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/projects',
+    path: '/planning/proposals',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <ProposalReviewPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/planning/metadata',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <MetadataPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/planning/evaluation',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <EvaluationPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/planning/projects',
     element: (
       <Layout>
         <SuspenseWrapper>
@@ -87,6 +120,11 @@ const router = createBrowserRouter([
         </SuspenseWrapper>
       </Layout>
     ),
+  },
+  // 旧路径重定向到 /planning 前缀（保留历史链接可用）
+  {
+    path: '/projects',
+    element: <Navigate to="/planning/projects" replace />,
   },
   {
     path: '/projects/:id',

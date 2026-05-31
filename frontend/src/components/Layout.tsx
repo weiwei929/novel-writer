@@ -52,9 +52,15 @@ const PHASES: Phase[] = [
     id: 'planning',
     label: '企划课',
     icon: ClipboardList,
-    to: '/projects',
-    match: ['/projects'],
-    sub: [{ path: '/projects', label: '作品管理' }],
+    // 默认落地「立项作品」：前三个子 Tab 暂为空白占位，先让用户看到已有项目列表
+    to: '/planning/projects',
+    match: ['/planning', '/projects'],
+    sub: [
+      { path: '/planning/proposals', label: '企划建议书' },
+      { path: '/planning/metadata', label: '作品内容元数据' },
+      { path: '/planning/evaluation', label: '立项评估' },
+      { path: '/planning/projects', label: '立项作品' },
+    ],
   },
   {
     id: 'writing',
