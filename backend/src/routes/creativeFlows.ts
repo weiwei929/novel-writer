@@ -1,19 +1,23 @@
 import { FastifyInstance, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../utils/db'
+import { ownerFields, hasExactlyOneOwner, ownerRefine, ownerWhere } from '../utils/ownership'
 
-const ListQuerySchema = z.object({
-  projectId: z.string().min(1),
-})
+const ListQuerySchema = z.object(ownerFields).refine(hasExactlyOneOwner, ownerRefine)
 
-const CreateCreativeFlowSchema = z.object({
-  projectId: z.string().min(1),
+const CreativeFlowFieldsSchema = z.object({
   title: z.string().min(1),
   content: z.string(),
   tags: z.any().optional(),
 })
 
-const UpdateCreativeFlowSchema = CreateCreativeFlowSchema.partial()
+const CreateCreativeFlowSchema = CreativeFlowFieldsSchema.extend(ownerFields).refine(
+  hasExactlyOneOwner,
+  ownerRefine
+)
+
+// 更新不接受归属字段
+const UpdateCreativeFlowSchema = CreativeFlowFieldsSchema.partial()
 
 type ListQuery = { Querystring: z.infer<typeof ListQuerySchema> }
 type GetByIdParams = { Params: { id: string } }
@@ -29,8 +33,8 @@ export async function creativeFlowRoutes(app: FastifyInstance) {
     }
 
     const flows = await prisma.creativeFlow.findMany({
-      where: { projectId: result.data.projectId },
-      orderBy: { updatedAt: 'desc' },
+      where: ownerWhere(result.data),
+      orderBy: { createdAt: 'desc' },
     })
     return { success: true, data: flows }
   })

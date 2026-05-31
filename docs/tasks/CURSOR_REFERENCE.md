@@ -125,6 +125,7 @@ model Project {
   creativeFlows CreativeFlow[]
   locations   Location[]    // 保留，但不再扩展新字段（地点信息合入 TimelineEntry）
   scraps      Scrap[]
+  proposals   Proposal[]
   collection  Collection? @relation(fields: [collectionId], references: [id])
 }
 
@@ -161,8 +162,11 @@ model Character {
   role            String?   // 保留旧字段（兼容）
   description     String?   // 保留旧字段
   profile         Json?     // 保留旧字段
-  projectId       String
-  project         Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // 归属双锚点（TASK-008）：proposalId（提案阶段）/ projectId（立项后），应用层 XOR
+  projectId       String?
+  project         Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  proposalId      String?
+  proposal        Proposal? @relation(fields: [proposalId], references: [id], onDelete: Cascade)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }
@@ -223,8 +227,11 @@ model TimelineEntry {
   emotionStage    String?   // 情绪阶段（选填）
   notes           String?   // 备注（选填）
   sortOrder       Int       // 排序
-  projectId       String
-  project         Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // 归属双锚点（TASK-008）：proposalId / projectId，应用层 XOR
+  projectId       String?
+  project         Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  proposalId      String?
+  proposal        Proposal? @relation(fields: [proposalId], references: [id], onDelete: Cascade)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }
@@ -235,13 +242,16 @@ model CreativeFlow {
   title           String
   content         String    // Markdown 正文
   tags            Json?     // 标签
-  projectId       String
-  project         Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // 归属双锚点（TASK-008）：proposalId / projectId，应用层 XOR
+  projectId       String?
+  project         Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  proposalId      String?
+  proposal        Proposal? @relation(fields: [proposalId], references: [id], onDelete: Cascade)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }
 
-// 作品企划建议书
+// 作品企划建议书（TASK-008 已实现）
 model Proposal {
   id          String   @id @default(uuid())
   title       String
@@ -252,6 +262,13 @@ model Proposal {
   references  Json?    // 引用的外来参考/碎片ID列表
   sourceNotes String?  // 来源讨论记录
   projectId   String?  // 被采纳后关联到立项项目
+  project     Project? @relation(fields: [projectId], references: [id])
+
+  // 作品设定子表（提案阶段挂在 proposalId 下；立项后 re-key 到 projectId）
+  characters      Character[]
+  timelineEntries TimelineEntry[]
+  creativeFlows   CreativeFlow[]
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

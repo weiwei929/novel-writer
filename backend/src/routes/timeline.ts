@@ -1,13 +1,11 @@
 import { FastifyInstance, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../utils/db'
+import { ownerFields, hasExactlyOneOwner, ownerRefine, ownerWhere } from '../utils/ownership'
 
-const ListQuerySchema = z.object({
-  projectId: z.string().min(1),
-})
+const ListQuerySchema = z.object(ownerFields).refine(hasExactlyOneOwner, ownerRefine)
 
-const CreateTimelineSchema = z.object({
-  projectId: z.string().min(1),
+const TimelineFieldsSchema = z.object({
   time: z.string().min(1),
   location: z.string().min(1),
   characters: z.string().min(1),
@@ -20,7 +18,13 @@ const CreateTimelineSchema = z.object({
   sortOrder: z.number().int().optional(),
 })
 
-const UpdateTimelineSchema = CreateTimelineSchema.partial()
+const CreateTimelineSchema = TimelineFieldsSchema.extend(ownerFields).refine(
+  hasExactlyOneOwner,
+  ownerRefine
+)
+
+// 更新不接受归属字段
+const UpdateTimelineSchema = TimelineFieldsSchema.partial()
 
 type ListQuery = { Querystring: z.infer<typeof ListQuerySchema> }
 type GetByIdParams = { Params: { id: string } }
@@ -36,7 +40,7 @@ export async function timelineRoutes(app: FastifyInstance) {
     }
 
     const entries = await prisma.timelineEntry.findMany({
-      where: { projectId: result.data.projectId },
+      where: ownerWhere(result.data),
       orderBy: { sortOrder: 'asc' },
     })
     return { success: true, data: entries }

@@ -1,13 +1,11 @@
 import { FastifyInstance, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../utils/db'
+import { ownerFields, hasExactlyOneOwner, ownerRefine, ownerWhere } from '../utils/ownership'
 
-const ListQuerySchema = z.object({
-  projectId: z.string().min(1),
-})
+const ListQuerySchema = z.object(ownerFields).refine(hasExactlyOneOwner, ownerRefine)
 
-const CreateCharacterSchema = z.object({
-  projectId: z.string().min(1),
+const CharacterFieldsSchema = z.object({
   name: z.string().min(1),
   role: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
@@ -24,7 +22,13 @@ const CreateCharacterSchema = z.object({
   catchphrase: z.string().optional().nullable(),
 })
 
-const UpdateCharacterSchema = CreateCharacterSchema.partial()
+const CreateCharacterSchema = CharacterFieldsSchema.extend(ownerFields).refine(
+  hasExactlyOneOwner,
+  ownerRefine
+)
+
+// 更新不接受归属字段（projectId/proposalId 创建时定死）
+const UpdateCharacterSchema = CharacterFieldsSchema.partial()
 
 type ListQuery = { Querystring: z.infer<typeof ListQuerySchema> }
 type GetByIdParams = { Params: { id: string } }
@@ -32,7 +36,7 @@ type CreateBody = { Body: z.infer<typeof CreateCharacterSchema> }
 type UpdateParams = { Params: { id: string }; Body: z.infer<typeof UpdateCharacterSchema> }
 
 export async function characterRoutes(app: FastifyInstance) {
-  // GET /characters/list?projectId=xxx
+  // GET /characters/list?projectId=xxx 或 ?proposalId=xxx
   app.get('/list', async (req: FastifyRequest<ListQuery>, reply) => {
     const result = ListQuerySchema.safeParse(req.query)
     if (!result.success) {
@@ -40,7 +44,7 @@ export async function characterRoutes(app: FastifyInstance) {
     }
 
     const characters = await prisma.character.findMany({
-      where: { projectId: result.data.projectId },
+      where: ownerWhere(result.data),
       orderBy: { createdAt: 'asc' },
     })
     return { success: true, data: characters }

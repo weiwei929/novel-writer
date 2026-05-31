@@ -54,6 +54,7 @@ model Project {
   scraps       Scrap[]
   timelineEntries TimelineEntry[]
   creativeFlows   CreativeFlow[]
+  proposals    Proposal[]
   
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -125,8 +126,11 @@ model Character {
   keyRelations String? // 关键关系（选填）
   catchphrase  String? // 口头禅（选填）
 
-  projectId   String
-  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // 归属：proposalId（提案阶段）/ projectId（立项后），应用层强制二选一
+  projectId   String?
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  proposalId  String?
+  proposal    Proposal? @relation(fields: [proposalId], references: [id], onDelete: Cascade)
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -161,8 +165,11 @@ model TimelineEntry {
   notes         String? // 备注（选填）
   sortOrder     Int     // 排序
 
-  projectId String
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // 归属：proposalId（提案阶段）/ projectId（立项后），应用层强制二选一
+  projectId String?
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  proposalId String?
+  proposal   Proposal? @relation(fields: [proposalId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -178,9 +185,37 @@ model CreativeFlow {
   content String // Markdown
   tags    Json?  // 标签
 
-  projectId String
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // 归属：proposalId（提案阶段）/ projectId（立项后），应用层强制二选一
+  projectId String?
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  proposalId String?
+  proposal   Proposal? @relation(fields: [proposalId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------
+// Proposal (企划建议书) - TASK-008
+// ---------------------------------------------------------
+
+model Proposal {
+  id          String   @id @default(uuid())
+  title       String
+  synopsis    String?  // 故事梗概
+  innovation  String?  // 创新点
+  coreSetting String?  // 核心设定（高层自由描述）
+  status      String   @default("draft") // draft | submitted | evaluated | approved | rejected
+  references  Json?    // 外来参考/碎片ID列表（UI 轻处理）
+  sourceNotes String?  // 来源讨论记录
+
+  projectId   String?  // 立项后关联项目
+  project     Project? @relation(fields: [projectId], references: [id])
+
+  characters      Character[]
+  timelineEntries TimelineEntry[]
+  creativeFlows   CreativeFlow[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
