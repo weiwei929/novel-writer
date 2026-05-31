@@ -75,7 +75,17 @@ export interface Project {
   title: string
   description?: string
   author: string
-  status: 'draft' | 'writing' | 'completed' | 'archived' | 'imported' | 'published'
+  status:
+    | 'draft'
+    | 'planning'
+    | 'writing'
+    | 'reviewing'
+    | 'completed'
+    | 'archived'
+    | 'pooled'
+    | 'trashed'
+    | 'imported'
+    | 'published'
   collectionId?: string 
   wordCount: number
   chapterCount?: number 
@@ -579,6 +589,11 @@ export const proposalsApi = {
   },
   async updateStatus(id: string, status: Proposal['status']): Promise<Proposal> {
     const response = await api.put(`/proposals/${id}/status`, { status })
+    return response.data
+  },
+  // 通过立项：后端建项目 + 作品设定 re-key + 提案归档，返回新项目 ID
+  async approve(id: string): Promise<{ projectId: string }> {
+    const response = await api.put(`/proposals/${id}/approve`)
     return response.data
   },
   async delete(id: string): Promise<void> {

@@ -34,9 +34,11 @@ export default function ProposalEvalPage() {
   }, [load])
 
   useEffect(() => {
-    if (id) setCurrentScope({ type: 'proposal', id })
+    if (id && proposal && proposal.status !== 'approved' && !proposal.projectId) {
+      setCurrentScope({ type: 'proposal', id })
+    }
     return () => setCurrentScope(null)
-  }, [id, setCurrentScope])
+  }, [id, proposal, setCurrentScope])
 
   const handleReturn = async () => {
     if (!id) return
@@ -52,8 +54,26 @@ export default function ProposalEvalPage() {
     }
   }
 
+  const handleApprove = async () => {
+    if (!id) return
+    setActing(true)
+    try {
+      const { projectId } = await proposalsApi.approve(id)
+      addNotification({
+        type: 'success',
+        title: '立项成功',
+        message: '作品设定已迁入项目，可继续定型元数据',
+      })
+      navigate(`/planning/metadata/${projectId}`)
+    } catch {
+      addNotification({ type: 'error', title: '立项失败', message: '无法完成立项操作' })
+    } finally {
+      setActing(false)
+    }
+  }
+
   const notImplemented = (name: string) =>
-    addNotification({ type: 'info', title: '开发中', message: `「${name}」将在立项流程卡中实现` })
+    addNotification({ type: 'info', title: '开发中', message: `「${name}」功能开发中` })
 
   if (loading) {
     return (
@@ -101,13 +121,16 @@ export default function ProposalEvalPage() {
             <Undo2 size={15} />
             退回创意组
           </button>
-          <button
-            onClick={() => notImplemented('通过立项')}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border border-green-200 text-green-700 hover:bg-green-50 transition-colors"
-          >
-            <CheckCircle2 size={15} />
-            通过立项
-          </button>
+          {proposal.status !== 'approved' && (
+            <button
+              onClick={() => void handleApprove()}
+              disabled={acting}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border border-green-200 text-green-700 hover:bg-green-50 transition-colors disabled:opacity-50"
+            >
+              <CheckCircle2 size={15} />
+              通过立项
+            </button>
+          )}
           <button
             onClick={() => notImplemented('暂存审查池')}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
@@ -138,10 +161,23 @@ export default function ProposalEvalPage() {
         </div>
       </div>
 
-      {/* 作品设定（只读） */}
+      {/* 作品设定（只读；已立项则数据已迁入项目） */}
       <div>
         <h2 className="text-lg font-bold text-gray-900 mb-3">作品设定（只读）</h2>
-        <WorldBuildingPage readOnly />
+        {proposal.status === 'approved' && proposal.projectId ? (
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-600">
+            该企划已立项，作品设定已迁入项目。
+            <button
+              type="button"
+              onClick={() => navigate(`/planning/metadata/${proposal.projectId}`)}
+              className="ml-2 text-blue-600 hover:underline"
+            >
+              前往作品内容元数据
+            </button>
+          </div>
+        ) : (
+          <WorldBuildingPage readOnly />
+        )}
       </div>
     </div>
   )

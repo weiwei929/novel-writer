@@ -66,9 +66,12 @@ const PHASES: Phase[] = [
     id: 'writing',
     label: '创作室',
     icon: PenLine,
-    to: '/editor',
-    match: ['/editor'],
-    sub: [{ path: '/editor', label: '写作编辑器' }],
+    to: '/writing/projects',
+    match: ['/writing', '/editor'],
+    sub: [
+      { path: '/writing/projects', label: '创作中作品' },
+      { path: '/editor', label: '写作编辑器（旧）' },
+    ],
   },
   {
     id: 'review',

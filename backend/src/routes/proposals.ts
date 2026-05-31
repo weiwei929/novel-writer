@@ -95,6 +95,44 @@ export async function proposalRoutes(app: FastifyInstance) {
     }
   })
 
+  // PUT /proposals/:id/approve（通过立项：建项目 + 作品设定 re-key + 提案归档）
+  app.put('/:id/approve', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    const { id } = req.params
+    const proposal = await prisma.proposal.findUnique({ where: { id } })
+    if (!proposal) {
+      return reply.status(404).send({ success: false, error: 'Proposal not found' })
+    }
+    if (proposal.projectId || proposal.status === 'approved') {
+      return reply.status(400).send({ success: false, error: '该提案已立项' })
+    }
+
+    // 原子操作：建项目 → 作品设定 proposalId 搬移到 projectId → 提案归档
+    const project = await prisma.$transaction(async tx => {
+      const created = await tx.project.create({
+        data: { title: proposal.title, status: 'planning' },
+      })
+      await tx.character.updateMany({
+        where: { proposalId: id },
+        data: { projectId: created.id, proposalId: null },
+      })
+      await tx.timelineEntry.updateMany({
+        where: { proposalId: id },
+        data: { projectId: created.id, proposalId: null },
+      })
+      await tx.creativeFlow.updateMany({
+        where: { proposalId: id },
+        data: { projectId: created.id, proposalId: null },
+      })
+      await tx.proposal.update({
+        where: { id },
+        data: { projectId: created.id, status: 'approved' },
+      })
+      return created
+    })
+
+    return { success: true, data: { projectId: project.id, project } }
+  })
+
   // DELETE /proposals/:id
   app.delete('/:id', async (req: FastifyRequest<GetByIdParams>, reply) => {
     try {

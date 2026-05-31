@@ -56,14 +56,16 @@ L4 章节级（仅创作室）
 /planning           → 企划课 L1
 /planning/proposals    → 企划建议书评估 L2（仅列已提交提案）
 /planning/proposals/:id → 企划建议书评估详情 L3（只读）
-/planning/metadata     → 作品内容元数据 L2
-/planning/metadata/:id → 作品详情 L3
+/planning/metadata              → 作品内容元数据 L2（项目选择）
+/planning/metadata/:projectId   → 作品内容元数据 L3（可编辑作品设定）
 /planning/evaluation   → 立项评估 L2
 /planning/projects     → 立项作品 L2
 
-/writing            → 创作室 L1
-/writing/projects      → 创作中作品列表 L3
-/writing/:projectId/:chapterId → 编辑器 L4
+/writing                 → 创作室 L1
+/writing/projects        → 创作中作品列表 L2（status=writing）
+/writing/:projectId      → 创作室作品页 L3（作品设定只读 + 章节占位）
+/writing/:projectId/:chapterId → 编辑器 L4（规划中）
+/editor                  → 旧写作编辑器（保留）
 
 /review             → 编审部 L1
 /review/projects       → 待审作品列表 L3

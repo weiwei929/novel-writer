@@ -25,8 +25,11 @@ const ProposalsPage = lazy(() => import('./pages/creative/ProposalsPage'))
 const ProposalDetailPage = lazy(() => import('./pages/creative/ProposalDetailPage'))
 const ProposalReviewPage = lazy(() => import('./pages/planning/ProposalReviewPage'))
 const ProposalEvalPage = lazy(() => import('./pages/planning/ProposalEvalPage'))
-const MetadataPage = lazy(() => import('./pages/planning/MetadataPage'))
+const MetadataListPage = lazy(() => import('./pages/planning/MetadataListPage'))
+const MetadataProjectPage = lazy(() => import('./pages/planning/MetadataProjectPage'))
 const EvaluationPage = lazy(() => import('./pages/planning/EvaluationPage'))
+const WritingProjectsPage = lazy(() => import('./pages/writing/WritingProjectsPage'))
+const WritingProjectPage = lazy(() => import('./pages/writing/WritingProjectPage'))
 
 import { PageWrapper as UI_PageWrapper } from './components/layout/PageWrapper'
 
@@ -108,7 +111,37 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <SuspenseWrapper>
-          <MetadataPage />
+          <MetadataListPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/planning/metadata/:projectId',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <MetadataProjectPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/writing/projects',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <WritingProjectsPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/writing/:projectId',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <WritingProjectPage />
         </SuspenseWrapper>
       </Layout>
     ),
