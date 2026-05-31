@@ -19,6 +19,7 @@ const ApiTestPage = lazy(() => import('./pages/ApiTestPage'))
 const ScrapsPage = lazy(() => import('./pages/ScrapsPage'))
 const ReviewPage = lazy(() => import('./pages/ReviewPage'))
 const ReferencesPage = lazy(() => import('./pages/creative/ReferencesPage'))
+const WorldBuildingPage = lazy(() => import('./pages/creative/WorldBuildingPage'))
 const AiSearchPage = lazy(() => import('./pages/creative/AiSearchPage'))
 const ChatPage = lazy(() => import('./pages/creative/ChatPage'))
 const ProposalsPage = lazy(() => import('./pages/creative/ProposalsPage'))
@@ -170,6 +171,16 @@ const router = createBrowserRouter([
       <Layout>
         <SuspenseWrapper>
           <ScrapsPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/creative/world',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <WorldBuildingPage />
         </SuspenseWrapper>
       </Layout>
     ),

@@ -143,6 +143,73 @@ export interface Scrap {
   createdAt: string
 }
 
+// --- 世界观管理（TASK-006 后端 / TASK-007 前端）---
+
+export interface WorldCharacter {
+  id: string
+  projectId: string
+  name: string
+  gender?: string | null
+  age?: string | null
+  identity?: string | null
+  appearance?: string | null
+  personality?: string | null
+  interests?: string | null
+  roleType?: string | null
+  experience?: string | null
+  keyRelations?: string | null
+  catchphrase?: string | null
+  // 旧字段保留（不在 UI 中展示/编辑）
+  role?: string | null
+  description?: string | null
+  profile?: any
+  createdAt: string
+  updatedAt: string
+}
+
+export interface TimelineEntry {
+  id: string
+  projectId: string
+  time: string
+  location: string
+  characters: string
+  premise?: string | null
+  process?: string | null
+  outcome?: string | null
+  narrativeMode?: string | null
+  emotionStage?: string | null
+  notes?: string | null
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreativeFlow {
+  id: string
+  projectId: string
+  title: string
+  content: string
+  tags?: string[] | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type CharacterInput = Partial<Omit<WorldCharacter, 'id' | 'createdAt' | 'updatedAt'>> & {
+  projectId: string
+  name: string
+}
+export type TimelineInput = Partial<Omit<TimelineEntry, 'id' | 'createdAt' | 'updatedAt'>> & {
+  projectId: string
+  time: string
+  location: string
+  characters: string
+}
+export type CreativeFlowInput = Partial<Omit<CreativeFlow, 'id' | 'createdAt' | 'updatedAt'>> & {
+  projectId: string
+  title: string
+  content: string
+}
+
 export const collectionsApi = {
   async getAll(): Promise<Collection[]> {
     const response = await api.get('/collections')
@@ -365,6 +432,73 @@ export const scrapsApi = {
   }
 }
 
+
+// 世界观管理 API（对接 TASK-006 后端：/characters /timeline /creative-flows）
+export const worldApi = {
+  chars: {
+    async list(projectId: string): Promise<WorldCharacter[]> {
+      const response = await api.get(`/characters/list?projectId=${encodeURIComponent(projectId)}`)
+      return response.data || []
+    },
+    async getById(id: string): Promise<WorldCharacter> {
+      const response = await api.get(`/characters/${id}`)
+      return response.data
+    },
+    async create(data: CharacterInput): Promise<WorldCharacter> {
+      const response = await api.post('/characters', data)
+      return response.data
+    },
+    async update(id: string, data: Partial<CharacterInput>): Promise<WorldCharacter> {
+      const response = await api.put(`/characters/${id}`, data)
+      return response.data
+    },
+    async delete(id: string): Promise<void> {
+      await api.delete(`/characters/${id}`)
+    },
+  },
+  timeline: {
+    async list(projectId: string): Promise<TimelineEntry[]> {
+      const response = await api.get(`/timeline/list?projectId=${encodeURIComponent(projectId)}`)
+      return response.data || []
+    },
+    async getById(id: string): Promise<TimelineEntry> {
+      const response = await api.get(`/timeline/${id}`)
+      return response.data
+    },
+    async create(data: TimelineInput): Promise<TimelineEntry> {
+      const response = await api.post('/timeline', data)
+      return response.data
+    },
+    async update(id: string, data: Partial<TimelineInput>): Promise<TimelineEntry> {
+      const response = await api.put(`/timeline/${id}`, data)
+      return response.data
+    },
+    async delete(id: string): Promise<void> {
+      await api.delete(`/timeline/${id}`)
+    },
+  },
+  flows: {
+    async list(projectId: string): Promise<CreativeFlow[]> {
+      const response = await api.get(`/creative-flows/list?projectId=${encodeURIComponent(projectId)}`)
+      return response.data || []
+    },
+    async getById(id: string): Promise<CreativeFlow> {
+      const response = await api.get(`/creative-flows/${id}`)
+      return response.data
+    },
+    async create(data: CreativeFlowInput): Promise<CreativeFlow> {
+      const response = await api.post('/creative-flows', data)
+      return response.data
+    },
+    async update(id: string, data: Partial<CreativeFlowInput>): Promise<CreativeFlow> {
+      const response = await api.put(`/creative-flows/${id}`, data)
+      return response.data
+    },
+    async delete(id: string): Promise<void> {
+      await api.delete(`/creative-flows/${id}`)
+    },
+  },
+}
 
 export const settingsApi = {
   get: () => api.get<ApiResponse<any>>('/settings').then(res => res.data),

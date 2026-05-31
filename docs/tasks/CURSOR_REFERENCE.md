@@ -32,7 +32,7 @@ L1 主导航（5项，顶部 Tab 栏）
 [创意组] [企划课] [创作室] [编审部] [文集库]
 
 L2 子导航（仅创意组/企划课有，Tab 切换）
-创意组: [外来参考] [灵感碎片] [AI搜索] [创意讨论] [企划建议书]
+创意组: [外来参考] [灵感碎片] [世界观] [AI搜索] [创意讨论] [企划建议书]
 企划课: [企划建议书] [作品内容元数据] [立项评估] [立项作品]
 
 L3 作品级（列表 → 详情页）
@@ -48,6 +48,7 @@ L4 章节级（仅创作室）
 /creative           → 创意组 L1
 /creative/references    → 外来参考 L2
 /creative/scraps        → 灵感碎片 L2
+/creative/world         → 世界观 L2（人物设定/故事线/创作心流，内部 Tab 不改 URL）
 /creative/ai-search     → AI 搜索 L2
 /creative/chat          → 创意讨论 L2
 /creative/proposals     → 企划建议书 L2
