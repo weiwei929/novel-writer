@@ -9,6 +9,9 @@ import { authRoutes } from './routes/auth'
 import { aiRoutes } from './routes/ai'
 import { collectionRoutes } from './routes/collections'
 import { settingsRoutes } from './routes/settings'
+import { characterRoutes } from './routes/characters'
+import { timelineRoutes } from './routes/timeline'
+import { creativeFlowRoutes } from './routes/creativeFlows'
 import { authMiddleware } from './middleware/auth'
 
 const server = Fastify({
@@ -45,6 +48,9 @@ server.register(collectionRoutes, { prefix: '/api/v2/collections' })
 server.register(authRoutes, { prefix: '/api/v2/auth' })
 server.register(aiRoutes, { prefix: '/api/v2/ai' })
 server.register(settingsRoutes, { prefix: '/api/v2/settings' })
+server.register(characterRoutes, { prefix: '/api/v2/characters' })
+server.register(timelineRoutes, { prefix: '/api/v2/timeline' })
+server.register(creativeFlowRoutes, { prefix: '/api/v2/creative-flows' })
 
 // Run Server
 const start = async () => {

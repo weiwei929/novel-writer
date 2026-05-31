@@ -52,6 +52,8 @@ model Project {
   characters   Character[]
   locations    Location[]
   scraps       Scrap[]
+  timelineEntries TimelineEntry[]
+  creativeFlows   CreativeFlow[]
   
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -110,7 +112,19 @@ model Character {
   
   // Detailed traits stored as JSON for flexibility
   profile     Json?   // { "age": 20, "appearance": "...", "relationships": [] }
-  
+
+  // --- TASK-006 结构化人物设定字段（全部选填，兼容旧数据） ---
+  gender       String? // 性别
+  age          String? // 年龄
+  identity     String? // 身份/职业
+  appearance   String? // 外貌
+  personality  String? // 性格（含特点/缺陷）
+  interests    String? // 兴趣
+  roleType     String? // 角色定位：主角一号/二号/重要配角/普通配角/龙套
+  experience   String? // 个人经历（选填）
+  keyRelations String? // 关键关系（选填）
+  catchphrase  String? // 口头禅（选填）
+
   projectId   String
   project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   
@@ -128,4 +142,45 @@ model Location {
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// ---------------------------------------------------------
+// Story Timeline (故事线) - TASK-006
+// ---------------------------------------------------------
+
+model TimelineEntry {
+  id            String  @id @default(uuid())
+  time          String  // 时间标记（必填）
+  location      String  // 地点（必填）
+  characters    String  // 涉及人物及当下关系（必填）
+  premise       String? // 起因（选填）
+  process       String? // 过程（选填）
+  outcome       String? // 结果（选填）
+  narrativeMode String? // 叙事方式（选填）
+  emotionStage  String? // 情绪阶段（选填）
+  notes         String? // 备注（选填）
+  sortOrder     Int     // 排序
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------
+// Creative Flow (创作心流) - TASK-006
+// ---------------------------------------------------------
+
+model CreativeFlow {
+  id      String @id @default(uuid())
+  title   String
+  content String // Markdown
+  tags    Json?  // 标签
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
