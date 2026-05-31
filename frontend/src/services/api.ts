@@ -143,11 +143,16 @@ export interface Scrap {
   createdAt: string
 }
 
-// --- 世界观管理（TASK-006 后端 / TASK-007 前端）---
+// --- 作品设定（TASK-006 后端 / TASK-007 前端 / TASK-008 双锚点）---
+// 内部标识符沿用 world/Character 等命名；用户可见 UI 标签统一为「作品设定」
+
+// 数据归属：提案阶段挂 proposalId，立项后挂 projectId
+export type WorldScope = { type: 'proposal' | 'project'; id: string }
 
 export interface WorldCharacter {
   id: string
-  projectId: string
+  projectId?: string | null
+  proposalId?: string | null
   name: string
   gender?: string | null
   age?: string | null
@@ -169,7 +174,8 @@ export interface WorldCharacter {
 
 export interface TimelineEntry {
   id: string
-  projectId: string
+  projectId?: string | null
+  proposalId?: string | null
   time: string
   location: string
   characters: string
@@ -186,7 +192,8 @@ export interface TimelineEntry {
 
 export interface CreativeFlow {
   id: string
-  projectId: string
+  projectId?: string | null
+  proposalId?: string | null
   title: string
   content: string
   tags?: string[] | null
@@ -194,20 +201,62 @@ export interface CreativeFlow {
   updatedAt: string
 }
 
-export type CharacterInput = Partial<Omit<WorldCharacter, 'id' | 'createdAt' | 'updatedAt'>> & {
-  projectId: string
+// 表单输入（不含归属字段，归属由 scope 注入）
+export type CharacterInput = {
   name: string
+  gender?: string | null
+  age?: string | null
+  identity?: string | null
+  appearance?: string | null
+  personality?: string | null
+  interests?: string | null
+  roleType?: string | null
+  experience?: string | null
+  keyRelations?: string | null
+  catchphrase?: string | null
+  role?: string | null
+  description?: string | null
+  profile?: any
 }
-export type TimelineInput = Partial<Omit<TimelineEntry, 'id' | 'createdAt' | 'updatedAt'>> & {
-  projectId: string
+export type TimelineInput = {
   time: string
   location: string
   characters: string
+  premise?: string | null
+  process?: string | null
+  outcome?: string | null
+  narrativeMode?: string | null
+  emotionStage?: string | null
+  notes?: string | null
+  sortOrder?: number
 }
-export type CreativeFlowInput = Partial<Omit<CreativeFlow, 'id' | 'createdAt' | 'updatedAt'>> & {
-  projectId: string
+export type CreativeFlowInput = {
   title: string
   content: string
+  tags?: string[] | null
+}
+
+// 企划建议书（TASK-008 后端已实现）
+export interface Proposal {
+  id: string
+  title: string
+  synopsis?: string | null
+  innovation?: string | null
+  coreSetting?: string | null
+  status: 'draft' | 'submitted' | 'evaluated' | 'approved' | 'rejected'
+  references?: any
+  sourceNotes?: string | null
+  projectId?: string | null
+  createdAt: string
+  updatedAt: string
+}
+export type ProposalInput = {
+  title: string
+  synopsis?: string | null
+  innovation?: string | null
+  coreSetting?: string | null
+  references?: any
+  sourceNotes?: string | null
 }
 
 export const collectionsApi = {
@@ -433,19 +482,29 @@ export const scrapsApi = {
 }
 
 
-// 世界观管理 API（对接 TASK-006 后端：/characters /timeline /creative-flows）
+// 作品设定 API（对接 /characters /timeline /creative-flows，支持 proposalId/projectId 双锚点）
+const scopeQuery = (scope: WorldScope) =>
+  scope.type === 'proposal'
+    ? `proposalId=${encodeURIComponent(scope.id)}`
+    : `projectId=${encodeURIComponent(scope.id)}`
+
+export const scopeToOwner = (
+  scope: WorldScope
+): { projectId?: string; proposalId?: string } =>
+  scope.type === 'proposal' ? { proposalId: scope.id } : { projectId: scope.id }
+
 export const worldApi = {
   chars: {
-    async list(projectId: string): Promise<WorldCharacter[]> {
-      const response = await api.get(`/characters/list?projectId=${encodeURIComponent(projectId)}`)
+    async list(scope: WorldScope): Promise<WorldCharacter[]> {
+      const response = await api.get(`/characters/list?${scopeQuery(scope)}`)
       return response.data || []
     },
     async getById(id: string): Promise<WorldCharacter> {
       const response = await api.get(`/characters/${id}`)
       return response.data
     },
-    async create(data: CharacterInput): Promise<WorldCharacter> {
-      const response = await api.post('/characters', data)
+    async create(scope: WorldScope, data: CharacterInput): Promise<WorldCharacter> {
+      const response = await api.post('/characters', { ...data, ...scopeToOwner(scope) })
       return response.data
     },
     async update(id: string, data: Partial<CharacterInput>): Promise<WorldCharacter> {
@@ -457,16 +516,16 @@ export const worldApi = {
     },
   },
   timeline: {
-    async list(projectId: string): Promise<TimelineEntry[]> {
-      const response = await api.get(`/timeline/list?projectId=${encodeURIComponent(projectId)}`)
+    async list(scope: WorldScope): Promise<TimelineEntry[]> {
+      const response = await api.get(`/timeline/list?${scopeQuery(scope)}`)
       return response.data || []
     },
     async getById(id: string): Promise<TimelineEntry> {
       const response = await api.get(`/timeline/${id}`)
       return response.data
     },
-    async create(data: TimelineInput): Promise<TimelineEntry> {
-      const response = await api.post('/timeline', data)
+    async create(scope: WorldScope, data: TimelineInput): Promise<TimelineEntry> {
+      const response = await api.post('/timeline', { ...data, ...scopeToOwner(scope) })
       return response.data
     },
     async update(id: string, data: Partial<TimelineInput>): Promise<TimelineEntry> {
@@ -478,16 +537,16 @@ export const worldApi = {
     },
   },
   flows: {
-    async list(projectId: string): Promise<CreativeFlow[]> {
-      const response = await api.get(`/creative-flows/list?projectId=${encodeURIComponent(projectId)}`)
+    async list(scope: WorldScope): Promise<CreativeFlow[]> {
+      const response = await api.get(`/creative-flows/list?${scopeQuery(scope)}`)
       return response.data || []
     },
     async getById(id: string): Promise<CreativeFlow> {
       const response = await api.get(`/creative-flows/${id}`)
       return response.data
     },
-    async create(data: CreativeFlowInput): Promise<CreativeFlow> {
-      const response = await api.post('/creative-flows', data)
+    async create(scope: WorldScope, data: CreativeFlowInput): Promise<CreativeFlow> {
+      const response = await api.post('/creative-flows', { ...data, ...scopeToOwner(scope) })
       return response.data
     },
     async update(id: string, data: Partial<CreativeFlowInput>): Promise<CreativeFlow> {
@@ -497,6 +556,33 @@ export const worldApi = {
     async delete(id: string): Promise<void> {
       await api.delete(`/creative-flows/${id}`)
     },
+  },
+}
+
+// 企划建议书 API（TASK-008 后端：/api/v2/proposals）
+export const proposalsApi = {
+  async list(): Promise<Proposal[]> {
+    const response = await api.get('/proposals')
+    return response.data || []
+  },
+  async getById(id: string): Promise<Proposal> {
+    const response = await api.get(`/proposals/${id}`)
+    return response.data
+  },
+  async create(data: ProposalInput): Promise<Proposal> {
+    const response = await api.post('/proposals', data)
+    return response.data
+  },
+  async update(id: string, data: Partial<ProposalInput>): Promise<Proposal> {
+    const response = await api.put(`/proposals/${id}`, data)
+    return response.data
+  },
+  async updateStatus(id: string, status: Proposal['status']): Promise<Proposal> {
+    const response = await api.put(`/proposals/${id}/status`, { status })
+    return response.data
+  },
+  async delete(id: string): Promise<void> {
+    await api.delete(`/proposals/${id}`)
   },
 }
 

@@ -19,11 +19,12 @@ const ApiTestPage = lazy(() => import('./pages/ApiTestPage'))
 const ScrapsPage = lazy(() => import('./pages/ScrapsPage'))
 const ReviewPage = lazy(() => import('./pages/ReviewPage'))
 const ReferencesPage = lazy(() => import('./pages/creative/ReferencesPage'))
-const WorldBuildingPage = lazy(() => import('./pages/creative/WorldBuildingPage'))
 const AiSearchPage = lazy(() => import('./pages/creative/AiSearchPage'))
 const ChatPage = lazy(() => import('./pages/creative/ChatPage'))
 const ProposalsPage = lazy(() => import('./pages/creative/ProposalsPage'))
+const ProposalDetailPage = lazy(() => import('./pages/creative/ProposalDetailPage'))
 const ProposalReviewPage = lazy(() => import('./pages/planning/ProposalReviewPage'))
+const ProposalEvalPage = lazy(() => import('./pages/planning/ProposalEvalPage'))
 const MetadataPage = lazy(() => import('./pages/planning/MetadataPage'))
 const EvaluationPage = lazy(() => import('./pages/planning/EvaluationPage'))
 
@@ -88,6 +89,16 @@ const router = createBrowserRouter([
       <Layout>
         <SuspenseWrapper>
           <ProposalReviewPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/planning/proposals/:id',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <ProposalEvalPage />
         </SuspenseWrapper>
       </Layout>
     ),
@@ -176,16 +187,6 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/creative/world',
-    element: (
-      <Layout>
-        <SuspenseWrapper>
-          <WorldBuildingPage />
-        </SuspenseWrapper>
-      </Layout>
-    ),
-  },
-  {
     path: '/creative/ai-search',
     element: (
       <Layout>
@@ -211,6 +212,16 @@ const router = createBrowserRouter([
       <Layout>
         <SuspenseWrapper>
           <ProposalsPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/creative/proposals/:id',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <ProposalDetailPage />
         </SuspenseWrapper>
       </Layout>
     ),
