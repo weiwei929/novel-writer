@@ -52,8 +52,8 @@ const PHASES: Phase[] = [
     id: 'planning',
     label: '企划课',
     icon: ClipboardList,
-    // 默认落地「立项作品」：前三个子 Tab 暂为空白占位，先让用户看到已有项目列表
-    to: '/planning/projects',
+    // 默认落地「企划建议书」：企划课流程起点，与上游创意组产出对齐
+    to: '/planning/proposals',
     match: ['/planning', '/projects'],
     sub: [
       { path: '/planning/proposals', label: '企划建议书' },
