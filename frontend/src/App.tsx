@@ -15,10 +15,13 @@ const EnhancedEditorPage = lazy(() => import('./pages/EnhancedEditorPage'))
 const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage'))
 const StatsPage = lazy(() => import('./pages/StatsPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
-const FileManagerPage = lazy(() => import('./pages/FileManagerPage'))
 const ApiTestPage = lazy(() => import('./pages/ApiTestPage'))
 const ScrapsPage = lazy(() => import('./pages/ScrapsPage'))
 const ReviewPage = lazy(() => import('./pages/ReviewPage'))
+const ReferencesPage = lazy(() => import('./pages/creative/ReferencesPage'))
+const AiSearchPage = lazy(() => import('./pages/creative/AiSearchPage'))
+const ChatPage = lazy(() => import('./pages/creative/ChatPage'))
+const ProposalsPage = lazy(() => import('./pages/creative/ProposalsPage'))
 
 import { PageWrapper as UI_PageWrapper } from './components/layout/PageWrapper'
 
@@ -114,7 +117,17 @@ const router = createBrowserRouter([
     element: <Navigate to="/projects" replace />,
   },
   {
-    path: '/scraps',
+    path: '/creative/references',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <ReferencesPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/creative/scraps',
     element: (
       <Layout>
         <SuspenseWrapper>
@@ -122,6 +135,45 @@ const router = createBrowserRouter([
         </SuspenseWrapper>
       </Layout>
     ),
+  },
+  {
+    path: '/creative/ai-search',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <AiSearchPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/creative/chat',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <ChatPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/creative/proposals',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <ProposalsPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  // 旧路径重定向到 /creative 前缀（保留历史链接可用）
+  {
+    path: '/scraps',
+    element: <Navigate to="/creative/scraps" replace />,
+  },
+  {
+    path: '/files',
+    element: <Navigate to="/creative/references" replace />,
   },
   {
     path: '/review',
@@ -139,16 +191,6 @@ const router = createBrowserRouter([
       <Layout>
         <SuspenseWrapper>
           <StatsPage />
-        </SuspenseWrapper>
-      </Layout>
-    ),
-  },
-  {
-    path: '/files',
-    element: (
-      <Layout>
-        <SuspenseWrapper>
-          <FileManagerPage />
         </SuspenseWrapper>
       </Layout>
     ),

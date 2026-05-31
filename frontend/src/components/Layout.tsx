@@ -38,11 +38,14 @@ const PHASES: Phase[] = [
     id: 'ideation',
     label: '创意组',
     icon: Lightbulb,
-    to: '/scraps',
-    match: ['/scraps', '/files'],
+    to: '/creative/references',
+    match: ['/creative'],
     sub: [
-      { path: '/scraps', label: '灵感碎片' },
-      { path: '/files', label: '导入' },
+      { path: '/creative/references', label: '外来参考' },
+      { path: '/creative/scraps', label: '灵感碎片' },
+      { path: '/creative/ai-search', label: 'AI 搜索' },
+      { path: '/creative/chat', label: '创意讨论' },
+      { path: '/creative/proposals', label: '企划建议书' },
     ],
   },
   {

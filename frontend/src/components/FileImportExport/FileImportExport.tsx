@@ -34,6 +34,7 @@ export const FileImportExport: React.FC = () => {
         
         // 2. Cleaning Pipeline (仅用于预览)
         let cleanText = text
+            // eslint-disable-next-line no-irregular-whitespace
             .replace(/^　+/gm, '') 
             .replace(/^[ \t]+/gm, '')
             .replace(/\n{3,}/g, '\n\n')
