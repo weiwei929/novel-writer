@@ -1,15 +1,7 @@
 import React, { ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import {
-  Lightbulb,
-  ClipboardList,
-  PenLine,
-  ClipboardCheck,
-  Library,
-  Settings,
-  Feather,
-  LucideIcon,
-} from 'lucide-react'
+import { IconCreative, IconFeather, IconLibrary, IconPlanning, IconReview, IconSettings, IconShelf, IconStats, IconWriting, IconComponent } from './ui/icons'
+import { useSettingsStore } from '../stores/settingsStore'
 
 interface LayoutProps {
   children: ReactNode
@@ -23,21 +15,23 @@ interface SubNavItem {
 interface Phase {
   id: string
   label: string
-  icon: LucideIcon
-  // 点击阶段 Tab 的默认落地路由
+  icon: IconComponent
   to: string
-  // 属于该阶段的路由前缀（用于高亮判定）
   match: string[]
-  // 阶段内子导航（预留位，后续逐步填充）
   sub: SubNavItem[]
 }
 
-// 5 阶段创作管道：创意组 → 企划课 → 创作室 → 编审部 → 文集库
+interface GlobalAction {
+  path: string
+  icon: IconComponent
+  title: string
+}
+
 const PHASES: Phase[] = [
   {
     id: 'ideation',
     label: '创意组',
-    icon: Lightbulb,
+    icon: IconCreative,
     to: '/creative/references',
     match: ['/creative'],
     sub: [
@@ -51,10 +45,9 @@ const PHASES: Phase[] = [
   {
     id: 'planning',
     label: '企划课',
-    icon: ClipboardList,
-    // 默认落地「企划建议书」：企划课流程起点，与上游创意组产出对齐
+    icon: IconPlanning,
     to: '/planning/proposals',
-    match: ['/planning', '/projects'],
+    match: ['/planning', '/projects', '/work'],
     sub: [
       { path: '/planning/proposals', label: '企划建议书评估' },
       { path: '/planning/metadata', label: '作品内容元数据' },
@@ -65,18 +58,15 @@ const PHASES: Phase[] = [
   {
     id: 'writing',
     label: '创作室',
-    icon: PenLine,
+    icon: IconWriting,
     to: '/writing/projects',
     match: ['/writing', '/editor'],
-    sub: [
-      { path: '/writing/projects', label: '创作中作品' },
-      { path: '/editor', label: '写作编辑器（旧）' },
-    ],
+    sub: [{ path: '/writing/projects', label: '创作中作品' }],
   },
   {
     id: 'review',
     label: '编审部',
-    icon: ClipboardCheck,
+    icon: IconReview,
     to: '/review',
     match: ['/review'],
     sub: [{ path: '/review', label: '审阅工作台' }],
@@ -84,14 +74,17 @@ const PHASES: Phase[] = [
   {
     id: 'library',
     label: '文集库',
-    icon: Library,
-    to: '/collections',
-    match: ['/collections', '/stats'],
-    sub: [
-      { path: '/collections', label: '文集' },
-      { path: '/stats', label: '数据统计' },
-    ],
+    icon: IconLibrary,
+    to: '/library',
+    match: ['/library', '/collections'],
+    sub: [{ path: '/collections', label: '文集' }],
   },
+]
+
+const GLOBAL_ACTIONS: GlobalAction[] = [
+  { path: '/stats', icon: IconStats, title: '数据统计' },
+  { path: '/settings', icon: IconSettings, title: '系统设置' },
+  { path: '/shelf', icon: IconShelf, title: '作品暂存' },
 ]
 
 const matchesPath = (pathname: string, target: string): boolean =>
@@ -100,13 +93,23 @@ const matchesPath = (pathname: string, target: string): boolean =>
 const getActivePhase = (pathname: string): Phase | undefined =>
   PHASES.find(phase => phase.match.some(m => matchesPath(pathname, m)))
 
+const isWritingEditorPath = (pathname: string): boolean =>
+  /^\/writing\/[^/]+\/[^/]+$/.test(pathname)
+
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation()
   const pathname = location.pathname
   const activePhase = getActivePhase(pathname)
-  // 编辑器：导航不再全屏隐藏，改为收窄常驻
-  const isEditor = pathname.startsWith('/editor')
-  const settingsActive = matchesPath(pathname, '/settings')
+  const isEditor = pathname.startsWith('/editor') || isWritingEditorPath(pathname)
+  const aiPartner = useSettingsStore(s => s.ai.partner)
+
+  const visibleSubNav =
+    activePhase?.sub.filter(item => {
+      if (!aiPartner && (item.path === '/creative/ai-search' || item.path === '/creative/chat')) {
+        return false
+      }
+      return true
+    }) ?? []
 
   const phaseTabs = (
     <nav className="flex items-center space-x-1">
@@ -140,30 +143,36 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           isEditor ? 'w-7 h-7' : 'w-8 h-8'
         }`}
       >
-        <Feather className={isEditor ? 'w-4 h-4 text-white' : 'w-5 h-5 text-white'} />
+        <IconFeather className={isEditor ? 'w-4 h-4 text-white' : 'w-5 h-5 text-white'} />
       </div>
       {!isEditor && <h1 className="text-lg font-bold text-gray-900">小说创作器</h1>}
     </Link>
   )
 
-  const settingsGear = (
-    <Link
-      to="/settings"
-      title="系统设置"
-      className={`flex items-center justify-center rounded-lg transition-colors ${
-        isEditor ? 'w-8 h-8' : 'w-9 h-9'
-      } ${
-        settingsActive
-          ? 'bg-blue-100 text-blue-700'
-          : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
-      }`}
-    >
-      <Settings className={isEditor ? 'w-4 h-4' : 'w-5 h-5'} />
-    </Link>
+  const globalActions = (
+    <div className="flex items-center gap-1">
+      {GLOBAL_ACTIONS.map(({ path, icon: Icon, title }) => {
+        const active = matchesPath(pathname, path)
+        return (
+          <Link
+            key={path}
+            to={path}
+            title={title}
+            className={`flex items-center justify-center rounded-lg transition-colors ${
+              isEditor ? 'w-8 h-8' : 'w-9 h-9'
+            } ${
+              active
+                ? 'bg-blue-100 text-blue-700'
+                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            <Icon className={isEditor ? 'w-4 h-4' : 'w-5 h-5'} />
+          </Link>
+        )
+      })}
+    </div>
   )
 
-  // 编辑器模式：单行收窄导航，最大化创作空间，但导航始终可见。
-  // 固定高度 flex 列：导航条占 h-12，编辑器铺满其下剩余空间。
   if (isEditor) {
     return (
       <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
@@ -173,7 +182,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {brand}
               {phaseTabs}
             </div>
-            {settingsGear}
+            {globalActions}
           </div>
         </header>
         <div className="flex-1 min-h-0">{children}</div>
@@ -183,7 +192,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 顶部：5 阶段主导航 */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-30">
         <div className="container mx-auto px-4">
           <div className="h-16 flex items-center justify-between">
@@ -191,16 +199,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {brand}
               {phaseTabs}
             </div>
-            {settingsGear}
+            {globalActions}
           </div>
         </div>
 
-        {/* 阶段内子导航区域（预留位，后续逐步填充子 Tab） */}
-        {activePhase && (
+        {visibleSubNav.length > 0 && (
           <div className="border-t bg-gray-50/80">
             <div className="container mx-auto px-4">
               <div className="flex items-center h-11 space-x-1">
-                {activePhase.sub.map(item => {
+                {visibleSubNav.map(item => {
                   const isActive = matchesPath(pathname, item.path)
                   return (
                     <Link
@@ -222,7 +229,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         )}
       </header>
 
-      {/* 主内容区 */}
       <main className="container mx-auto px-4 py-6">{children}</main>
     </div>
   )
