@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../utils/db'
 
-const PROPOSAL_STATUSES = ['draft', 'submitted', 'evaluated', 'approved', 'rejected'] as const
+const PROPOSAL_STATUSES = ['draft', 'submitted', 'evaluated', 'approved', 'rejected', 'shelved'] as const
 
 // 创建：归属字段（projectId）不在创建期开放，立项流程后续卡处理
 const CreateProposalSchema = z.object({

@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client'
 import { FastifyInstance, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../utils/db'
@@ -7,6 +8,9 @@ import { aiService } from '../services/ai/AIService'
 import type { FastifyBaseLogger } from 'fastify'
 import { ApiResponse } from '../utils/response'
 import type { ProjectMetadata } from '../types/metadata'
+import { mapProjectStatus, withMappedProjectStatus } from '../services/status-migration'
+
+const PROJECT_STATUSES = ['draft', 'planning', 'writing', 'reviewing', 'completed', 'archived', 'shelved'] as const
 
 // ===== 项目规模限制常量 =====
 const LIMITS = {
@@ -207,7 +211,7 @@ const UpdateProjectSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
   author: z.string().optional(),
-  status: z.enum(['draft', 'writing', 'completed', 'archived']).optional(),
+  status: z.enum(PROJECT_STATUSES).optional(),
   coverImage: z.string().optional(),
   metadata: z.any().optional(), // Allow any JSON object/value
   tags: z.any().optional(),     // Allow any JSON array/value
@@ -222,6 +226,10 @@ const ImportProjectSchema = z.object({
 const ConfirmMetadataSchema = z.object({
   confirmed: z.boolean(),
   editedMetadata: z.record(z.string(), z.any()).optional()  // 允许用户编辑后的元数据
+})
+
+const ShelveProjectSchema = z.object({
+  source: z.string().optional(),
 })
 
 // Chapter Planning Schemas
@@ -301,42 +309,25 @@ export async function projectRoutes(app: FastifyInstance) {
 
     try {
       const project = await prisma.$transaction(async (tx) => {
-        // 1. Find or Create "Imported" Collection
-        let collection = await tx.collection.findFirst({
-          where: { name: '导入文集' }
-        })
-
-        if (!collection) {
-          collection = await tx.collection.create({
-            data: {
-              name: '导入文集',
-              description: '自动存放导入的外部作品'
-            }
-          })
-        }
-
-        // 2. Create Project
         const newProject = await tx.project.create({
           data: {
             title,
             description: `导入于 ${new Date().toLocaleString('zh-CN')}`,
-            status: 'imported', // 导入的项目进入暂存池
-            author: 'Unknown', // Default author
-            collectionId: collection.id,
+            status: 'draft',
+            author: 'Unknown',
             createdAt: createdAt ? new Date(createdAt) : undefined,
           }
         })
 
-        // 3. Create Chapters with proper word count
         if (chapters.length > 0) {
           await tx.chapter.createMany({
             data: chapters.map((ch, index) => ({
               projectId: newProject.id,
               title: ch.title || `第 ${index + 1} 章`,
               content: ch.content,
-              order: index + 1,  // 使用索引作为顺序
+              order: index + 1,
               status: 'draft',
-              wordCount: countWords(ch.content) // Use proper word counting
+              wordCount: countWords(ch.content)
             }))
           })
         }
@@ -344,15 +335,11 @@ export async function projectRoutes(app: FastifyInstance) {
         return newProject
       })
 
-
-      // Update project total word count
       await updateProjectStats(project.id)
 
-      // ===== 导入成功，保存到暂存池 =====
-      // AI 元数据提取将在用户点击"转入创作"时触发
       return ApiResponse.success(
-        { project },
-        '导入成功！项目已保存到暂存池'
+        { project: withMappedProjectStatus(project) },
+        '作品已导入，状态为草稿'
       )
     } catch (e: any) {
       req.log.error(e)
@@ -434,53 +421,11 @@ export async function projectRoutes(app: FastifyInstance) {
     }
   })
 
-  // POST /projects/:id/move-to-draft - 将导入的项目转入创作区
-  app.post('/:id/move-to-draft', async (req: FastifyRequest<GetByIdParams>, reply) => {
-    const { id } = req.params
-    
-    try {
-      const project = await prisma.project.findUnique({ where: { id } })
-      if (!project) {
-        return reply.status(404).send(ApiResponse.error('Project not found', 404))
-      }
-      
-      if (project.status !== 'imported') {
-        return reply.status(400).send(
-          ApiResponse.error('只能转移导入状态的项目', 400)
-        )
-      }
-      
-      // 查找或创建"原创构思"集合
-      let draftCollection = await prisma.collection.findFirst({
-        where: { name: '原创构思' }
-      })
-      
-      if (!draftCollection) {
-        draftCollection = await prisma.collection.create({
-          data: { 
-            name: '原创构思', 
-            description: '原创作品集合'
-          }
-        })
-      }
-      
-      // 更新项目状态和集合
-      const updated = await prisma.project.update({
-        where: { id },
-        data: {
-          status: 'draft',
-          collectionId: draftCollection.id
-        }
-      })
-      
-      // ===== 不自动调用 AI =====
-      // 用户将在项目详情页看到提示，可以选择是否启动 AI 协助
-      
-      return ApiResponse.success(updated, '已转入原创构思')
-    } catch (e: any) {
-      req.log.error(e)
-      return reply.status(500).send(ApiResponse.error(e.message, 500))
-    }
+  // POST /projects/:id/move-to-draft — 已废弃（导入作品直接进入 draft）
+  app.post('/:id/move-to-draft', async (_req: FastifyRequest<GetByIdParams>, reply) => {
+    return reply.status(410).send(
+      ApiResponse.error('该接口已废弃，导入作品直接进入草稿状态', 410)
+    )
   })
 
   // POST /projects/:id/extract-metadata
@@ -525,6 +470,11 @@ export async function projectRoutes(app: FastifyInstance) {
 
   // GET /projects
   app.get('/', async (req, reply) => {
+    const statusFilter =
+      typeof (req.query as { status?: string }).status === 'string'
+        ? (req.query as { status: string }).status
+        : undefined
+
     const projects = await prisma.project.findMany({
       orderBy: { updatedAt: 'desc' },
       include: {
@@ -533,7 +483,92 @@ export async function projectRoutes(app: FastifyInstance) {
         }
       }
     })
-    return { success: true, data: projects }
+
+    let data = projects.map(withMappedProjectStatus)
+    if (statusFilter) {
+      data = data.filter(p => p.status === statusFilter)
+    }
+
+    return { success: true, data }
+  })
+
+  // POST /projects/:id/shelve — 移入作品暂存
+  app.post('/:id/shelve', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    const { id } = req.params
+    const parsed = ShelveProjectSchema.safeParse(req.body ?? {})
+    if (!parsed.success) {
+      return reply.status(400).send({ success: false, error: parsed.error.format() })
+    }
+
+    try {
+      const project = await prisma.project.findUnique({ where: { id } })
+      if (!project) {
+        return reply.status(404).send(ApiResponse.error('Project not found', 404))
+      }
+
+      const currentStatus = mapProjectStatus(project.status)
+      if (currentStatus === 'shelved') {
+        return reply.status(400).send(ApiResponse.error('作品已在暂存中', 400))
+      }
+
+      const metadata = (project.metadata as Record<string, unknown>) || {}
+      const updated = await prisma.project.update({
+        where: { id },
+        data: {
+          status: 'shelved',
+          metadata: {
+            ...metadata,
+            _shelved: {
+              previousStatus: currentStatus,
+              shelvedAt: new Date().toISOString(),
+              source: parsed.data.source,
+            },
+          } as Prisma.InputJsonValue,
+        },
+      })
+
+      return ApiResponse.success(withMappedProjectStatus(updated), '已移入作品暂存')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Shelve failed'
+      req.log.error(e)
+      return reply.status(500).send(ApiResponse.error(message, 500))
+    }
+  })
+
+  // POST /projects/:id/restore — 从作品暂存还原
+  app.post('/:id/restore', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    const { id } = req.params
+
+    try {
+      const project = await prisma.project.findUnique({ where: { id } })
+      if (!project) {
+        return reply.status(404).send(ApiResponse.error('Project not found', 404))
+      }
+
+      const metadata = (project.metadata as Record<string, unknown>) || {}
+      const shelvedMeta = metadata._shelved as
+        | { previousStatus?: string; shelvedAt?: string; source?: string }
+        | undefined
+      const previousStatus = shelvedMeta?.previousStatus
+        ? mapProjectStatus(shelvedMeta.previousStatus)
+        : 'draft'
+
+      const { _shelved: _removed, ...rest } = metadata
+
+      const updated = await prisma.project.update({
+        where: { id },
+        data: {
+          status: previousStatus,
+          metadata: rest as Prisma.InputJsonValue,
+        },
+      })
+
+      return ApiResponse.success(withMappedProjectStatus(updated), '作品已还原')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Restore failed'
+      req.log.error(e)
+      return reply.status(500).send(ApiResponse.error(message, 500))
+    }
   })
 
   // GET /projects/:id
@@ -545,7 +580,7 @@ export async function projectRoutes(app: FastifyInstance) {
       }
     })
     if (!project) return reply.status(404).send(ApiResponse.error('Project not found', 404))
-    return ApiResponse.success(project)
+    return ApiResponse.success(withMappedProjectStatus(project))
   })
 
   // POST /projects
@@ -572,12 +607,17 @@ export async function projectRoutes(app: FastifyInstance) {
       return reply.status(400).send({ success: false, error: result.error.format() })
     }
 
+    const updateData = { ...result.data }
+    if (updateData.status) {
+      updateData.status = mapProjectStatus(updateData.status) as typeof updateData.status
+    }
+
     try {
       const project = await prisma.project.update({
         where: { id: req.params.id },
-        data: result.data
+        data: updateData
       })
-      return { success: true, data: project }
+      return { success: true, data: withMappedProjectStatus(project) }
     } catch (e) {
       return reply.status(404).send({ success: false, error: 'Project not found' })
     }
