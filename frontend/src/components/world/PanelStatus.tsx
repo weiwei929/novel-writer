@@ -1,5 +1,5 @@
+import { IconInfo } from '../ui/icons'
 import type { ReactNode } from 'react'
-import { AlertCircle } from 'lucide-react'
 
 interface PanelStatusProps {
   loading: boolean
@@ -32,7 +32,7 @@ export default function PanelStatus({
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-red-400">
-        <AlertCircle size={48} className="mb-3 opacity-40" />
+        <IconInfo size={48} className="mb-3 opacity-40" />
         <p className="text-sm text-red-500">{error}</p>
       </div>
     )

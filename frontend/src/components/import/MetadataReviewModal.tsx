@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react'
 import { projectsApi } from '../../services/api'
+import { IconCheckCircle, IconClose, IconInfo, IconLoading } from '../ui/icons'
 
 interface MetadataReviewModalProps {
   isOpen: boolean
@@ -84,7 +84,7 @@ export const MetadataReviewModal: React.FC<MetadataReviewModalProps> = ({
   const metadataFields = [
     { key: 'synopsis', label: '作品梗概', icon: '📖' },
     { key: 'characters', label: '人物设定', icon: '👥' },
-    { key: 'worldBuilding', label: '世界观', icon: '🌍' },
+    { key: 'worldBuilding', label: '作品设定', icon: '🌍' },
     { key: 'plotStructure', label: '情节结构', icon: '📊' },
     { key: 'themes', label: '主题思想', icon: '💡' },
     { key: 'writingStyle', label: '写作风格', icon: '✍️' },
@@ -97,7 +97,7 @@ export const MetadataReviewModal: React.FC<MetadataReviewModalProps> = ({
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6">
           <div className="flex items-center gap-3 mb-2">
-            <AlertCircle size={28} />
+            <IconInfo size={28} />
             <h2 className="text-2xl font-bold">AI 提取的元数据待确认</h2>
           </div>
           <p className="text-purple-100 text-sm">
@@ -109,14 +109,14 @@ export const MetadataReviewModal: React.FC<MetadataReviewModalProps> = ({
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-              <XCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
+              <IconClose className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
               <div className="text-red-700">{error}</div>
             </div>
           )}
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <div className="flex items-start gap-3">
-              <AlertCircle className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
+              <IconInfo className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
               <div className="text-sm text-blue-800">
                 <p className="font-semibold mb-1">重要提示</p>
                 <ul className="list-disc list-inside space-y-1 text-blue-700">
@@ -185,9 +185,9 @@ export const MetadataReviewModal: React.FC<MetadataReviewModalProps> = ({
               className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
             >
               {loading ? (
-                <Loader2 size={18} className="animate-spin" />
+                <IconLoading size={18} className="animate-spin" />
               ) : (
-                <XCircle size={18} />
+                <IconClose size={18} />
               )}
               拒绝元数据
             </button>
@@ -198,9 +198,9 @@ export const MetadataReviewModal: React.FC<MetadataReviewModalProps> = ({
               className="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all flex items-center gap-2 disabled:opacity-50 shadow-lg"
             >
               {loading ? (
-                <Loader2 size={18} className="animate-spin" />
+                <IconLoading size={18} className="animate-spin" />
               ) : (
-                <CheckCircle size={18} />
+                <IconCheckCircle size={18} />
               )}
               确认并保存
             </button>

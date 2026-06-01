@@ -1,5 +1,5 @@
+import { IconDelete, IconEdit, IconList, IconPlus } from '../ui/icons'
 import { useState } from 'react'
-import { Plus, GitCommitHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { worldApi, type TimelineEntry, type TimelineInput } from '../../services/api'
 import { useWorldStore } from '../../stores/worldStore'
 import { useUIStore } from '../../stores/uiStore'
@@ -62,7 +62,7 @@ export default function TimelinePanel({ readOnly = false }: { readOnly?: boolean
             }}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm shadow-sm"
           >
-            <Plus size={16} />
+            <IconPlus size={16} />
             新增条目
           </button>
         )}
@@ -72,7 +72,7 @@ export default function TimelinePanel({ readOnly = false }: { readOnly?: boolean
         loading={loading}
         error={error}
         empty={entries.length === 0}
-        icon={<GitCommitHorizontal size={48} className="opacity-30" />}
+        icon={<IconList size={48} className="opacity-30" />}
         emptyText={readOnly ? '该提案暂无故事线。' : '还没有故事线条目，点击右上角“新增条目”开始编排时间线。'}
       >
         <div className="space-y-3">
@@ -107,14 +107,14 @@ export default function TimelinePanel({ readOnly = false }: { readOnly?: boolean
                     className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
                     title="编辑"
                   >
-                    <Pencil size={15} />
+                    <IconEdit size={15} />
                   </button>
                   <button
                     onClick={() => setDeleteId(e.id)}
                     className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
                     title="删除"
                   >
-                    <Trash2 size={15} />
+                    <IconDelete size={15} />
                   </button>
                 </div>
               )}

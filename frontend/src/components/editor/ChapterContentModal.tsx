@@ -1,5 +1,5 @@
+import { IconClose } from '../ui/icons'
 import React, { useEffect } from 'react'
-import { X } from 'lucide-react'
 
 interface ChapterContentModalProps {
   open: boolean
@@ -56,7 +56,7 @@ const ChapterContentModal: React.FC<ChapterContentModalProps> = ({
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600 transition-colors"
           >
-            <X size={18} />
+            <IconClose size={18} />
           </button>
         </div>
         {/* 内容（只读） */}

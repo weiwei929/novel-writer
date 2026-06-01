@@ -1,16 +1,18 @@
+import { IconArrowLeft, IconCheckCircle, IconShelf } from '../../components/ui/icons'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Undo2, CheckCircle2, Archive } from 'lucide-react'
 import { proposalsApi, type Proposal } from '../../services/api'
 import { useWorldStore } from '../../stores/worldStore'
 import { useUIStore } from '../../stores/uiStore'
 import WorldBuildingPage from '../creative/WorldBuildingPage'
 import ProposalStatusBadge from '../../components/proposals/ProposalStatusBadge'
+import { useSettingsStore } from '../../stores/settingsStore'
 
 export default function ProposalEvalPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { addNotification } = useUIStore()
+  const aiReviewer = useSettingsStore(s => s.ai.reviewer)
   const setCurrentScope = useWorldStore(s => s.setCurrentScope)
 
   const [proposal, setProposal] = useState<Proposal | null>(null)
@@ -64,7 +66,7 @@ export default function ProposalEvalPage() {
         title: '立项成功',
         message: '作品设定已迁入项目，可继续定型元数据',
       })
-      navigate(`/planning/metadata/${projectId}`)
+      navigate(`/work/${projectId}`)
     } catch {
       addNotification({ type: 'error', title: '立项失败', message: '无法完成立项操作' })
     } finally {
@@ -108,7 +110,7 @@ export default function ProposalEvalPage() {
           onClick={() => navigate('/planning/proposals')}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900"
         >
-          <ArrowLeft size={16} />
+          <IconArrowLeft size={16} />
           返回列表
         </button>
         <div className="flex items-center gap-2">
@@ -118,7 +120,7 @@ export default function ProposalEvalPage() {
             disabled={acting}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
-            <Undo2 size={15} />
+            <IconArrowLeft size={15} />
             退回创意组
           </button>
           {proposal.status !== 'approved' && (
@@ -127,7 +129,7 @@ export default function ProposalEvalPage() {
               disabled={acting}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border border-green-200 text-green-700 hover:bg-green-50 transition-colors disabled:opacity-50"
             >
-              <CheckCircle2 size={15} />
+              <IconCheckCircle size={15} />
               通过立项
             </button>
           )}
@@ -135,7 +137,7 @@ export default function ProposalEvalPage() {
             onClick={() => notImplemented('暂存审查池')}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
           >
-            <Archive size={15} />
+            <IconShelf size={15} />
             暂存审查池
           </button>
         </div>
@@ -161,6 +163,15 @@ export default function ProposalEvalPage() {
         </div>
       </div>
 
+      {aiReviewer && (
+        <div className="bg-violet-50 border border-violet-200 rounded-xl p-5">
+          <h2 className="text-lg font-bold text-violet-900 mb-2">AI 评估</h2>
+          <p className="text-sm text-violet-800/80">
+            AI 审校官将在此对企划建议书给出结构化评估意见。该功能正在开发中，当前仅显示入口占位。
+          </p>
+        </div>
+      )}
+
       {/* 作品设定（只读；已立项则数据已迁入项目） */}
       <div>
         <h2 className="text-lg font-bold text-gray-900 mb-3">作品设定（只读）</h2>
@@ -169,10 +180,10 @@ export default function ProposalEvalPage() {
             该企划已立项，作品设定已迁入项目。
             <button
               type="button"
-              onClick={() => navigate(`/planning/metadata/${proposal.projectId}`)}
+              onClick={() => navigate(`/work/${proposal.projectId}`)}
               className="ml-2 text-blue-600 hover:underline"
             >
-              前往作品内容元数据
+              查看项目
             </button>
           </div>
         ) : (

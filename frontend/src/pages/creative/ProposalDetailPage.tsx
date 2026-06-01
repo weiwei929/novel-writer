@@ -1,6 +1,6 @@
+import { IconArrowLeft, IconSave, IconSend } from '../../components/ui/icons'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Save, Send } from 'lucide-react'
 import { proposalsApi, type Proposal } from '../../services/api'
 import { useWorldStore } from '../../stores/worldStore'
 import { useUIStore } from '../../stores/uiStore'
@@ -122,17 +122,25 @@ export default function ProposalDetailPage() {
           onClick={() => navigate('/creative/proposals')}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900"
         >
-          <ArrowLeft size={16} />
+          <IconArrowLeft size={16} />
           返回列表
         </button>
         <div className="flex items-center gap-2">
           <ProposalStatusBadge status={proposal.status} />
+          {proposal.projectId && (
+            <button
+              onClick={() => navigate(`/work/${proposal.projectId}`)}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border border-blue-200 text-blue-700 hover:bg-blue-50 transition-colors"
+            >
+              查看项目
+            </button>
+          )}
           <button
             onClick={handleSaveDraft}
             disabled={saving}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
-            <Save size={15} />
+            <IconSave size={15} />
             保存草稿
           </button>
           <button
@@ -141,7 +149,7 @@ export default function ProposalDetailPage() {
             title={isDraft ? '提交至企划课评估' : '该提案已提交，无法重复提交'}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Send size={15} />
+            <IconSend size={15} />
             提交评估
           </button>
         </div>

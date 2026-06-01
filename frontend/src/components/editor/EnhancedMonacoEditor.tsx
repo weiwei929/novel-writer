@@ -14,6 +14,7 @@ interface EnhancedMonacoEditorProps {
   height?: string | number
   language?: string
   theme?: string
+  fontSize?: number
   autoSave?: boolean
   autoSaveDelay?: number
   showWordCount?: boolean
@@ -27,6 +28,7 @@ const EnhancedMonacoEditor = forwardRef<EnhancedMonacoEditorRef, EnhancedMonacoE
   height = '100%',
   language = 'markdown',
   theme = 'vs',
+  fontSize = 14,
   autoSave = false,
   autoSaveDelay = 3000,
   showWordCount = true,
@@ -135,6 +137,12 @@ const EnhancedMonacoEditor = forwardRef<EnhancedMonacoEditorRef, EnhancedMonacoE
     }
   }, [value, autoSave, autoSaveDelay])
 
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.updateOptions({ fontSize, lineHeight: Math.round(fontSize * 1.5) })
+    }
+  }, [fontSize])
+
   const handleEditorDidMount = (editorInstance: editor.IStandaloneCodeEditor, monaco: Monaco) => {
     // 定义自定义主题
     monaco.editor.defineTheme('novel-light', {
@@ -172,6 +180,8 @@ const EnhancedMonacoEditor = forwardRef<EnhancedMonacoEditorRef, EnhancedMonacoE
 
     editorRef.current = editorInstance
 
+    editorInstance.updateOptions({ fontSize, lineHeight: Math.round(fontSize * 1.5) })
+
     editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
       if (onSave) {
         onSave(editorInstance.getValue())
@@ -204,8 +214,8 @@ const EnhancedMonacoEditor = forwardRef<EnhancedMonacoEditorRef, EnhancedMonacoE
           wordWrap: 'on',
           minimap: { enabled: false },
           scrollBeyondLastLine: false,
-          fontSize: 14,
-          lineHeight: 24,
+          fontSize,
+          lineHeight: Math.round(fontSize * 1.5),
           fontFamily: '"PingFang SC", "Microsoft YaHei", "Segoe UI", Tahoma, Arial, sans-serif',
           automaticLayout: true,
           lineNumbers: 'on',

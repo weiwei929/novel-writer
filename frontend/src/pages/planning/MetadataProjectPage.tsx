@@ -1,6 +1,6 @@
+import { IconArrowLeft } from '../../components/ui/icons'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
 import { projectsApi, type Project } from '../../services/api'
 import { useWorldStore } from '../../stores/worldStore'
 import { useUIStore } from '../../stores/uiStore'
@@ -63,7 +63,7 @@ export default function MetadataProjectPage() {
           onClick={() => navigate('/planning/metadata')}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900"
         >
-          <ArrowLeft size={16} />
+          <IconArrowLeft size={16} />
           选择其他作品
         </button>
         <div className="flex items-center gap-2">

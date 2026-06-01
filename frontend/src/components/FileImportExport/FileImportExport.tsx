@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload as UploadIcon, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react'
 import { projectsApi } from '../../services/api'
 import { useNavigate } from 'react-router-dom'
 import { MetadataReviewModal } from '../import/MetadataReviewModal'
 import { useNotifications } from '../../hooks/useNotifications'
+import { IconAlert, IconCheckCircle, IconLoading, IconUpload } from '../ui/icons'
 
 export const FileImportExport: React.FC = () => {
     const navigate = useNavigate()
@@ -116,7 +116,7 @@ export const FileImportExport: React.FC = () => {
             // 显示成功通知
             success(
                 '导入成功！',
-                `《${project.title}》已导入到暂存池，请在"外部导入"区域查看`
+                `《${project.title}》已导入，状态为草稿`
             )
             
             // 如果有待确认的元数据，等待一下让 AI 提取完成
@@ -177,9 +177,9 @@ export const FileImportExport: React.FC = () => {
     if (step === 'success') {
          return (
              <div className="text-center p-12 bg-white rounded-lg shadow-sm">
-                 <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                 <IconCheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
                  <h2 className="text-2xl font-bold text-gray-800 mb-2">导入成功！</h2>
-                 <p className="text-gray-600 mb-6">《{parsedData?.title}》已存入"导入文集"。</p>
+                 <p className="text-gray-600 mb-6">《{parsedData?.title}》作品已导入，状态为草稿。</p>
                  <button onClick={() => navigate('/collections')} className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                      去整理文集
                  </button>
@@ -248,12 +248,12 @@ export const FileImportExport: React.FC = () => {
                 <input {...getInputProps()} />
                 {step === 'importing' ? (
                      <div className="flex flex-col items-center">
-                         <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
+                         <IconLoading className="w-12 h-12 text-blue-500 animate-spin mb-4" />
                          <p className="text-lg font-medium">正在入库，请稍候...</p>
                      </div>
                 ) : (
                     <>
-                        {importError ? <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4"/> : <UploadIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />}
+                        {importError ? <IconAlert className="w-12 h-12 text-red-500 mx-auto mb-4"/> : <IconUpload className="w-12 h-12 text-gray-400 mx-auto mb-4" />}
                         {importError ? (
                             <div className="text-red-600 font-medium mb-2">{importError}</div>
                         ) : (

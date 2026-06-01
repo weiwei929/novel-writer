@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { ProjectOutline } from '../../types/planner'
 import { aiApi } from '../../services/api'
-import { Loader, Send, Save, BookOpen } from 'lucide-react'
+import { IconBookOpen, IconLoading, IconSave, IconSend } from '../ui/icons'
 
 interface PlannerBoardProps {
   projectId: string
@@ -36,7 +36,7 @@ export const PlannerBoard: React.FC<PlannerBoardProps> = ({ projectId, initialOu
       <div className="flex-1 bg-white rounded-lg shadow p-6 overflow-y-auto custom-scrollbar">
         {!outline ? (
           <div className="h-full flex flex-col items-center justify-center text-gray-400">
-            <BookOpen size={48} className="mb-4 opacity-50" />
+            <IconBookOpen size={48} className="mb-4 opacity-50" />
             <p>输入你的构思，让 AI 为你规划大纲</p>
           </div>
         ) : (
@@ -111,7 +111,7 @@ export const PlannerBoard: React.FC<PlannerBoardProps> = ({ projectId, initialOu
                 disabled={!outline}
                 className="flex items-center gap-2 text-gray-600 hover:text-gray-900 disabled:opacity-50"
              >
-               <Save size={18} />
+               <IconSave size={18} />
                <span>保存大纲</span>
              </button>
 
@@ -120,7 +120,7 @@ export const PlannerBoard: React.FC<PlannerBoardProps> = ({ projectId, initialOu
                disabled={loading || !prompt.trim()}
                className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 disabled:opacity-50 transition-colors"
              >
-               {loading ? <Loader size={18} className="animate-spin" /> : <Send size={18} />}
+               {loading ? <IconLoading size={18} className="animate-spin" /> : <IconSend size={18} />}
                <span>生成大纲</span>
              </button>
            </div>

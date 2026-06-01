@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Project, Chapter } from '../../services/api'
-import { FileText, Settings, BookOpen, X } from 'lucide-react'
 import { useNotifications } from '../../hooks/useNotifications'
 import { readMetadataFieldValue } from '../../utils/metadataField'
 import ChapterPlanningEditor from './ChapterPlanningEditor'
+import { IconBookOpen, IconClose, IconFile, IconSettings } from '../ui/icons'
 
 interface ProjectNavigationPanelProps {
   project: Project
@@ -72,7 +72,7 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
                 className="flex items-center gap-1 px-2 py-1 hover:bg-gray-100 rounded text-xs text-gray-500"
                 title="元数据设置"
               >
-                <Settings size={14} />
+                <IconSettings size={14} />
                 <span>元数据</span>
               </button>
             )}
@@ -95,7 +95,7 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
           return (
             <div className="border border-gray-100 rounded-lg bg-gray-50/50 overflow-hidden">
               <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-gray-100 text-xs text-gray-500">
-                <BookOpen size={12} />
+                <IconBookOpen size={12} />
                 作品梗概
               </div>
               <div className="px-3 py-2 text-xs text-gray-700 leading-relaxed max-h-40 overflow-y-auto custom-scrollbar whitespace-pre-wrap">
@@ -120,7 +120,7 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
         <div className="divide-y">
           {chapters.length === 0 ? (
             <div className="p-6 text-center text-gray-400 text-sm">
-              <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <IconFile className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <p>暂无章节</p>
             </div>
           ) : (
@@ -222,7 +222,7 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
                 onClick={() => setSynopsisModal(null)}
                 className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <X size={18} />
+                <IconClose size={18} />
               </button>
             </div>
             {/* 内容 */}

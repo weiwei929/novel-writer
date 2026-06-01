@@ -1,5 +1,5 @@
+import { IconClose, IconFile, IconLoading, IconRefresh } from './icons'
 import React from 'react'
-import { Loader, RefreshCw, XCircle, FileText } from 'lucide-react'
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg'
@@ -47,7 +47,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       case 'pulse':
         return <div className={`${getSizeClasses()} bg-blue-500 rounded-full animate-pulse`} />
       default:
-        return <Loader className={`${getSizeClasses()} animate-spin text-blue-500`} />
+        return <IconLoading className={`${getSizeClasses()} animate-spin text-blue-500`} />
     }
   }
 
@@ -93,7 +93,7 @@ const LoadingState: React.FC<LoadingStateProps> = ({
       <div className={`flex flex-col items-center justify-center ${minHeight} ${className}`}>
         <div className="text-center">
           <div className="text-red-500 mb-2">
-            <XCircle className="w-8 h-8 mx-auto" />
+            <IconClose className="w-8 h-8 mx-auto" />
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-1">加载失败</h3>
           <p className="text-sm text-gray-600 mb-4">{error}</p>
@@ -102,7 +102,7 @@ const LoadingState: React.FC<LoadingStateProps> = ({
               onClick={onRetry}
               className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
             >
-              <RefreshCw className="w-4 h-4 mr-2" />
+              <IconRefresh className="w-4 h-4 mr-2" />
               重试
             </button>
           )}
@@ -116,7 +116,7 @@ const LoadingState: React.FC<LoadingStateProps> = ({
       <div className={`flex items-center justify-center ${minHeight} ${className}`}>
         <div className="text-center">
           <div className="text-gray-400 mb-2">
-            <FileText className="w-8 h-8 mx-auto" />
+            <IconFile className="w-8 h-8 mx-auto" />
           </div>
           <p className="text-sm text-gray-600">{emptyMessage}</p>
         </div>

@@ -1,5 +1,5 @@
+import { IconDelete, IconEdit, IconPlus, IconSparkles } from '../ui/icons'
 import { useState } from 'react'
-import { Plus, Sparkles, Pencil, Trash2 } from 'lucide-react'
 import { worldApi, type CreativeFlow, type CreativeFlowInput } from '../../services/api'
 import { useWorldStore } from '../../stores/worldStore'
 import { useUIStore } from '../../stores/uiStore'
@@ -73,7 +73,7 @@ export default function CreativeFlowPanel({ readOnly = false }: { readOnly?: boo
             }}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm shadow-sm"
           >
-            <Plus size={16} />
+            <IconPlus size={16} />
             新增心流
           </button>
         )}
@@ -83,7 +83,7 @@ export default function CreativeFlowPanel({ readOnly = false }: { readOnly?: boo
         loading={loading}
         error={error}
         empty={flows.length === 0}
-        icon={<Sparkles size={48} className="opacity-30" />}
+        icon={<IconSparkles size={48} className="opacity-30" />}
         emptyText={readOnly ? '该提案暂无创作心流。' : '还没有创作心流，点击右上角“新增心流”记录你的灵感片段。'}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -104,14 +104,14 @@ export default function CreativeFlowPanel({ readOnly = false }: { readOnly?: boo
                       className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
                       title="编辑"
                     >
-                      <Pencil size={14} />
+                      <IconEdit size={14} />
                     </button>
                     <button
                       onClick={() => setDeleteId(f.id)}
                       className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
                       title="删除"
                     >
-                      <Trash2 size={14} />
+                      <IconDelete size={14} />
                     </button>
                   </div>
                 )}

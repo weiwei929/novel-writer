@@ -1,5 +1,5 @@
+import { IconAlert, IconArrowLeft, IconRefresh } from './icons'
 import React, { Component, ErrorInfo, ReactNode } from 'react'
-import { AlertTriangle, RefreshCw, ArrowLeft } from 'lucide-react'
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -66,7 +66,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
         <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
           <div className="sm:mx-auto sm:w-full sm:max-w-md">
             <div className="text-center">
-              <AlertTriangle className="mx-auto h-16 w-16 text-red-500" />
+              <IconAlert className="mx-auto h-16 w-16 text-red-500" />
               <h2 className="mt-6 text-3xl font-extrabold text-gray-900">出现了意外错误</h2>
               <p className="mt-2 text-sm text-gray-600">
                 应用程序遇到了一个意外的问题。请尝试以下解决方案：
@@ -81,7 +81,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                   onClick={this.handleRetry}
                   className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  <RefreshCw className="w-4 h-4 mr-2" />
+                  <IconRefresh className="w-4 h-4 mr-2" />
                   重试
                 </button>
 
@@ -89,7 +89,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                   onClick={this.handleGoBack}
                   className="w-full flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  <IconArrowLeft className="w-4 h-4 mr-2" />
                   返回上一页
                 </button>
 
@@ -97,7 +97,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                   onClick={this.handleReload}
                   className="w-full flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  <RefreshCw className="w-4 h-4 mr-2" />
+                  <IconRefresh className="w-4 h-4 mr-2" />
                   重新加载页面
                 </button>
               </div>
@@ -164,7 +164,7 @@ interface ErrorDisplayProps {
 export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, onRetry, className = '' }) => {
   return (
     <div className={`text-center py-8 ${className}`}>
-      <AlertTriangle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+      <IconAlert className="mx-auto h-12 w-12 text-red-500 mb-4" />
       <h3 className="text-lg font-medium text-gray-900 mb-2">出现错误</h3>
       <p className="text-sm text-gray-600 mb-4">{error}</p>
       {onRetry && (
@@ -172,7 +172,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, onRetry, clas
           onClick={onRetry}
           className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
         >
-          <RefreshCw className="w-4 h-4 mr-2" />
+          <IconRefresh className="w-4 h-4 mr-2" />
           重试
         </button>
       )}

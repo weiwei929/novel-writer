@@ -8,8 +8,8 @@
  */
 
 import React, { useState } from 'react'
-import { X, Bot, User, Sparkles, Save, RefreshCw } from 'lucide-react'
 import { aiApi } from '../../services/api'
+import { IconBot, IconClose, IconRefresh, IconSave, IconSparkles, IconUser } from '../ui/icons'
 
 interface CharacterGenerationModalProps {
   isOpen: boolean
@@ -74,7 +74,7 @@ export const CharacterGenerationModal: React.FC<CharacterGenerationModalProps> =
         <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-blue-50 rounded-t-xl">
           <div className="flex items-center gap-3">
             <div className="bg-purple-100 p-2 rounded-lg">
-              <User size={24} className="text-purple-600" />
+              <IconUser size={24} className="text-purple-600" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-800">AI 角色生成</h2>
@@ -82,7 +82,7 @@ export const CharacterGenerationModal: React.FC<CharacterGenerationModalProps> =
             </div>
           </div>
           <button onClick={handleClose} className="p-2 hover:bg-white/50 rounded-full transition-colors">
-            <X size={20} className="text-gray-500" />
+            <IconClose size={20} className="text-gray-500" />
           </button>
         </div>
 
@@ -119,7 +119,7 @@ export const CharacterGenerationModal: React.FC<CharacterGenerationModalProps> =
                 </>
               ) : (
                 <>
-                  <Sparkles size={20} />
+                  <IconSparkles size={20} />
                   生成角色
                 </>
               )}
@@ -138,14 +138,14 @@ export const CharacterGenerationModal: React.FC<CharacterGenerationModalProps> =
             <div className="mt-6 space-y-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                  <Bot size={20} className="text-purple-600" />
+                  <IconBot size={20} className="text-purple-600" />
                   生成的角色设定
                 </h3>
                 <button
                   onClick={handleGenerate}
                   className="text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1"
                 >
-                  <RefreshCw size={16} />
+                  <IconRefresh size={16} />
                   重新生成
                 </button>
               </div>
@@ -226,7 +226,7 @@ export const CharacterGenerationModal: React.FC<CharacterGenerationModalProps> =
               onClick={handleSave}
               className="px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors flex items-center gap-2"
             >
-              <Save size={18} />
+              <IconSave size={18} />
               保存到人物库
             </button>
           )}

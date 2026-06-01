@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import {
-  CheckCircle,
-  XCircle,
-  Loader,
-  AlertTriangle,
-  Database,
-  Server,
-  Wifi,
-  RefreshCw,
-} from 'lucide-react'
+  IconCheckCircle,
+  IconClose,
+  IconLoading,
+  IconAlert,
+  IconFolder,
+  IconSettings,
+  IconRefresh,
+} from '../components/ui/icons'
 import { collectionsApi, projectsApi, chaptersApi, aiApi } from '../services/api'
 
 interface ApiTestResult {
@@ -218,11 +217,11 @@ const ApiTestPage: React.FC = () => {
   const getStatusIcon = (status: ApiTestResult['status']) => {
     switch (status) {
       case 'pending':
-        return <Loader size={20} className="animate-spin text-blue-500" />
+        return <IconLoading size={20} className="animate-spin text-blue-500" />
       case 'success':
-        return <CheckCircle size={20} className="text-green-500" />
+        return <IconCheckCircle size={20} className="text-green-500" />
       case 'error':
-        return <XCircle size={20} className="text-red-500" />
+        return <IconClose size={20} className="text-red-500" />
     }
   }
 
@@ -250,7 +249,7 @@ const ApiTestPage: React.FC = () => {
               disabled={isRunning}
               className="flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed mx-auto"
             >
-              <RefreshCw size={20} className={isRunning ? 'animate-spin' : ''} />
+              <IconRefresh size={20} className={isRunning ? 'animate-spin' : ''} />
               {isRunning ? '测试中...' : '开始测试'}
             </button>
           </div>
@@ -259,25 +258,25 @@ const ApiTestPage: React.FC = () => {
           {tests.length > 0 && (
             <div className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-gray-50 p-4 rounded-lg text-center">
-                <Database size={24} className="mx-auto mb-2 text-gray-600" />
+                <IconFolder size={24} className="mx-auto mb-2 text-gray-600" />
                 <div className="text-2xl font-bold text-gray-900">{summary.total}</div>
                 <div className="text-sm text-gray-600">总测试数</div>
               </div>
 
               <div className="bg-green-50 p-4 rounded-lg text-center">
-                <CheckCircle size={24} className="mx-auto mb-2 text-green-600" />
+                <IconCheckCircle size={24} className="mx-auto mb-2 text-green-600" />
                 <div className="text-2xl font-bold text-green-700">{summary.passed}</div>
                 <div className="text-sm text-green-600">通过</div>
               </div>
 
               <div className="bg-red-50 p-4 rounded-lg text-center">
-                <XCircle size={24} className="mx-auto mb-2 text-red-600" />
+                <IconClose size={24} className="mx-auto mb-2 text-red-600" />
                 <div className="text-2xl font-bold text-red-700">{summary.failed}</div>
                 <div className="text-sm text-red-600">失败</div>
               </div>
 
               <div className="bg-blue-50 p-4 rounded-lg text-center">
-                <Wifi size={24} className="mx-auto mb-2 text-blue-600" />
+                <IconSettings size={24} className="mx-auto mb-2 text-blue-600" />
                 <div className="text-2xl font-bold text-blue-700">
                   {summary.total > 0 ? Math.round((summary.passed / summary.total) * 100) : 0}%
                 </div>
@@ -308,7 +307,7 @@ const ApiTestPage: React.FC = () => {
                     </div>
 
                     <div className="text-sm text-gray-600 mb-2">
-                      <Server size={14} className="inline mr-1" />
+                      <IconSettings size={14} className="inline mr-1" />
                       {test.endpoint}
                     </div>
 
@@ -321,7 +320,7 @@ const ApiTestPage: React.FC = () => {
 
           {tests.length === 0 && (
             <div className="text-center py-12">
-              <AlertTriangle size={48} className="mx-auto mb-4 text-gray-400" />
+              <IconAlert size={48} className="mx-auto mb-4 text-gray-400" />
               <p className="text-gray-500">点击"开始测试"按钮来运行API连接测试</p>
             </div>
           )}

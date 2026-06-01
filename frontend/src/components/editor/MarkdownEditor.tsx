@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
-import { Save, Eye, EyeOff, Maximize2, Minimize2, FileText, Palette, FileCode } from 'lucide-react'
 import EnhancedMonacoEditor, { EnhancedMonacoEditorRef } from './EnhancedMonacoEditor'
+import { IconEye, IconEyeOff, IconFile, IconMaximize, IconMinimize, IconPalette, IconSave } from '../ui/icons'
+import { useSettingsStore } from '../../stores/settingsStore'
 
 
 export interface MarkdownEditorRef {
@@ -19,15 +20,23 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
   initialContent = '',
   onSave,
   onContentChange,
-  autoSave = true,
-  autoSaveDelay = 2000,
+  autoSave: autoSaveProp,
+  autoSaveDelay: autoSaveDelayProp,
 }, ref) => {
+  const editorPrefs = useSettingsStore(s => s.editor)
+  const autoSave = autoSaveProp ?? editorPrefs.autoSave
+  const autoSaveDelay = autoSaveDelayProp ?? editorPrefs.autoSaveDelay
+
   const [content, setContent] = useState(initialContent)
   const [displayMode, setDisplayMode] = useState<'edit' | 'preview'>('edit')
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [editorTheme, setEditorTheme] = useState<string>('novel-light')
+  const [editorTheme, setEditorTheme] = useState<string>(editorPrefs.theme)
+
+  useEffect(() => {
+    setEditorTheme(editorPrefs.theme)
+  }, [editorPrefs.theme])
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout>>()
   const onSaveRef = useRef<typeof onSave>()
@@ -127,58 +136,9 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
     setEditorTheme(themes[nextIndex])
   }
 
-  // 渲染Markdown预览
+  // 简单 Markdown 预览（不含 frontmatter 解析）
   const renderPreview = (text: string) => {
-    let propsHtml = ''
-    let body = text
-    const fmMatch = body.match(/^---\n([\s\S]*?)\n---\n/)
-    if (fmMatch) {
-      const raw = fmMatch[1]
-      const lines = raw.split('\n').filter(Boolean)
-      const kv: Record<string, string> = {}
-      for (const line of lines) {
-        const i = line.indexOf(':')
-        if (i > -1) {
-          const k = line.slice(0, i).trim()
-          const v = line.slice(i + 1).trim()
-          kv[k] = v
-        }
-      }
-      const pTitle = kv['projectTitle'] || ''
-      const cTitle = kv['chapterTitle'] || ''
-      propsHtml = `
-        <div class="mb-6 rounded border bg-gray-50 p-4 text-sm">
-          <div class="font-medium text-gray-900 mb-2">文档属性</div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <div class="text-xs text-gray-500 mb-1">作品</div>
-              <div class="space-y-1 text-gray-700">
-                <div>标题：${pTitle}</div>
-                <div>作者：${kv['projectAuthor'] || ''}</div>
-                <div>创建时间：${kv['projectCreatedAt'] || ''}</div>
-                <div>修改时间：${kv['projectUpdatedAt'] || ''}</div>
-                <div>梗概：${kv['projectSynopsis'] || ''}</div>
-              </div>
-            </div>
-            <div>
-              <div class="text-xs text-gray-500 mb-1">章节</div>
-              <div class="space-y-1 text-gray-700">
-                <div>序号：${kv['chapterOrder'] || ''}</div>
-                <div>标题：${cTitle}</div>
-                <div>作者：${kv['chapterAuthor'] || ''}</div>
-                <div>创建时间：${kv['chapterCreatedAt'] || ''}</div>
-                <div>修改时间：${kv['chapterUpdatedAt'] || ''}</div>
-                <div>梗概：${kv['chapterSynopsis'] || ''}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `
-      body = body.replace(fmMatch[0], '')
-    }
-    // 增强的Markdown渲染，更好的写作预览体验
-    let html = body
-      // 标题 - 添加更好的间距
+    let html = text
       .replace(
         /^### (.*$)/gm,
         '<h3 class="text-xl font-semibold text-gray-800 mt-8 mb-4 border-b border-gray-200 pb-2">$1</h3>'
@@ -188,27 +148,20 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
         /^# (.*$)/gm,
         '<h1 class="text-3xl font-bold text-gray-900 mt-12 mb-8 border-b-2 border-gray-300 pb-4">$1</h1>'
       )
-      // 粗体和斜体
       .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')
       .replace(/\*(.*?)\*/g, '<em class="italic text-gray-700">$1</em>')
-      // 列表项
       .replace(/^\* (.*$)/gm, '<li class="mb-2">$1</li>')
       .replace(/^- (.*$)/gm, '<li class="mb-2">$1</li>')
-      // 段落分隔
       .replace(/\n\n/g, '</p><p class="mb-6 text-gray-800 leading-relaxed">')
-      // 换行
       .replace(/\n/g, '<br>')
 
-    // 包装列表项
     html = html.replace(
       /(<li[^>]*>.*?<\/li>)/gs,
       '<ul class="list-disc ml-6 mb-6 space-y-1">$1</ul>'
     )
 
     return {
-      __html:
-        propsHtml +
-        `<div class="text-gray-800 leading-relaxed"><p class="mb-6 text-gray-800 leading-relaxed">${html}</p></div>`,
+      __html: `<div class="text-gray-800 leading-relaxed"><p class="mb-6 text-gray-800 leading-relaxed">${html}</p></div>`,
     }
   }
 
@@ -222,7 +175,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
     ? 'fixed inset-0 z-50 bg-white'
     : 'w-full h-full min-h-[600px]'
 
-  const editorHeight = isFullscreen ? 'calc(100vh - 60px)' : 'calc(100vh - 220px)'
+  const editorHeight = isFullscreen ? 'calc(100vh - 60px)' : 'calc(100vh - 112px)'
 
   return (
     <div className={`flex flex-col ${containerClasses}`}>
@@ -233,7 +186,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
           <div className="flex items-center space-x-3">
             {/* 模式指示器 */}
             <div className="flex items-center space-x-2 px-3 py-1.5 bg-white border rounded-lg">
-              <FileText size={16} className="text-blue-500" />
+              <IconFile size={16} className="text-blue-500" />
               <span className="text-sm font-medium text-gray-700">
                 {displayMode === 'edit' ? '编辑模式' : '预览模式'}
               </span>
@@ -288,17 +241,8 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
                   className="flex items-center space-x-1 px-3 py-1 text-sm border rounded hover:bg-gray-100"
                   title="切换主题"
                 >
-                  <Palette size={16} />
+                  <IconPalette size={16} />
                   <span>主题</span>
-                </button>
-                
-                <button
-                  onClick={() => monacoEditorRef.current?.toggleFrontmatter()}
-                  className="flex items-center space-x-1 px-3 py-1 text-sm border rounded hover:bg-gray-100"
-                  title="切换文档属性显示"
-                >
-                  <FileCode size={16} />
-                  <span>属性</span>
                 </button>
               </>
             )}
@@ -320,7 +264,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
                 disabled={isSaving}
                 className="flex items-center space-x-1 px-3 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
               >
-                <Save size={16} />
+                <IconSave size={16} />
                 <span>{isSaving ? '保存中' : '保存'}</span>
               </button>
 
@@ -333,7 +277,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
                 }`}
                 title="切换预览"
               >
-                {displayMode === 'preview' ? <EyeOff size={16} /> : <Eye size={16} />}
+                {displayMode === 'preview' ? <IconEyeOff size={16} /> : <IconEye size={16} />}
                 <span>{displayMode === 'preview' ? '返回编辑' : '预览'}</span>
               </button>
 
@@ -342,7 +286,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
                 className="flex items-center space-x-1 px-3 py-1.5 text-sm border rounded hover:bg-gray-100"
                 title="全屏"
               >
-                {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                {isFullscreen ? <IconMinimize size={16} /> : <IconMaximize size={16} />}
               </button>
             </div>
           </div>
@@ -362,6 +306,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
               theme={editorTheme}
               autoSave={autoSave}
               autoSaveDelay={autoSaveDelay}
+              fontSize={editorPrefs.fontSize}
               showWordCount={true}
               height={editorHeight}
             />
@@ -377,7 +322,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
                 />
                 {!content && (
                   <div className="text-center py-20">
-                    <FileText size={48} className="text-gray-300 mx-auto mb-4" />
+                    <IconFile size={48} className="text-gray-300 mx-auto mb-4" />
                     <div className="text-gray-400 text-lg">暂无内容</div>
                     <div className="text-gray-500 text-sm mt-2">点击"返回编辑"开始写作...</div>
                   </div>

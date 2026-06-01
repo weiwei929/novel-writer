@@ -1,5 +1,5 @@
+import { IconClose } from '../ui/icons'
 import { useEffect, useState } from 'react'
-import { X } from 'lucide-react'
 import type { TimelineEntry, TimelineInput } from '../../services/api'
 
 interface TimelineFormModalProps {
@@ -104,7 +104,7 @@ export default function TimelineFormModal({
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <h2 className="text-lg font-bold text-gray-900">{entry ? '编辑故事线条目' : '新增故事线条目'}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={20} />
+            <IconClose size={20} />
           </button>
         </div>
 

@@ -1,6 +1,6 @@
+import { IconArrowLeft, IconFile } from '../../components/ui/icons'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, FileText } from 'lucide-react'
 import { projectsApi, chaptersApi, type Project, type Chapter } from '../../services/api'
 import { useWorldStore } from '../../stores/worldStore'
 import { useUIStore } from '../../stores/uiStore'
@@ -69,7 +69,7 @@ export default function WritingProjectPage() {
           onClick={() => navigate('/writing/projects')}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900"
         >
-          <ArrowLeft size={16} />
+          <IconArrowLeft size={16} />
           返回创作室
         </button>
         <div className="flex items-center gap-2">
@@ -86,7 +86,7 @@ export default function WritingProjectPage() {
 
       <section className="bg-white border border-gray-200 rounded-xl p-5">
         <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-          <FileText size={18} />
+          <IconFile size={18} />
           章节
         </h2>
         {chapters.length === 0 ? (

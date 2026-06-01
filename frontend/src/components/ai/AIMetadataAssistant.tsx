@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { X, Bot, User, Sparkles, Save, Edit2, Check, AlertCircle } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import { aiApi } from '../../services/api'
+import { IconBot, IconCheck, IconClose, IconEdit, IconInfo, IconSave, IconSparkles, IconUser } from '../ui/icons'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -172,7 +172,7 @@ export const AIMetadataAssistant: React.FC<AIMetadataAssistantProps> = ({
         <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-blue-50 rounded-t-xl">
           <div className="flex items-center gap-3">
             <div className="bg-purple-100 p-2 rounded-lg">
-              <Bot size={24} className="text-purple-600" />
+              <IconBot size={24} className="text-purple-600" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-800">AI 元数据助手</h2>
@@ -180,7 +180,7 @@ export const AIMetadataAssistant: React.FC<AIMetadataAssistantProps> = ({
             </div>
           </div>
           <button onClick={handleClose} className="p-2 hover:bg-white/50 rounded-full transition-colors">
-            <X size={20} className="text-gray-500" />
+            <IconClose size={20} className="text-gray-500" />
           </button>
         </div>
 
@@ -197,7 +197,7 @@ export const AIMetadataAssistant: React.FC<AIMetadataAssistantProps> = ({
                 >
                   {message.role === 'assistant' && (
                     <div className="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                      <Bot size={16} className="text-purple-600" />
+                      <IconBot size={16} className="text-purple-600" />
                     </div>
                   )}
                   <div
@@ -219,7 +219,7 @@ export const AIMetadataAssistant: React.FC<AIMetadataAssistantProps> = ({
                   </div>
                   {message.role === 'user' && (
                     <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <User size={16} className="text-blue-600" />
+                      <IconUser size={16} className="text-blue-600" />
                     </div>
                   )}
                 </div>
@@ -228,7 +228,7 @@ export const AIMetadataAssistant: React.FC<AIMetadataAssistantProps> = ({
               {loading && (
                 <div className="flex gap-3 justify-start">
                   <div className="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                    <Bot size={16} className="text-purple-600" />
+                    <IconBot size={16} className="text-purple-600" />
                   </div>
                   <div className="bg-gray-100 rounded-lg p-4">
                     <div className="flex gap-2">
@@ -247,7 +247,7 @@ export const AIMetadataAssistant: React.FC<AIMetadataAssistantProps> = ({
             <div className="p-4 border-t border-gray-200 bg-gray-50">
               {error && (
                 <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center gap-2">
-                  <AlertCircle size={16} />
+                  <IconInfo size={16} />
                   {error}
                 </div>
               )}
@@ -268,7 +268,7 @@ export const AIMetadataAssistant: React.FC<AIMetadataAssistantProps> = ({
                   disabled={loading || !userInput.trim()}
                   className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all flex items-center gap-2"
                 >
-                  <Sparkles size={18} />
+                  <IconSparkles size={18} />
                   发送
                 </button>
               </div>
@@ -284,7 +284,7 @@ export const AIMetadataAssistant: React.FC<AIMetadataAssistantProps> = ({
                   onClick={() => setIsEditing(!isEditing)}
                   className="text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1"
                 >
-                  {isEditing ? <Check size={16} /> : <Edit2 size={16} />}
+                  {isEditing ? <IconCheck size={16} /> : <IconEdit size={16} />}
                   {isEditing ? '完成编辑' : '编辑'}
                 </button>
               </div>
@@ -311,7 +311,7 @@ export const AIMetadataAssistant: React.FC<AIMetadataAssistantProps> = ({
                   onClick={handleSave}
                   className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 font-medium transition-all flex items-center justify-center gap-2"
                 >
-                  <Save size={18} />
+                  <IconSave size={18} />
                   确认保存到"{fieldLabel}"
                 </button>
               </div>

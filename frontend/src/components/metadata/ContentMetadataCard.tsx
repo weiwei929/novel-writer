@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { Settings } from 'lucide-react'
 import { readMetadataFieldValue } from '../../utils/metadataField'
+import { IconSettings } from '../ui/icons'
 
 interface ContentMetadataCardProps {
   metadata: Record<string, any> | null | undefined
@@ -18,7 +18,7 @@ const FIELDS: MetadataField[] = [
   { key: 'synopsis', label: '项目梗概' },
   { key: 'characters', label: '人物设定' },
   { key: 'timeline', label: '时间线' },
-  { key: 'settings', label: '世界观/设定' },
+    { key: 'settings', label: '作品设定' },
   { key: 'relationships', label: '关系网' },
   { key: 'plotStructure', label: '情节结构' },
 ]
@@ -50,7 +50,7 @@ const ContentMetadataCard: React.FC<ContentMetadataCardProps> = ({
             className="flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
             title="编辑内容元数据"
           >
-            <Settings size={13} />
+            <IconSettings size={13} />
             编辑
           </button>
         )}

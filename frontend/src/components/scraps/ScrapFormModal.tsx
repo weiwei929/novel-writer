@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, Plus } from 'lucide-react'
 import type { Scrap, Project } from '../../services/api'
 import { projectsApi } from '../../services/api'
+import { IconClose, IconPlus } from '../ui/icons'
 
 interface ScrapFormModalProps {
   isOpen: boolean
@@ -102,7 +102,7 @@ export default function ScrapFormModal({ isOpen, scrap, onClose, onSave }: Scrap
             onClick={onClose}
             className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
           >
-            <X size={18} />
+            <IconClose size={18} />
           </button>
         </div>
 
@@ -156,7 +156,7 @@ export default function ScrapFormModal({ isOpen, scrap, onClose, onSave }: Scrap
                     onClick={() => removeTag(tag)}
                     className="hover:text-blue-900 ml-0.5"
                   >
-                    <X size={12} />
+                    <IconClose size={12} />
                   </button>
                 </span>
               ))}
@@ -179,7 +179,7 @@ export default function ScrapFormModal({ isOpen, scrap, onClose, onSave }: Scrap
                            hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed 
                            transition-colors flex items-center gap-1"
               >
-                <Plus size={14} />
+                <IconPlus size={14} />
                 添加
               </button>
             </div>

@@ -10,8 +10,8 @@
  */
 
 import React, { useState } from 'react'
-import { X, Bot, BookOpen, Sparkles, Download, RefreshCw } from 'lucide-react'
 import { aiApi, chaptersApi } from '../../services/api'
+import { IconBookOpen, IconBot, IconClose, IconDownload, IconRefresh, IconSparkles } from '../ui/icons'
 
 interface OutlineGenerationModalProps {
   isOpen: boolean
@@ -109,7 +109,7 @@ export const OutlineGenerationModal: React.FC<OutlineGenerationModalProps> = ({
         <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-xl">
           <div className="flex items-center gap-3">
             <div className="bg-blue-100 p-2 rounded-lg">
-              <BookOpen size={24} className="text-blue-600" />
+              <IconBookOpen size={24} className="text-blue-600" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-800">AI 大纲生成</h2>
@@ -117,7 +117,7 @@ export const OutlineGenerationModal: React.FC<OutlineGenerationModalProps> = ({
             </div>
           </div>
           <button onClick={handleClose} className="p-2 hover:bg-white/50 rounded-full transition-colors">
-            <X size={20} className="text-gray-500" />
+            <IconClose size={20} className="text-gray-500" />
           </button>
         </div>
 
@@ -154,7 +154,7 @@ export const OutlineGenerationModal: React.FC<OutlineGenerationModalProps> = ({
                 </>
               ) : (
                 <>
-                  <Sparkles size={20} />
+                  <IconSparkles size={20} />
                   生成大纲
                 </>
               )}
@@ -173,7 +173,7 @@ export const OutlineGenerationModal: React.FC<OutlineGenerationModalProps> = ({
             <div className="mt-6 space-y-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                  <Bot size={20} className="text-blue-600" />
+                  <IconBot size={20} className="text-blue-600" />
                   生成的大纲
                 </h3>
                 <button
@@ -181,7 +181,7 @@ export const OutlineGenerationModal: React.FC<OutlineGenerationModalProps> = ({
                   className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
                   disabled={loading}
                 >
-                  <RefreshCw size={16} />
+                  <IconRefresh size={16} />
                   重新生成
                 </button>
               </div>
@@ -248,7 +248,7 @@ export const OutlineGenerationModal: React.FC<OutlineGenerationModalProps> = ({
                 </>
               ) : (
                 <>
-                  <Download size={18} />
+                  <IconDownload size={18} />
                   导入为章节
                 </>
               )}

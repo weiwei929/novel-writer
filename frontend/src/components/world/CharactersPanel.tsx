@@ -1,5 +1,5 @@
+import { IconDelete, IconEdit, IconPlus, IconUser } from '../ui/icons'
 import { useState } from 'react'
-import { Plus, Users, Pencil, Trash2 } from 'lucide-react'
 import { worldApi, type WorldCharacter, type CharacterInput } from '../../services/api'
 import { useWorldStore } from '../../stores/worldStore'
 import { useUIStore } from '../../stores/uiStore'
@@ -60,7 +60,7 @@ export default function CharactersPanel({ readOnly = false }: { readOnly?: boole
             }}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm shadow-sm"
           >
-            <Plus size={16} />
+            <IconPlus size={16} />
             新增人物
           </button>
         )}
@@ -70,7 +70,7 @@ export default function CharactersPanel({ readOnly = false }: { readOnly?: boole
         loading={loading}
         error={error}
         empty={characters.length === 0}
-        icon={<Users size={48} className="opacity-30" />}
+        icon={<IconUser size={48} className="opacity-30" />}
         emptyText={readOnly ? '该提案暂无人物设定。' : '还没有人物，点击右上角“新增人物”开始构建。'}
       >
         <div className="overflow-hidden border border-gray-200 rounded-xl">
@@ -102,14 +102,14 @@ export default function CharactersPanel({ readOnly = false }: { readOnly?: boole
                           className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
                           title="编辑"
                         >
-                          <Pencil size={15} />
+                          <IconEdit size={15} />
                         </button>
                         <button
                           onClick={() => setDeleteId(c.id)}
                           className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
                           title="删除"
                         >
-                          <Trash2 size={15} />
+                          <IconDelete size={15} />
                         </button>
                       </div>
                     </td>

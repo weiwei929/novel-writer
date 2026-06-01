@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Project, projectsApi } from '../../services/api'
 import MetadataEditor from '../metadata/MetadataEditor'
-import { X } from 'lucide-react'
+import { IconClose } from '../ui/icons'
 
 interface ProjectMetadataPanelProps {
   project: Project
@@ -35,7 +35,7 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({
     { key: 'synopsis', label: '项目梗概', required: true },
     { key: 'characters', label: '人物设定', required: false },
     { key: 'timeline', label: '时间线', required: false },
-    { key: 'settings', label: '世界观/设定', required: false },
+    { key: 'settings', label: '作品设定', required: false },
     { key: 'relationships', label: '关系网', required: false },
     { key: 'plotStructure', label: '情节结构', required: false },
   ]
@@ -116,7 +116,7 @@ const ProjectMetadataPanel: React.FC<ProjectMetadataPanelProps> = ({
               编辑
             </button>
             <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded" title="关闭">
-              <X className="w-4 h-4" />
+              <IconClose className="w-4 h-4" />
             </button>
           </div>
         </div>

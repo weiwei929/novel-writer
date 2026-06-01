@@ -1,4 +1,4 @@
-import { Pencil, Trash2, Link as LinkIcon } from 'lucide-react'
+import { IconDelete, IconEdit, IconExternalLink } from '../ui/icons'
 import type { Scrap } from '../../services/api'
 
 interface ScrapCardProps {
@@ -51,7 +51,7 @@ export default function ScrapCard({ scrap, onEdit, onDelete }: ScrapCardProps) {
           {/* 作品归属 */}
           {scrap.project && (
             <span className="flex items-center gap-1 truncate max-w-[120px]" title={scrap.project.title}>
-              <LinkIcon size={12} />
+              <IconExternalLink size={12} />
               <span className="truncate">{scrap.project.title}</span>
             </span>
           )}
@@ -73,14 +73,14 @@ export default function ScrapCard({ scrap, onEdit, onDelete }: ScrapCardProps) {
               className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition-colors"
               title="编辑"
             >
-              <Pencil size={14} />
+              <IconEdit size={14} />
             </button>
             <button
               onClick={() => onDelete(scrap.id)}
               className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors"
               title="删除"
             >
-              <Trash2 size={14} />
+              <IconDelete size={14} />
             </button>
           </div>
         </div>

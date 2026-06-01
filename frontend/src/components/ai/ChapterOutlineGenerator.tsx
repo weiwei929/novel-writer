@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { X, Bot, BookOpen, Download, Edit2, Check, AlertCircle } from 'lucide-react'
 import { aiApi, chaptersApi } from '../../services/api'
+import { IconBookOpen, IconBot, IconCheck, IconClose, IconDownload, IconEdit, IconInfo } from '../ui/icons'
 
 interface ChapterOutlineGeneratorProps {
   isOpen: boolean
@@ -124,7 +124,7 @@ export const ChapterOutlineGenerator: React.FC<ChapterOutlineGeneratorProps> = (
         <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-xl">
           <div className="flex items-center gap-3">
             <div className="bg-blue-100 p-2 rounded-lg">
-              <BookOpen size={24} className="text-blue-600" />
+              <IconBookOpen size={24} className="text-blue-600" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-800">AI 章节大纲生成</h2>
@@ -132,7 +132,7 @@ export const ChapterOutlineGenerator: React.FC<ChapterOutlineGeneratorProps> = (
             </div>
           </div>
           <button onClick={handleClose} className="p-2 hover:bg-white/50 rounded-full transition-colors">
-            <X size={20} className="text-gray-500" />
+            <IconClose size={20} className="text-gray-500" />
           </button>
         </div>
 
@@ -187,7 +187,7 @@ export const ChapterOutlineGenerator: React.FC<ChapterOutlineGeneratorProps> = (
 
                 {error && (
                   <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center gap-2">
-                    <AlertCircle size={16} />
+                    <IconInfo size={16} />
                     {error}
                   </div>
                 )}
@@ -204,7 +204,7 @@ export const ChapterOutlineGenerator: React.FC<ChapterOutlineGeneratorProps> = (
                     </>
                   ) : (
                     <>
-                      <Bot size={20} />
+                      <IconBot size={20} />
                       生成章节大纲
                     </>
                   )}
@@ -213,7 +213,7 @@ export const ChapterOutlineGenerator: React.FC<ChapterOutlineGeneratorProps> = (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
                   <p className="font-semibold mb-2">⚠️ 重要提示</p>
                   <ul className="space-y-1 text-xs">
-                    <li>• AI 将基于项目元数据（梗概、人物、世界观等）生成大纲</li>
+                    <li>• AI 将基于项目元数据（梗概、人物、作品设定等）生成大纲</li>
                     <li>• 生成后可以编辑每个章节的标题和梗概</li>
                     <li>• 确认无误后，点击"导入为章节"批量创建</li>
                     <li>• 建议先完善项目元数据，再生成大纲</li>
@@ -233,7 +233,7 @@ export const ChapterOutlineGenerator: React.FC<ChapterOutlineGeneratorProps> = (
                   className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
                   disabled={loading}
                 >
-                  <Bot size={16} />
+                  <IconBot size={16} />
                   重新生成
                 </button>
               </div>
@@ -286,7 +286,7 @@ export const ChapterOutlineGenerator: React.FC<ChapterOutlineGeneratorProps> = (
                             onClick={() => setEditingIndex(isEditing ? null : index)}
                             className="ml-2 p-1 hover:bg-gray-100 rounded"
                           >
-                            {isEditing ? <Check size={16} className="text-green-600" /> : <Edit2 size={16} className="text-gray-500" />}
+                            {isEditing ? <IconCheck size={16} className="text-green-600" /> : <IconEdit size={16} className="text-gray-500" />}
                           </button>
                         </div>
 
@@ -315,7 +315,7 @@ export const ChapterOutlineGenerator: React.FC<ChapterOutlineGeneratorProps> = (
               <div className="p-4 border-t border-gray-200 bg-gray-50">
                 {error && (
                   <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center gap-2">
-                    <AlertCircle size={16} />
+                    <IconInfo size={16} />
                     {error}
                   </div>
                 )}
@@ -332,7 +332,7 @@ export const ChapterOutlineGenerator: React.FC<ChapterOutlineGeneratorProps> = (
                     </>
                   ) : (
                     <>
-                      <Download size={18} />
+                      <IconDownload size={18} />
                       导入为章节（{editedChapters.length} 章）
                     </>
                   )}

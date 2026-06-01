@@ -4,8 +4,8 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import { Lock, Eye, EyeOff, AlertCircle, X } from 'lucide-react'
 import api from '../../services/api'
+import { IconClose, IconEye, IconEyeOff, IconInfo, IconLock } from '../ui/icons'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -125,7 +125,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
                   className="p-0.5 rounded hover:bg-green-100 text-green-500 hover:text-green-700 transition-colors"
                   title="关闭"
                 >
-                  <X size={14} />
+                  <IconClose size={14} />
                 </button>
               </div>
             </div>
@@ -142,7 +142,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
       <div className="max-w-md w-full space-y-8 p-8">
         <div className="text-center">
           <div className="mx-auto h-20 w-20 bg-blue-100 rounded-full flex items-center justify-center">
-            <Lock className="h-10 w-10 text-blue-600" />
+            <IconLock className="h-10 w-10 text-blue-600" />
           </div>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">小说创作器</h2>
           <p className="mt-2 text-sm text-gray-600">请输入应用密码以继续使用</p>
@@ -167,7 +167,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
                 disabled={isLoading}
               />
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                <Lock className="h-4 w-4 text-gray-400" />
+                <IconLock className="h-4 w-4 text-gray-400" />
               </div>
               <button
                 type="button"
@@ -175,9 +175,9 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
-                  <EyeOff className="h-4 w-4 text-gray-400" />
+                  <IconEyeOff className="h-4 w-4 text-gray-400" />
                 ) : (
-                  <Eye className="h-4 w-4 text-gray-400" />
+                  <IconEye className="h-4 w-4 text-gray-400" />
                 )}
               </button>
             </div>
@@ -185,7 +185,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
           {error && (
             <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-md">
-              <AlertCircle className="h-4 w-4" />
+              <IconInfo className="h-4 w-4" />
               <span className="text-sm">{error}</span>
             </div>
           )}

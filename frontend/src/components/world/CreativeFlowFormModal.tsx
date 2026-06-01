@@ -1,5 +1,5 @@
+import { IconClose } from '../ui/icons'
 import { useEffect, useState } from 'react'
-import { X } from 'lucide-react'
 import type { CreativeFlow, CreativeFlowInput } from '../../services/api'
 
 interface CreativeFlowFormModalProps {
@@ -60,7 +60,7 @@ export default function CreativeFlowFormModal({
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <h2 className="text-lg font-bold text-gray-900">{flow ? '编辑创作心流' : '新增创作心流'}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={20} />
+            <IconClose size={20} />
           </button>
         </div>
 

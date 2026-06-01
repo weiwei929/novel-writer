@@ -1,5 +1,5 @@
+import { IconClose } from '../ui/icons'
 import { useEffect, useState } from 'react'
-import { X } from 'lucide-react'
 import type { WorldCharacter, CharacterInput } from '../../services/api'
 
 export const ROLE_TYPE_OPTIONS = ['主角一号', '主角二号', '重要配角', '普通配角', '龙套']
@@ -107,7 +107,7 @@ export default function CharacterFormModal({
             {character ? '编辑人物' : '新增人物'}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={20} />
+            <IconClose size={20} />
           </button>
         </div>
 

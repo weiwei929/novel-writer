@@ -6,8 +6,8 @@
 import React, { useEffect, useState } from 'react'
 import { Chapter, chaptersApi } from '../../services/api'
 import MetadataEditor from '../metadata/MetadataEditor'
-import { ChevronLeft, Bot } from 'lucide-react'
 import { AIMetadataAssistant } from '../ai/AIMetadataAssistant'
+import { IconArrowLeft, IconBot } from '../ui/icons'
 
 interface ChapterMetadataPanelProps {
   chapter: Chapter | null
@@ -108,7 +108,7 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
           className="p-2 hover:bg-gray-200 rounded"
           title="关闭元数据面板"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <IconArrowLeft className="w-5 h-5" />
         </button>
       </div>
     )
@@ -124,7 +124,7 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
             className="p-1.5 hover:bg-gray-100 rounded"
             title="关闭面板"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <IconArrowLeft className="w-4 h-4" />
           </button>
         </div>
         <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
@@ -168,7 +168,7 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
             className="p-1.5 hover:bg-gray-100 rounded"
             title="关闭面板"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <IconArrowLeft className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -223,7 +223,7 @@ const ChapterMetadataPanel: React.FC<ChapterMetadataPanelProps> = ({
               }}
               className="w-full px-3 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all flex items-center justify-center gap-2 text-sm font-medium"
             >
-              <Bot size={16} />
+              <IconBot size={16} />
               AI 辅助构建/修改"{metadataFields.find(f => f.key === activeField)?.label}"
             </button>
           </div>

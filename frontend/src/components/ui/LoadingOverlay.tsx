@@ -1,6 +1,6 @@
 import React from 'react'
-import { Loader } from 'lucide-react'
 import { useLoading } from '../../stores/uiStore'
+import { IconLoading } from './icons'
 
 const LoadingOverlay: React.FC = () => {
   const loading = useLoading()
@@ -13,7 +13,7 @@ const LoadingOverlay: React.FC = () => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm mx-4 text-center">
         <div className="flex items-center justify-center mb-4">
-          <Loader className="w-8 h-8 animate-spin text-blue-500" />
+          <IconLoading className="w-8 h-8 animate-spin text-blue-500" />
         </div>
 
         <h3 className="text-lg font-medium text-gray-900 mb-2">请稍候...</h3>

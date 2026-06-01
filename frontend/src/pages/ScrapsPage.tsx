@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Search, Plus, Library, Tag } from 'lucide-react'
 import { scrapsApi, projectsApi } from '../services/api'
 import type { Scrap, Project } from '../services/api'
 import ScrapCard from '../components/scraps/ScrapCard'
 import ScrapFormModal from '../components/scraps/ScrapFormModal'
 import { useUIStore } from '../stores/uiStore'
+import { IconLibrary, IconPlus, IconSearch, IconTag } from '../components/ui/icons'
 
 const FILTER_ALL = ''
 const FILTER_UNASSIGNED = '__unassigned__'
@@ -132,7 +132,7 @@ export default function ScrapsPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-blue-100 p-2 rounded-lg">
-              <Library size={22} className="text-blue-600" />
+              <IconLibrary size={22} className="text-blue-600" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">灵感碎片</h1>
@@ -146,7 +146,7 @@ export default function ScrapsPage() {
             className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg 
                        hover:bg-blue-700 font-medium transition-colors text-sm shadow-sm"
           >
-            <Plus size={18} />
+            <IconPlus size={18} />
             新建碎片
           </button>
         </div>
@@ -154,7 +154,7 @@ export default function ScrapsPage() {
         {/* 搜索 + 项目过滤 */}
         <div className="flex gap-3">
           <div className="relative flex-1 max-w-md">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <IconSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               value={search}
@@ -185,7 +185,7 @@ export default function ScrapsPage() {
         {/* 标签筛选 */}
         {allTags.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
-            <Tag size={14} className="text-gray-400 flex-shrink-0" />
+            <IconTag size={14} className="text-gray-400 flex-shrink-0" />
             <button
               onClick={() => setFilterTags([])}
               className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${
@@ -223,7 +223,7 @@ export default function ScrapsPage() {
         </div>
       ) : filteredScraps.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-          <Library size={48} className="mb-3 opacity-30" />
+          <IconLibrary size={48} className="mb-3 opacity-30" />
           <p className="text-sm">
             {search || filterProjectId || filterTags.length > 0
               ? '没有匹配的碎片'

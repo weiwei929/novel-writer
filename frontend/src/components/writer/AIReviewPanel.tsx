@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { X, Loader } from 'lucide-react'
 import { aiApi } from '../../services/api'
+import { IconClose, IconLoading } from '../ui/icons'
 
 interface AIReviewPanelProps {
   onClose: () => void
@@ -49,14 +49,14 @@ const AIReviewPanel: React.FC<AIReviewPanelProps> = ({ onClose, content, chapter
            <span className="text-xs font-normal text-amber-600">实验性</span>
         </h3>
         <button onClick={onClose} className="p-1 hover:bg-gray-200 rounded text-gray-500">
-          <X size={18} />
+          <IconClose size={18} />
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
         {loading && (
           <div className="flex flex-col items-center justify-center h-40 space-y-3">
-             <Loader className="animate-spin text-blue-500" size={32} />
+             <IconLoading className="animate-spin text-blue-500" size={32} />
              <p className="text-gray-500 text-sm">正在深度审阅全文...</p>
           </div>
         )}

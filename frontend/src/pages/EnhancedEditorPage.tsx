@@ -7,11 +7,11 @@ import ChapterMetadataPanel from '../components/editor/ChapterMetadataPanel'
 import AIAssistantPanel from '../components/writer/AIAssistantPanel'
 import AIReviewPanel from '../components/writer/AIReviewPanel'
 import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
-import { ArrowLeft, Save, Sparkles, Search } from 'lucide-react'
 import { useNotifications } from '../hooks/useNotifications'
 import { MetadataMissingPrompt } from '../components/project/MetadataMissingPrompt'
 import { MetadataReviewModal } from '../components/import/MetadataReviewModal'
 import { readMetadataFieldValue } from '../utils/metadataField'
+import { IconArrowLeft, IconSave, IconSearch, IconSparkles } from '../components/ui/icons'
 
 type EditorMode = 'pure' | 'ai' | 'review'
 
@@ -196,7 +196,7 @@ const EnhancedEditorPageContent: React.FC = () => {
         // 已在 handleSave 内部处理错误提示
       }
     }
-    navigate(`/editor/${project?.id}/${selectedChapter.id}`)
+    navigate(`/writing/${project?.id}/${selectedChapter.id}`)
   }
 
   const updateChapterAndProject = async (chapterId: string, updates: Partial<Chapter>) => {
@@ -340,7 +340,7 @@ const EnhancedEditorPageContent: React.FC = () => {
             className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700 shrink-0"
             title="返回作品列表"
           >
-            <ArrowLeft size={18} />
+            <IconArrowLeft size={18} />
           </button>
           <div className="h-5 w-px bg-gray-200"></div>
           <div className="min-w-0">
@@ -368,7 +368,7 @@ const EnhancedEditorPageContent: React.FC = () => {
                 : 'text-gray-500 hover:bg-gray-50 border border-transparent'
             }`}
           >
-            <Sparkles size={14} />
+            <IconSparkles size={14} />
             AI 助手
           </button>
 
@@ -381,7 +381,7 @@ const EnhancedEditorPageContent: React.FC = () => {
                 : 'text-gray-500 hover:bg-gray-50 border border-transparent'
             }`}
           >
-            <Search size={14} />
+            <IconSearch size={14} />
             审阅
           </button>
 
@@ -394,7 +394,7 @@ const EnhancedEditorPageContent: React.FC = () => {
               disabled={saving || !hasUnsavedChanges}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-medium transition-colors"
             >
-              <Save size={14} />
+              <IconSave size={14} />
               {saving ? '...' : '保存'}
             </button>
           )}
@@ -426,7 +426,7 @@ const EnhancedEditorPageContent: React.FC = () => {
                     }
                   }
                   if (navigateProjectId) {
-                    navigate(`/projects/${navigateProjectId}`)
+                    navigate(`/work/${navigateProjectId}`)
                   } else {
                     navigate('/projects')
                   }

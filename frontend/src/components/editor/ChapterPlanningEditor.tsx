@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { X, Plus, Trash2, ArrowUp, ArrowDown, Copy } from 'lucide-react'
 import { projectsApi, chaptersApi, Chapter, ChapterPlanItem } from '../../services/api'
 import { useNotifications } from '../../hooks/useNotifications'
+import { IconArrowDown, IconArrowUp, IconClose, IconCopy, IconDelete, IconPlus } from '../ui/icons'
 
 type PlanStatus = 'planned' | 'started' | 'completed'
 
@@ -182,7 +182,7 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({
               onClick={addPlan}
               className="inline-flex items-center gap-1 px-2.5 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
             >
-              <Plus className="w-4 h-4" /> 新增
+              <IconPlus className="w-4 h-4" /> 新增
             </button>
             <button
               onClick={save}
@@ -192,7 +192,7 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({
               {saving ? '保存中...' : '保存'}
             </button>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded" title="关闭">
-              <X className="w-5 h-5" />
+              <IconClose className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -230,7 +230,7 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({
                     className="p-1 hover:bg-gray-100 rounded"
                     title="上移"
                   >
-                    <ArrowUp className="w-4 h-4" />
+                    <IconArrowUp className="w-4 h-4" />
                   </button>
                   <div className="text-xs text-gray-500 w-8 text-center">{p.order}</div>
                   <button
@@ -238,7 +238,7 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({
                     className="p-1 hover:bg-gray-100 rounded"
                     title="下移"
                   >
-                    <ArrowDown className="w-4 h-4" />
+                    <IconArrowDown className="w-4 h-4" />
                   </button>
                 </div>
 
@@ -294,14 +294,14 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({
                     className="p-1 hover:bg-gray-100 rounded"
                     title="复制"
                   >
-                    <Copy className="w-4 h-4" />
+                    <IconCopy className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => deletePlan(idx)}
                     className="p-1 hover:bg-red-50 rounded text-red-600"
                     title="删除"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <IconDelete className="w-4 h-4" />
                   </button>
                 </div>
               </div>

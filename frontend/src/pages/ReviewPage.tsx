@@ -1,13 +1,15 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { ClipboardCheck, ListChecks, BookOpen, GitCompare, Sparkles } from 'lucide-react'
+import { IconBookOpen, IconCheckCheck, IconRefresh, IconReview, IconSparkles } from '../components/ui/icons'
+import { useSettingsStore } from '../stores/settingsStore'
 
 const ReviewPage: React.FC = () => {
+  const aiAuditor = useSettingsStore(s => s.ai.auditor)
   return (
     <div className="max-w-5xl mx-auto">
       <div className="text-center mb-10">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 mb-4">
-          <ClipboardCheck className="w-7 h-7" />
+          <IconReview className="w-7 h-7" />
         </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-3">编审部</h1>
         <p className="text-gray-600 max-w-2xl mx-auto">
@@ -26,25 +28,27 @@ const ReviewPage: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <PlannedCard
-          icon={<ListChecks className="w-6 h-6" />}
+          icon={<IconCheckCheck className="w-6 h-6" />}
           title="审阅清单"
           description="自定义检查项：角色名一致、时间线合理、章节字数均衡等。"
         />
         <PlannedCard
-          icon={<BookOpen className="w-6 h-6" />}
+          icon={<IconBookOpen className="w-6 h-6" />}
           title="连续阅读模式"
           description="将选定章节拼接为连续文档，沉浸式通读全局。"
         />
         <PlannedCard
-          icon={<GitCompare className="w-6 h-6" />}
+          icon={<IconRefresh className="w-6 h-6" />}
           title="修订对比"
           description="保存版本快照，修改后随时对比、安全回退。"
         />
-        <PlannedCard
-          icon={<Sparkles className="w-6 h-6" />}
-          title="AI 审查"
-          description="可选启动的智能审查，作为人工审阅的增值补充。"
-        />
+        {aiAuditor && (
+          <PlannedCard
+            icon={<IconSparkles className="w-6 h-6" />}
+            title="AI 审查"
+            description="可选启动的智能审查，作为人工审阅的增值补充。"
+          />
+        )}
       </div>
     </div>
   )

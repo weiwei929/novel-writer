@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
-import { X, CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-react'
 import { useNotifications, Notification, useUIStore } from '../../stores/uiStore'
+import { IconAlert, IconCheckCircle, IconClose, IconInfo } from './icons'
 
 const NotificationContainer: React.FC = () => {
   const notifications = useNotifications()
@@ -34,15 +34,15 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification }) => 
   const getIcon = () => {
     switch (notification.type) {
       case 'success':
-        return <CheckCircle className="w-5 h-5 text-green-500" />
+        return <IconCheckCircle className="w-5 h-5 text-green-500" />
       case 'error':
-        return <XCircle className="w-5 h-5 text-red-500" />
+        return <IconClose className="w-5 h-5 text-red-500" />
       case 'warning':
-        return <AlertTriangle className="w-5 h-5 text-yellow-500" />
+        return <IconAlert className="w-5 h-5 text-yellow-500" />
       case 'info':
-        return <Info className="w-5 h-5 text-blue-500" />
+        return <IconInfo className="w-5 h-5 text-blue-500" />
       default:
-        return <Info className="w-5 h-5 text-gray-500" />
+        return <IconInfo className="w-5 h-5 text-gray-500" />
     }
   }
 
@@ -98,7 +98,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification }) => 
           onClick={() => removeNotification(notification.id)}
           className="flex-shrink-0 p-0.5 rounded hover:bg-black hover:bg-opacity-10"
         >
-          <X className="w-4 h-4" />
+          <IconClose className="w-4 h-4" />
         </button>
       </div>
 

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react'
-import { Send, Bot, X, CheckCheck, BookMarked, ChevronDown, FileSearch } from 'lucide-react'
 import { aiApi } from '../../services/api'
+import { IconArrowDown, IconBookOpen, IconBot, IconCheckCheck, IconClose, IconSearch, IconSend } from '../ui/icons'
 
 interface AIAssistantPanelProps {
   onClose: () => void
@@ -69,7 +69,7 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ onClose, onApplyCon
     <div className="flex flex-col h-full bg-white border-l border-gray-200 w-80 shadow-xl">
       <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-blue-50/50">
         <div className="flex items-center gap-2 text-blue-800 font-medium">
-          <Bot size={18} />
+          <IconBot size={18} />
           <span>AI 助手</span>
         </div>
         <div className="flex items-center gap-1">
@@ -79,10 +79,10 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ onClose, onApplyCon
                 title="本章诊断 (Chapter Review)"
                 disabled={isLoading}
              >
-                <FileSearch size={16} />
+                <IconSearch size={16} />
              </button>
             <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md">
-              <X size={16} />
+              <IconClose size={16} />
             </button>
         </div>
       </div>
@@ -111,7 +111,7 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ onClose, onApplyCon
                         className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100 shadow-sm hover:bg-blue-100"
                         title="插入到编辑器光标处"
                     >
-                        <CheckCheck size={12} />
+                        <IconCheckCheck size={12} />
                         <span>正文</span>
                     </button>
                    )}
@@ -123,9 +123,9 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ onClose, onApplyCon
                                 className="flex items-center gap-1 text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded border border-purple-100 shadow-sm hover:bg-purple-100"
                                 title="采纳为项目设定"
                             >
-                                <BookMarked size={12} />
+                                <IconBookOpen size={12} />
                                 <span>设定</span>
-                                <ChevronDown size={10} />
+                                <IconArrowDown size={10} />
                             </button>
                             
                             {activeMessageIdx === idx && (
@@ -134,7 +134,7 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ onClose, onApplyCon
                                         onClick={() => handleMetadataAction('settings', msg.content)}
                                         className="text-left px-3 py-2 text-xs hover:bg-purple-50 text-gray-700"
                                     >
-                                        存为世界观
+                                        存为作品设定
                                     </button>
                                     <button 
                                         onClick={() => handleMetadataAction('characters', msg.content)}
@@ -185,7 +185,7 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ onClose, onApplyCon
             disabled={isLoading || !input.trim()}
             className="absolute right-1 top-1 p-1.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50"
           >
-            <Send size={14} />
+            <IconSend size={14} />
           </button>
         </div>
       </div>
