@@ -7,17 +7,17 @@ import AuthGuard from './components/auth/AuthGuard'
 import Layout from './components/Layout'
 import LoadingSpinner from './components/ui/LoadingComponents'
 
-// 懒加载页面组件（代码分割）
 const HomePage = lazy(() => import('./pages/HomePage'))
 const CollectionsPage = lazy(() => import('./pages/CollectionsPage'))
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage'))
-const EnhancedEditorPage = lazy(() => import('./pages/EnhancedEditorPage'))
-const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage'))
+const WritingEditorPage = lazy(() => import('./pages/WritingEditorPage'))
 const StatsPage = lazy(() => import('./pages/StatsPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const ApiTestPage = lazy(() => import('./pages/ApiTestPage'))
 const ScrapsPage = lazy(() => import('./pages/ScrapsPage'))
 const ReviewPage = lazy(() => import('./pages/ReviewPage'))
+const WorkDetailPage = lazy(() => import('./pages/WorkDetailPage'))
+const ShelfPage = lazy(() => import('./pages/ShelfPage'))
 const ReferencesPage = lazy(() => import('./pages/creative/ReferencesPage'))
 const AiSearchPage = lazy(() => import('./pages/creative/AiSearchPage'))
 const ChatPage = lazy(() => import('./pages/creative/ChatPage'))
@@ -33,13 +33,13 @@ const WritingProjectPage = lazy(() => import('./pages/writing/WritingProjectPage
 
 import { PageWrapper as UI_PageWrapper } from './components/layout/PageWrapper'
 
-// 编辑器回退：无章节时重定向到作品详情页
-const EditorFallback: React.FC = () => {
-  const { projectId } = useParams()
-  return <Navigate to={`/projects/${projectId}`} replace />
+const EditorWritingRedirect: React.FC = () => {
+  const { projectId, chapterId } = useParams()
+  if (chapterId) return <Navigate to={`/writing/${projectId}/${chapterId}`} replace />
+  if (projectId) return <Navigate to={`/writing/${projectId}`} replace />
+  return <Navigate to="/writing/projects" replace />
 }
 
-// 页面加载包装组件 - 处理 Suspense
 const SuspenseWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <Suspense
     fallback={
@@ -48,13 +48,10 @@ const SuspenseWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) 
       </div>
     }
   >
-    <UI_PageWrapper>
-      {children}
-    </UI_PageWrapper>
+    <UI_PageWrapper>{children}</UI_PageWrapper>
   </Suspense>
 )
 
-// 路由配置（模块级单例，避免每次渲染重新创建）
 const router = createBrowserRouter([
   {
     path: '/',
@@ -75,6 +72,40 @@ const router = createBrowserRouter([
         </SuspenseWrapper>
       </Layout>
     ),
+  },
+  {
+    path: '/stats',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <StatsPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/shelf',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <ShelfPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/work/:id',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <WorkDetailPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/library',
+    element: <Navigate to="/collections" replace />,
   },
   {
     path: '/collections',
@@ -127,26 +158,6 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/writing/projects',
-    element: (
-      <Layout>
-        <SuspenseWrapper>
-          <WritingProjectsPage />
-        </SuspenseWrapper>
-      </Layout>
-    ),
-  },
-  {
-    path: '/writing/:projectId',
-    element: (
-      <Layout>
-        <SuspenseWrapper>
-          <WritingProjectPage />
-        </SuspenseWrapper>
-      </Layout>
-    ),
-  },
-  {
     path: '/planning/evaluation',
     element: (
       <Layout>
@@ -166,38 +177,55 @@ const router = createBrowserRouter([
       </Layout>
     ),
   },
-  // 旧路径重定向到 /planning 前缀（保留历史链接可用）
+  {
+    path: '/writing/projects',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <WritingProjectsPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/writing/:projectId/:chapterId',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <WritingEditorPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/writing/:projectId',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <WritingProjectPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
   {
     path: '/projects',
-    element: <Navigate to="/planning/projects" replace />,
+    element: <Navigate to="/" replace />,
   },
   {
     path: '/projects/:id',
-    element: (
-      <Layout>
-        <SuspenseWrapper>
-          <ProjectDetailPage />
-        </SuspenseWrapper>
-      </Layout>
-    ),
+    element: <Navigate to="/" replace />,
   },
   {
     path: '/editor/:projectId/:chapterId',
-    element: (
-      <Layout>
-        <SuspenseWrapper>
-          <EnhancedEditorPage />
-        </SuspenseWrapper>
-      </Layout>
-    ),
+    element: <EditorWritingRedirect />,
   },
   {
     path: '/editor/:projectId',
-    element: <EditorFallback />,
+    element: <EditorWritingRedirect />,
   },
   {
     path: '/editor',
-    element: <Navigate to="/projects" replace />,
+    element: <Navigate to="/writing/projects" replace />,
   },
   {
     path: '/creative/references',
@@ -259,14 +287,13 @@ const router = createBrowserRouter([
       </Layout>
     ),
   },
-  // 旧路径重定向到 /creative 前缀（保留历史链接可用）
   {
     path: '/scraps',
-    element: <Navigate to="/creative/scraps" replace />,
+    element: <Navigate to="/" replace />,
   },
   {
     path: '/files',
-    element: <Navigate to="/creative/references" replace />,
+    element: <Navigate to="/" replace />,
   },
   {
     path: '/review',
@@ -274,16 +301,6 @@ const router = createBrowserRouter([
       <Layout>
         <SuspenseWrapper>
           <ReviewPage />
-        </SuspenseWrapper>
-      </Layout>
-    ),
-  },
-  {
-    path: '/stats',
-    element: (
-      <Layout>
-        <SuspenseWrapper>
-          <StatsPage />
         </SuspenseWrapper>
       </Layout>
     ),

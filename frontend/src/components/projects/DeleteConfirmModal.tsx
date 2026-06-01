@@ -1,5 +1,5 @@
+import { IconAlert, IconClose } from '../ui/icons'
 import React from 'react'
-import { AlertTriangle, X } from 'lucide-react'
 
 interface DeleteConfirmModalProps {
   isOpen: boolean
@@ -23,12 +23,12 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
         <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-red-50/50 rounded-t-xl">
           <div className="flex items-center gap-3">
             <div className="bg-red-100 p-2 rounded-lg">
-              <AlertTriangle size={24} className="text-red-600" />
+              <IconAlert size={24} className="text-red-600" />
             </div>
             <h2 className="text-xl font-bold text-gray-800">确认删除</h2>
           </div>
           <button onClick={onCancel} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
-            <X size={20} className="text-gray-500" />
+            <IconClose size={20} className="text-gray-500" />
           </button>
         </div>
 
@@ -61,7 +61,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
             onClick={onConfirm}
             className="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors flex items-center gap-2"
           >
-            <AlertTriangle size={18} />
+            <IconAlert size={18} />
             确认删除
           </button>
         </div>

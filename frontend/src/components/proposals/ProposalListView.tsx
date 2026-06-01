@@ -1,4 +1,4 @@
-import { Plus, FileText } from 'lucide-react'
+import { IconFile, IconPlus } from '../ui/icons'
 import type { Proposal } from '../../services/api'
 import ProposalStatusBadge from './ProposalStatusBadge'
 
@@ -38,7 +38,7 @@ export default function ProposalListView({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="bg-blue-100 p-2 rounded-lg">
-            <FileText size={22} className="text-blue-600" />
+            <IconFile size={22} className="text-blue-600" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
@@ -50,7 +50,7 @@ export default function ProposalListView({
             onClick={onCreate}
             className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm shadow-sm"
           >
-            <Plus size={18} />
+            <IconPlus size={18} />
             {createLabel}
           </button>
         )}
@@ -65,12 +65,12 @@ export default function ProposalListView({
         </div>
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-20 text-red-400">
-          <FileText size={48} className="mb-3 opacity-30" />
+          <IconFile size={48} className="mb-3 opacity-30" />
           <p className="text-sm text-red-500">{error}</p>
         </div>
       ) : proposals.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-          <FileText size={48} className="mb-3 opacity-30" />
+          <IconFile size={48} className="mb-3 opacity-30" />
           <p className="text-sm">{emptyText}</p>
         </div>
       ) : (

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { X } from 'lucide-react'
 import { Chapter, CreateChapterData } from '../../services/api'
+import { IconClose } from '../ui/icons'
 
 interface CreateChapterModalProps {
   onClose: () => void
@@ -43,7 +43,7 @@ export const CreateChapterModal: React.FC<CreateChapterModalProps> = ({
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="text-lg font-semibold">创建新章节</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <X className="w-5 h-5" />
+            <IconClose className="w-5 h-5" />
           </button>
         </div>
 
@@ -161,7 +161,7 @@ export const EditChapterModal: React.FC<EditChapterModalProps> = ({
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="text-lg font-semibold">编辑章节设置</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <X className="w-5 h-5" />
+            <IconClose className="w-5 h-5" />
           </button>
         </div>
 

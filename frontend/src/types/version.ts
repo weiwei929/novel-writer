@@ -81,7 +81,7 @@ export interface ChapterData {
 export interface PlanningData {
   outline?: string // 总体大纲
   characters?: CharacterInfo[] // 角色信息
-  worldSetting?: string // 世界观设定
+  worldSetting?: string // 作品设定
   timeline?: TimelineEvent[] // 时间线
   plotPoints?: string[] // 情节要点
 }

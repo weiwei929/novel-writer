@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import {
-  BookOpen,
-  Edit3,
-  Save,
-  X,
-  Target,
-  TrendingUp,
-  Clock,
-  FileText,
-  Calendar,
-  Award,
-  BarChart3,
-} from 'lucide-react'
+  IconBookOpen,
+  IconEdit,
+  IconSave,
+  IconClose,
+  IconStats,
+  IconCalendar,
+  IconFile,
+  IconStar,
+} from '../ui/icons'
 import { Project, Chapter, projectsApi } from '../../services/api'
 
 interface ProjectManagementPanelProps {
@@ -143,14 +140,14 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
                   disabled={saving}
                   className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
                 >
-                  <Save size={16} />
+                  <IconSave size={16} />
                   {saving ? '保存中...' : '保存'}
                 </button>
                 <button
                   onClick={handleCancel}
                   className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
                 >
-                  <X size={16} />
+                  <IconClose size={16} />
                   取消
                 </button>
               </>
@@ -159,7 +156,7 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
                 onClick={() => setIsEditing(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
               >
-                <Edit3 size={16} />
+                <IconEdit size={16} />
                 编辑
               </button>
             )}
@@ -170,14 +167,14 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
       {/* 统计概览 */}
       <div className="p-6 border-b">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <BarChart3 size={20} />
+          <IconStats size={20} />
           创作统计
         </h3>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-blue-50 p-4 rounded-lg">
             <div className="flex items-center gap-2 text-blue-600 mb-1">
-              <FileText size={16} />
+              <IconFile size={16} />
               <span className="text-sm font-medium">总字数</span>
             </div>
             <div className="text-2xl font-bold text-blue-700">
@@ -187,7 +184,7 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
 
           <div className="bg-green-50 p-4 rounded-lg">
             <div className="flex items-center gap-2 text-green-600 mb-1">
-              <BookOpen size={16} />
+              <IconBookOpen size={16} />
               <span className="text-sm font-medium">章节数</span>
             </div>
             <div className="text-2xl font-bold text-green-700">{chapters.length}</div>
@@ -195,7 +192,7 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
 
           <div className="bg-purple-50 p-4 rounded-lg">
             <div className="flex items-center gap-2 text-purple-600 mb-1">
-              <Clock size={16} />
+              <IconCalendar size={16} />
               <span className="text-sm font-medium">阅读时长</span>
             </div>
             <div className="text-2xl font-bold text-purple-700">
@@ -205,7 +202,7 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
 
           <div className="bg-orange-50 p-4 rounded-lg">
             <div className="flex items-center gap-2 text-orange-600 mb-1">
-              <Award size={16} />
+              <IconStar size={16} />
               <span className="text-sm font-medium">平均章节字数</span>
             </div>
             <div className="text-2xl font-bold text-orange-700">
@@ -237,7 +234,7 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
       {/* 写作目标设置 */}
       <div className="p-6 border-b">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Target size={20} />
+          <IconStats size={20} />
           写作目标
         </h3>
 
@@ -271,7 +268,7 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
       {/* 章节状态分布 */}
       <div className="p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <TrendingUp size={20} />
+          <IconStats size={20} />
           章节状态
         </h3>
 
@@ -299,11 +296,11 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
         {/* 项目元信息 */}
         <div className="mt-6 pt-6 border-t grid grid-cols-2 gap-4 text-sm text-gray-500">
           <div className="flex items-center gap-2">
-            <Calendar size={16} />
+            <IconCalendar size={16} />
             <span>创建时间：{formatDate(project.createdAt)}</span>
           </div>
           <div className="flex items-center gap-2">
-            <Clock size={16} />
+            <IconCalendar size={16} />
             <span>最后更新：{formatDate(project.updatedAt)}</span>
           </div>
         </div>

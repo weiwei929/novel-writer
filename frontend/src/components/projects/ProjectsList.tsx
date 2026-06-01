@@ -1,26 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import {
-  projectsApi,
-  collectionsApi,
-  chaptersApi,
-  Project,
-  Collection,
-} from '../../services/api'
-import { Plus, FileText, LayoutGrid, LayoutList } from 'lucide-react'
+import { projectsApi, chaptersApi, Project } from '../../services/api'
 import { ProjectCard } from './ProjectCard'
 import { KanbanBoard } from './KanbanBoard'
 import { CreateProjectModal } from './CreateProjectModal'
 import { DeleteConfirmModal } from './DeleteConfirmModal'
 import { readMetadataFieldValue } from '../../utils/metadataField'
+import { IconFile, IconGrid, IconList, IconPlus } from '../ui/icons'
 
 const ProjectsList: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([])
-  const [collections, setCollections] = useState<Collection[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [selectedCollection, setSelectedCollection] = useState<string>('')
   const [selectedTag, setSelectedTag] = useState<string>('')
   const [availableTags, setAvailableTags] = useState<string[]>([])
   const [previewProject, setPreviewProject] = useState<Project | null>(null)
@@ -50,17 +41,11 @@ const ProjectsList: React.FC = () => {
     })()
   }, [previewProject])
 
-  const [searchParams] = useSearchParams()
-
   const loadData = useCallback(async () => {
     try {
       setLoading(true)
-      const [projectsData, collectionsData] = await Promise.all([
-        projectsApi.getAll(selectedCollection || undefined),
-        collectionsApi.getAll(),
-      ])
+      const projectsData = await projectsApi.getAll()
       setProjects(projectsData)
-      setCollections(collectionsData)
       
       // Extract unique tags
       const tags = new Set<string>()
@@ -75,16 +60,11 @@ const ProjectsList: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }, [selectedCollection])
+  }, [])
 
   useEffect(() => {
-    const fromUrl = searchParams.get('collectionId') || ''
-    if (fromUrl && fromUrl !== selectedCollection) {
-      setSelectedCollection(fromUrl)
-    } else {
-      loadData()
-    }
-  }, [selectedCollection, searchParams, loadData])
+    loadData()
+  }, [loadData])
   
   // Filter projects by tag
   const filteredProjects = selectedTag 
@@ -163,14 +143,14 @@ const ProjectsList: React.FC = () => {
                 className={`p-2 rounded ${viewMode === 'kanban' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
                 title="看板视图"
               >
-                 <LayoutList size={20} className="rotate-90" />
+                 <IconList size={20} className="rotate-90" />
               </button>
               <button 
                 onClick={() => setViewMode('list')}
                 className={`p-2 rounded ${viewMode === 'list' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
                 title="网格视图"
               >
-                 <LayoutGrid size={20} />
+                 <IconGrid size={20} />
               </button>
            </div>
 
@@ -178,7 +158,7 @@ const ProjectsList: React.FC = () => {
             onClick={() => setShowCreateModal(true)}
             className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-blue-600 text-sm font-medium"
           >
-            <Plus size={20} />
+            <IconPlus size={20} />
             创建作品
           </button>
         </div>
@@ -210,10 +190,8 @@ const ProjectsList: React.FC = () => {
           {projects.length === 0 ? (
              // No projects at all
              <>
-                <FileText size={64} className="mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-500 text-lg mb-4">
-                  {selectedCollection ? '该文集中还没有作品' : '还没有作品'}
-                </p>
+                <IconFile size={64} className="mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-500 text-lg mb-4">还没有作品</p>
                 <button
                   onClick={() => setShowCreateModal(true)}
                   className="bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-600"
@@ -251,7 +229,6 @@ const ProjectsList: React.FC = () => {
                 <ProjectCard
                   key={project.id}
                   project={project}
-                  collectionName={collections.find(c => c.id === project.collectionId)?.name || '未分类'}
                   onDelete={handleDelete}
                   onUpdate={loadData}
                   onExport={handleExport}
@@ -266,7 +243,6 @@ const ProjectsList: React.FC = () => {
 
       {showCreateModal && (
         <CreateProjectModal
-          collections={collections}
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
             setShowCreateModal(false)

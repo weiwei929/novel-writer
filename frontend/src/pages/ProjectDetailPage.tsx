@@ -3,11 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
 import { useNotifications } from '../hooks/useNotifications'
 import { readMetadataFieldValue } from '../utils/metadataField'
-import { ArrowLeft, FileText, Play, X, List } from 'lucide-react'
 import ContentMetadataCard from '../components/metadata/ContentMetadataCard'
 import ChapterContentModal from '../components/editor/ChapterContentModal'
 import ChapterPlanningEditor from '../components/editor/ChapterPlanningEditor'
 import ProjectMetadataPanel from '../components/editor/ProjectMetadataPanel'
+import { IconArrowLeft, IconArrowRight, IconClose, IconFile, IconList } from '../components/ui/icons'
 
 const ProjectDetailPage: React.FC = () => {
   const navigate = useNavigate()
@@ -112,7 +112,7 @@ const ProjectDetailPage: React.FC = () => {
             className="flex items-center gap-1.5 text-gray-500 hover:text-gray-900 shrink-0"
             title="返回作品列表"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <IconArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-xl font-bold text-gray-800 truncate">{project.title}</h1>
           {/* 作品状态 */}
@@ -126,18 +126,18 @@ const ProjectDetailPage: React.FC = () => {
             onClick={() => setShowPlanning(true)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-all text-sm"
           >
-            <List size={14} />
+            <IconList size={14} />
             管理章节规划
           </button>
           <button
             onClick={() => {
               if (chapters.length > 0) {
-                navigate(`/editor/${project.id}/${chapters[0].id}`)
+                navigate(`/writing/${project.id}/${chapters[0].id}`)
               }
             }}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
           >
-            <Play size={14} />
+            <IconArrowRight size={14} />
             进入编辑器
           </button>
         </div>
@@ -151,7 +151,7 @@ const ProjectDetailPage: React.FC = () => {
           {synopsis && (
             <details className="bg-white rounded-lg border shadow-sm mb-4 flex-shrink-0 group">
               <summary className="px-4 py-3 cursor-pointer select-none flex items-center gap-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-lg">
-                <FileText size={14} className="text-gray-400" />
+                <IconFile size={14} className="text-gray-400" />
                 作品梗概
               </summary>
               <div className="px-4 pb-4">
@@ -167,7 +167,7 @@ const ProjectDetailPage: React.FC = () => {
             {/* 章节列表标题 */}
             <div className="px-4 py-3 border-b flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-2">
-                <FileText size={14} className="text-gray-400" />
+                <IconFile size={14} className="text-gray-400" />
                 <h3 className="text-sm font-semibold text-gray-900">
                   章节列表
                   <span className="text-gray-400 font-normal ml-1">({chapters.length})</span>
@@ -181,16 +181,16 @@ const ProjectDetailPage: React.FC = () => {
             {/* 章节内容 */}
             {chapters.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center p-10 text-gray-500">
-                <FileText className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                <IconFile className="w-10 h-10 mx-auto mb-3 text-gray-300" />
                 <div className="mb-1 text-sm">暂无章节</div>
                 <div className="text-xs text-gray-400 mb-4">
                   进入编辑器，使用"管理章节规划"创建章节
                 </div>
                 <button
-                  onClick={() => navigate(`/editor/${project.id}`)}
+                  onClick={() => navigate(`/work/${project.id}`)}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
                 >
-                  <Play size={14} />
+                  <IconArrowRight size={14} />
                   进入编辑器
                 </button>
               </div>
@@ -256,11 +256,11 @@ const ProjectDetailPage: React.FC = () => {
                           </button>
                         )}
                         <button
-                          onClick={() => navigate(`/editor/${project.id}/${c.id}`)}
+                          onClick={() => navigate(`/writing/${project.id}/${c.id}`)}
                           className="inline-flex items-center gap-1 px-2.5 py-1 border border-blue-200 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors text-xs font-medium"
                           title="进入编辑器"
                         >
-                          <Play size={12} />
+                          <IconArrowRight size={12} />
                           写作
                         </button>
                       </div>
@@ -306,7 +306,7 @@ const ProjectDetailPage: React.FC = () => {
                 onClick={() => setSynopsisModal(null)}
                 className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600"
               >
-                <X size={18} />
+                <IconClose size={18} />
               </button>
             </div>
             <div className="px-5 py-4 overflow-y-auto text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">

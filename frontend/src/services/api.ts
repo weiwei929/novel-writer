@@ -41,6 +41,52 @@ api.interceptors.response.use(
 
 // --- Type Definitions ---
 
+// ===== 状态枚举（唯一源） =====
+export const PROJECT_STATUSES = [
+  'draft',
+  'planning',
+  'writing',
+  'reviewing',
+  'completed',
+  'archived',
+  'shelved',
+] as const
+
+export type ProjectStatus = (typeof PROJECT_STATUSES)[number]
+
+export const PROPOSAL_STATUSES = [
+  'draft',
+  'submitted',
+  'evaluated',
+  'approved',
+  'rejected',
+  'shelved',
+] as const
+
+export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number]
+
+export const PROJECT_STATUS_LABEL: Record<string, string> = {
+  draft: '草稿',
+  planning: '企划中',
+  writing: '创作中',
+  reviewing: '审阅中',
+  completed: '已完成',
+  archived: '已归档',
+  shelved: '作品暂存',
+}
+
+export const PROPOSAL_STATUS_LABEL: Record<string, string> = {
+  draft: '草稿',
+  submitted: '已提交',
+  evaluated: '已评估',
+  approved: '已立项',
+  rejected: '已驳回',
+  shelved: '作品暂存',
+}
+
+export const getStatusLabel = (status: string): string =>
+  PROJECT_STATUS_LABEL[status] || status
+
 // Type definitions
 export interface ApiResponse<T = any> {
   success: boolean
@@ -75,17 +121,7 @@ export interface Project {
   title: string
   description?: string
   author: string
-  status:
-    | 'draft'
-    | 'planning'
-    | 'writing'
-    | 'reviewing'
-    | 'completed'
-    | 'archived'
-    | 'pooled'
-    | 'trashed'
-    | 'imported'
-    | 'published'
+  status: ProjectStatus
   collectionId?: string 
   wordCount: number
   chapterCount?: number 
@@ -102,8 +138,7 @@ export interface CreateProjectData {
   title: string
   description?: string
   author: string
-  status?: string
-  collectionId?: string
+  status?: ProjectStatus
   genre?: string[]
   tags?: string[]
   masterPrompt?: string
@@ -253,7 +288,7 @@ export interface Proposal {
   synopsis?: string | null
   innovation?: string | null
   coreSetting?: string | null
-  status: 'draft' | 'submitted' | 'evaluated' | 'approved' | 'rejected'
+  status: ProposalStatus
   references?: any
   sourceNotes?: string | null
   projectId?: string | null
@@ -267,6 +302,22 @@ export type ProposalInput = {
   coreSetting?: string | null
   references?: any
   sourceNotes?: string | null
+}
+
+export interface WorkDetailResponse {
+  project: Project
+  chapters: Chapter[]
+  characters: WorldCharacter[]
+  timelineEntries: TimelineEntry[]
+  creativeFlows: CreativeFlow[]
+  proposal?: Proposal
+}
+
+export const workApi = {
+  async getDetail(id: string): Promise<WorkDetailResponse> {
+    const response = await api.get(`/work/${id}`)
+    return response.data
+  },
 }
 
 export const collectionsApi = {
@@ -303,15 +354,14 @@ export const collectionsApi = {
 }
 
 export const projectsApi = {
-  async getAll(_collectionId?: string): Promise<Project[]> {
-    // V2 return all (filtering not implemented)
-    const response = await api.get('/projects')
-    // No more manual JSON parsing needed!
+  async getAll(_collectionId?: string, status?: string): Promise<Project[]> {
+    const url = status ? `/projects?status=${encodeURIComponent(status)}` : '/projects'
+    const response = await api.get(url)
     return (response.data || []).map((p: any) => ({
         ...p,
         tags: p.tags || [],
         metadata: p.metadata || {},
-        genre: p.tags || [], // Mapping tags to genre for compatibility if needed
+        genre: p.tags || [],
         status: p.status || 'draft'
     }))
   },
@@ -361,7 +411,7 @@ export const projectsApi = {
 
   async getImported(): Promise<Project[]> {
     const response = await api.get('/projects')
-    return (response.data || []).filter((p: Project) => p.status === 'imported')
+    return (response.data || []).filter((p: Project) => p.status === 'draft')
   },
 
   async extractMetadata(id: string): Promise<{ hasPendingMetadata: boolean }> {
@@ -389,6 +439,20 @@ export const projectsApi = {
   async updateChapterPlanning(projectId: string, plans: ChapterPlanItem[]): Promise<ChapterPlanItem[]> {
     const response = await api.put(`/projects/${projectId}/chapter-planning`, plans)
     return response.data
+  },
+
+  async shelve(id: string, source?: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/shelve`, { source })
+    return response.data
+  },
+
+  async restore(id: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/restore`)
+    return response.data
+  },
+
+  async getShelved(): Promise<Project[]> {
+    return this.getAll(undefined, 'shelved')
   },
 }
 

@@ -1,4 +1,4 @@
-import { FolderOpen } from 'lucide-react'
+import { IconFolder } from '../ui/icons'
 import type { Project } from '../../services/api'
 import ProjectStatusBadge from './ProjectStatusBadge'
 
@@ -25,7 +25,7 @@ export default function ProjectPickerView({
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center gap-3">
         <div className="bg-blue-100 p-2 rounded-lg">
-          <FolderOpen size={22} className="text-blue-600" />
+          <IconFolder size={22} className="text-blue-600" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
@@ -46,7 +46,7 @@ export default function ProjectPickerView({
         </div>
       ) : projects.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-          <FolderOpen size={48} className="mb-3 opacity-30" />
+          <IconFolder size={48} className="mb-3 opacity-30" />
           <p className="text-sm">{emptyText}</p>
         </div>
       ) : (

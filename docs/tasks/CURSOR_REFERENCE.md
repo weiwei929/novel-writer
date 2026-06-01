@@ -12,7 +12,7 @@
 | 栈 | Vite + React 18 + TypeScript + Tailwind CSS + Zustand + Monaco Editor |
 | 后端 | Fastify 5 + Prisma 6 + SQLite + Zod + TypeScript |
 | 包管理 | npm（两套：`frontend/package.json` + `backend/package.json`） |
-| 2.0 目录 | `/root/novel-writer-2.0/`（VPS），与 1.0 隔离 |
+| 2.0 目录 | `/root/novel-writer/`（VPS，`v2-dev` 分支），与 1.0 隔离 |
 | 端口 | 开发 3001，生产待定 |
 
 ---
@@ -33,14 +33,16 @@ L1 主导航（5项，顶部 Tab 栏）
 
 L2 子导航（仅创意组/企划课有，Tab 切换）
 创意组: [外来参考] [灵感碎片] [AI搜索] [创意讨论] [企划建议书]
-企划课: [企划建议书评估] [作品内容元数据] [立项评估] [立项作品]
+企划课: [企划建议书] [作品内容元数据] [立项评估] [立项作品]
 
 L3 作品级（列表 → 详情页）
-子 Tab → 作品名称列表 → 点击 → 详情页
+子 Tab → 作品名称列表 → 点击 → 详情页（统一入口 /work/:id）
 
 L4 章节级（仅创作室）
 编辑器 + 参考面板
 ```
+
+右上角全局入口（不占 L1 主导航位）：`[数据统计] [系统设置] [暂存阁]`
 
 ### 路由结构对应
 
@@ -51,30 +53,53 @@ L4 章节级（仅创作室）
 /creative/ai-search     → AI 搜索 L2
 /creative/chat          → 创意讨论 L2
 /creative/proposals     → 企划建议书 L2
-/creative/proposals/:id → 企划建议书详情 L3
+/creative/proposals/:id → 提案详情（过渡，后续并入 /work/:id）
+
+/work/:id           → 统一作品详情页 L3（中枢 ★）
+                       提案阶段显示提案数据，立项后显示项目数据
+                       按 status 切换操作栏和行为
 
 /planning           → 企划课 L1
-/planning/proposals    → 企划建议书评估 L2（仅列已提交提案）
-/planning/proposals/:id → 企划建议书评估详情 L3（只读）
-/planning/metadata              → 作品内容元数据 L2（项目选择）
-/planning/metadata/:projectId   → 作品内容元数据 L3（可编辑作品设定）
+/planning/proposals     → 企划建议书评估 L2
+/planning/proposals/:id → 评估详情 L3（过渡，后续并入 /work/:id）
+/planning/metadata              → 作品内容元数据 L2
+/planning/metadata/:projectId   → 元数据详情 L3（过渡，后续并入 /work/:id）
 /planning/evaluation   → 立项评估 L2
-/planning/projects     → 立项作品 L2
+/planning/projects     → 立项作品列表 L2
 
-/writing                 → 创作室 L1
-/writing/projects        → 创作中作品列表 L2（status=writing）
-/writing/:projectId      → 创作室作品页 L3（作品设定只读 + 章节占位）
-/writing/:projectId/:chapterId → 编辑器 L4（规划中）
-/editor                  → 旧写作编辑器（保留）
+/writing            → 创作室 L1
+/writing/projects      → 创作中作品列表 L2
+/writing/:projectId/:chapterId → 编辑器 L4
 
-/review             → 编审部 L1
-/review/projects       → 待审作品列表 L3
-/review/:projectId     → 审阅工作台
+/review             → 编审部 L1（搁置）
+/review/projects       → 待审作品列表 L2
 
-/library            → 文集库 L1
-/library/projects      → 归档作品列表
-/library/stats         → 统计仪表盘
+/library            → 文集库 L1（搁置）
+/library/projects      → 归档作品列表 L2
+
+# 全局功能（右上角入口，不占 L1 主导航位）
+/stats              → 数据统计
+/settings           → 系统设置
+/shelf              → 暂存阁（软删除回收站）
+
+# 兼容重定向
+/editor/*           → /writing/*（全局重定向，见 TASK-011）
+/projects/*         → 逐步降级，最终指向 /work/:id 或首页
 ```
+
+### `/work/:id` 中枢行为
+
+```
+/work/:id  ← 统一作品详情页
+  提案阶段 → 显示提案数据（可编辑作品设定）
+  企划阶段 → 显示项目数据（作品设定只读，含操作栏）
+  创作阶段 → 显示章节列表 + 「进入创作室」按钮
+  审阅阶段 → 全只读 + 审阅操作栏
+  文集库   → 全只读 + 归入文集/导出
+  暂存阁   → 全只读 + 还原/彻底删除
+```
+
+DB 模型名仍为 `Project`，前端路由叫 `work`，两者不一致是允许的。
 
 ---
 
@@ -100,11 +125,13 @@ interface StageTransition {
 
 阶段内不设回退，可配置"不玩了"删除按钮，同样落入回收站。
 
+> **2.0 落地说明（TASK-011+）：** `pool` / `trash` 在数据层统一收敛为 `status: 'shelved'`，原状态保存在 `metadata._shelved = { previousStatus, shelvedAt, source }`。暂存阁入口为 `/shelf`，还原时回到原状态，彻底删除才真删。
+
 ---
 
 ## 五、关键数据模型
 
-### 5.1 现有模型（复用，不修改）
+### 5.1 现有模型（复用，不修改表名）
 
 ```prisma
 // Project - 扩充 status
@@ -114,13 +141,14 @@ model Project {
   description String?
   author      String?
   coverImage  String?
-  status      String   @default("draft")  // draft | planning | writing | reviewing | completed | archived | pooled | trashed
+  status      String   @default("draft")  // draft | planning | writing | reviewing | completed | archived | shelved
   wordCount   Int      @default(0)
-  metadata    Json?    // 保留现有结构
+  metadata    Json?    // 保留现有结构；_shelved 存暂存阁元数据
+  masterPrompt String? // 保留
   tags        Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  collectionId String?
+  collectionId String?  // 可选归属，创建 Project 不再强制选 Collection
   chapters    Chapter[]
   characters  Character[]
   timelineEntries TimelineEntry[]
@@ -147,7 +175,7 @@ model Chapter {
   updatedAt DateTime @updatedAt
 }
 
-// Character - 扩展（TASK-006 新增字段）
+// Character - 扩展（TASK-006 新增字段 + TASK-008 双锚点）
 model Character {
   id              String   @id @default(uuid())
   name            String
@@ -164,7 +192,7 @@ model Character {
   role            String?   // 保留旧字段（兼容）
   description     String?   // 保留旧字段
   profile         Json?     // 保留旧字段
-  // 归属双锚点（TASK-008）：proposalId（提案阶段）/ projectId（立项后），应用层 XOR
+  // 归属双锚点：proposalId（提案阶段）/ projectId（立项后），应用层 XOR
   projectId       String?
   project         Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   proposalId      String?
@@ -189,7 +217,7 @@ model Scrap {
   updatedAt DateTime @updatedAt
 }
 
-// Collection - 语义重定义为"文集"
+// Collection - 语义重定义为"文集"，文集库阶段使用，不做创建前置条件
 model Collection {
   id          String    @id @default(uuid())
   name        String
@@ -200,7 +228,7 @@ model Collection {
 }
 ```
 
-### 5.2 新增模型
+### 5.2 新增 / 扩展模型
 
 ```prisma
 // 外来参考（文件引用）
@@ -216,7 +244,7 @@ model FileReference {
   updatedAt   DateTime @updatedAt
 }
 
-// 故事线（TASK-006 新增）
+// 故事线（TASK-006 新增 + TASK-008 双锚点）
 model TimelineEntry {
   id              String   @id @default(uuid())
   time            String    // 时间标记（必填）
@@ -229,7 +257,7 @@ model TimelineEntry {
   emotionStage    String?   // 情绪阶段（选填）
   notes           String?   // 备注（选填）
   sortOrder       Int       // 排序
-  // 归属双锚点（TASK-008）：proposalId / projectId，应用层 XOR
+  // 归属双锚点：proposalId / projectId，应用层 XOR
   projectId       String?
   project         Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   proposalId      String?
@@ -238,13 +266,13 @@ model TimelineEntry {
   updatedAt       DateTime  @updatedAt
 }
 
-// 创作心流（TASK-006 新增）
+// 创作心流（TASK-006 新增 + TASK-008 双锚点）
 model CreativeFlow {
   id              String   @id @default(uuid())
   title           String
   content         String    // Markdown 正文
   tags            Json?     // 标签
-  // 归属双锚点（TASK-008）：proposalId / projectId，应用层 XOR
+  // 归属双锚点：proposalId / projectId，应用层 XOR
   projectId       String?
   project         Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   proposalId      String?
@@ -260,13 +288,12 @@ model Proposal {
   synopsis    String?  // 故事梗概
   innovation  String?  // 创新点
   coreSetting String?  // 核心设定
-  status      String   @default("draft") // draft | submitted | evaluated | approved | rejected
+  status      String   @default("draft") // draft | submitted | evaluated | approved | rejected | shelved
   references  Json?    // 引用的外来参考/碎片ID列表
   sourceNotes String?  // 来源讨论记录
   projectId   String?  // 被采纳后关联到立项项目
   project     Project? @relation(fields: [projectId], references: [id])
 
-  // 作品设定子表（提案阶段挂在 proposalId 下；立项后 re-key 到 projectId）
   characters      Character[]
   timelineEntries TimelineEntry[]
   creativeFlows   CreativeFlow[]
@@ -275,9 +302,10 @@ model Proposal {
   updatedAt   DateTime @updatedAt
 }
 
-// 审核池 & 回收站（统一的状态管理）
+// 暂存阁（统一的状态管理）
 // 不新增模型，通过 Project.status 和 Proposal.status 扩展值管理
-// status: "pooled" = 审查池, "trashed" = 回收站
+// status: "shelved" = 暂存阁（软删除，保留完整状态可还原）
+// metadata._shelved = { previousStatus, shelvedAt, source }
 
 // 修订快照
 model Snapshot {
@@ -291,9 +319,30 @@ model Snapshot {
 }
 ```
 
+### 5.3 状态枚举（唯一源，见 TASK-011）
+
+```typescript
+// frontend/src/types/status.ts
+export const PROJECT_STATUSES = [
+  'draft', 'planning', 'writing', 'reviewing', 'completed', 'archived', 'shelved',
+] as const
+
+export const PROPOSAL_STATUSES = [
+  'draft', 'submitted', 'evaluated', 'approved', 'rejected', 'shelved',
+] as const
+```
+
+存量旧状态兼容映射（`imported→draft`, `published→completed`, `pooled/trashed→shelved`）集中在 service 层，不散落在页面。
+
 ---
 
 ## 六、UI 命名规范
+
+### 文案约定
+
+- **用户可见文案**：统一用「作品设定」，不出现「世界观」
+- **代码变量名 / API 字段**：保持英文
+- AI Prompt 中的「世界观」暂不改动（改变可能影响 AI 输出，单独阶段处理）
 
 ### 组件目录
 
@@ -329,29 +378,49 @@ frontend/src/
 │       ├── CollectionList.tsx
 │       └── StatsDashboard.tsx
 ├── pages/
-│   ├── CreativePage.tsx     ← 创意组页面（内嵌子Tab）
-│   ├── PlanningPage.tsx     ← 企划课页面
-│   ├── WritingPage.tsx      ← 创作室页面
+│   ├── CreativePage.tsx      ← 创意组页面（内嵌子Tab）
+│   ├── PlanningPage.tsx      ← 企划课页面
+│   ├── WritingPage.tsx       ← 创作室页面
 │   ├── WritingEditorPage.tsx ← 编辑器页面（L4）
-│   ├── ReviewPage.tsx       ← 编审部页面
-│   └── LibraryPage.tsx      ← 文集库页面
+│   ├── WorkDetailPage.tsx    ← 统一作品详情页（/work/:id，中枢）
+│   ├── ReviewPage.tsx        ← 编审部页面
+│   ├── LibraryPage.tsx       ← 文集库页面
+│   └── ShelfPage.tsx         ← 暂存阁页面
 └── services/
-    └── api.ts               ← 扩展 API 方法
+    └── api.ts                ← 扩展 API 方法
 ```
 
 ### 路由配置
 
 ```typescript
-// App.tsx 路由结构
+// App.tsx 路由结构（目标态）
 const routes = [
+  { path: '/', element: <HomePage /> },
   { path: '/creative/*', element: <CreativePage /> },
   { path: '/planning/*', element: <PlanningPage /> },
   { path: '/writing/*', element: <WritingPage /> },
   { path: '/writing/:projectId/:chapterId', element: <WritingEditorPage /> },
+  { path: '/work/:id', element: <WorkDetailPage /> },
   { path: '/review/*', element: <ReviewPage /> },
   { path: '/library/*', element: <LibraryPage /> },
+  { path: '/stats', element: <StatsPage /> },
+  { path: '/settings', element: <SettingsPage /> },
+  { path: '/shelf', element: <ShelfPage /> },
 ]
 ```
+
+### 编辑器范围
+
+```
+章节框架编辑（标题/梗概/排序）→ 在 /work/:id 详情页内做，不用 Monaco
+章节正文写作 → 在 /writing/:projectId/:chapterId 用 Monaco
+               纯 Markdown，不含 frontmatter
+               不含元数据提取、AI 审阅等杂项
+               超 5000 字温和提示
+               用 ## 标题做内部锚点导航
+```
+
+编辑器右栏 4 模式互斥：`pure`（默认）| `reference` | `ai` | `review`（留空，编审部以后做）
 
 ---
 
@@ -383,6 +452,7 @@ interface AISettings {
 3. **样式**：Tailwind CSS，和 1.0 一致
 4. **编辑器**：复用 Monaco Editor 集成
 5. **路由**：React Router v7，和 1.0 一致
+6. **UI 语言**：所有面向用户的标签、按钮、提示文字用**中文**。代码中的变量名、API 字段名保持英文。任务卡中的「UI 标签」列就是用户最终看到的文字。
 
 ---
 
@@ -392,3 +462,12 @@ interface AISettings {
 2. **鉴权**：复用 1.0 的 auth middleware
 3. **路由风格**：保持 `/api/v2/...` 前缀
 4. **错误格式**：保持 `{ success, data, error }` 格式
+
+---
+
+## 十、开发习惯
+
+- **不要每卡一 commit** — 阶段性里程碑时一次性提交
+- **不要出现「世界观」** — 统一用「作品设定」（AI Prompt 除外）
+- **代码变量名用英文，UI 标签用中文**
+- **不问「我要不要提交」** — 任务卡里写明提交时机

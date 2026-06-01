@@ -1,20 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { chaptersApi, projectsApi, Project, Chapter, CreateChapterData } from '../../services/api'
-import {
-  Plus,
-  Edit3,
-  Trash2,
-  BookOpen,
-  FileText,
-  Calendar,
-  Clock,
-  BarChart3,
-  ArrowUp,
-  ArrowDown,
-  Play,
-} from 'lucide-react'
+import { chaptersApi, projectsApi, Project, Chapter, CreateChapterData, getStatusLabel } from '../../services/api'
 import { CreateChapterModal, EditChapterModal } from './ChapterModals'
+import { IconArrowDown, IconArrowRight, IconArrowUp, IconBookOpen, IconCalendar, IconDelete, IconEdit, IconFile, IconPlus, IconStats } from '../ui/icons'
 
 interface ChapterManagerProps {
   projectId: string
@@ -88,7 +76,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
       if (onChapterSelect) {
         onChapterSelect(newChapter)
       } else {
-        navigate(`/editor/${newChapter.id}`)
+        navigate(`/writing/${projectId}/${newChapter.id}`)
       }
     } catch (err) {
       setError('创建章节失败')
@@ -152,35 +140,34 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
   const getStatusColor = (status: Chapter['status'] | Project['status']) => {
     switch (status) {
       case 'draft':
+      case 'planning':
         return 'bg-gray-100 text-gray-700 border-gray-200'
       case 'writing':
+      case 'reviewing':
         return 'bg-blue-100 text-blue-700 border-blue-200'
       case 'completed':
         return 'bg-green-100 text-green-700 border-green-200'
-      case 'published':
-        return 'bg-purple-100 text-purple-700 border-purple-200'
       case 'archived':
         return 'bg-yellow-100 text-yellow-700 border-yellow-200'
+      case 'shelved':
+        return 'bg-red-100 text-red-700 border-red-200'
       default:
         return 'bg-gray-100 text-gray-700 border-gray-200'
     }
   }
 
   const getStatusText = (status: Chapter['status'] | Project['status']) => {
-    switch (status) {
-      case 'draft':
-        return '草稿'
-      case 'writing':
-        return '写作中'
-      case 'completed':
-        return '已完成'
-      case 'published':
-        return '已发布'
-      case 'archived':
-        return '已归档'
-      default:
-        return '未知'
+    if (status === 'draft' || status === 'writing' || status === 'completed') {
+      switch (status) {
+        case 'draft':
+          return '草稿'
+        case 'writing':
+          return '写作中'
+        case 'completed':
+          return '已完成'
+      }
     }
+    return getStatusLabel(status)
   }
 
   const calculateReadingTime = (wordCount: number) => {
@@ -218,7 +205,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
         <div className="bg-white rounded-lg shadow-sm border p-4">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-xl font-semibold flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-blue-500" />
+              <IconBookOpen className="w-5 h-5 text-blue-500" />
               {project.title}
             </h2>
             <span
@@ -230,19 +217,19 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-1">
-              <FileText className="w-4 h-4" />
+              <IconFile className="w-4 h-4" />
               <span>{chapters.length} 章节</span>
             </div>
             <div className="flex items-center gap-1">
-              <BarChart3 className="w-4 h-4" />
+              <IconStats className="w-4 h-4" />
               <span>{project.wordCount.toLocaleString()} 字</span>
             </div>
             <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
+              <IconCalendar className="w-4 h-4" />
               <span>{calculateReadingTime(project.wordCount)}</span>
             </div>
             <div className="flex items-center gap-1">
-              <Calendar className="w-4 h-4" />
+              <IconCalendar className="w-4 h-4" />
               <span>{new Date(project.updatedAt).toLocaleDateString()}</span>
             </div>
           </div>
@@ -256,7 +243,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
           onClick={() => setShowCreateModal(true)}
           className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
         >
-          <Plus className="w-4 h-4" />
+          <IconPlus className="w-4 h-4" />
           新建章节
         </button>
       </div>
@@ -264,7 +251,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
       {/* 章节列表 */}
       {chapters.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <IconFile className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">还没有章节</h3>
           <p className="text-gray-500 mb-4">创建第一个章节开始你的写作之旅</p>
           <button
@@ -290,7 +277,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
                     if (onChapterSelect) {
                       onChapterSelect(chapter)
                     } else {
-                      navigate(`/editor/${chapter.id}`)
+                      navigate(`/writing/${projectId}/${chapter.id}`)
                     }
                   }}
                 >
@@ -322,13 +309,13 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
                       if (onChapterSelect) {
                         onChapterSelect(chapter)
                       } else {
-                        navigate(`/editor/${chapter.id}`)
+                        navigate(`/writing/${projectId}/${chapter.id}`)
                       }
                     }}
                     className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors"
                     title="编辑章节"
                   >
-                    <Play className="w-4 h-4" />
+                    <IconArrowRight className="w-4 h-4" />
                   </button>
 
                   <button
@@ -336,7 +323,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
                     className="p-2 text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 rounded transition-colors"
                     title="章节设置"
                   >
-                    <Edit3 className="w-4 h-4" />
+                    <IconEdit className="w-4 h-4" />
                   </button>
 
                   {index > 0 && (
@@ -345,7 +332,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
                       className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded transition-colors"
                       title="上移"
                     >
-                      <ArrowUp className="w-4 h-4" />
+                      <IconArrowUp className="w-4 h-4" />
                     </button>
                   )}
 
@@ -355,7 +342,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
                       className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded transition-colors"
                       title="下移"
                     >
-                      <ArrowDown className="w-4 h-4" />
+                      <IconArrowDown className="w-4 h-4" />
                     </button>
                   )}
 
@@ -364,7 +351,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
                     className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
                     title="删除章节"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <IconDelete className="w-4 h-4" />
                   </button>
                 </div>
               </div>

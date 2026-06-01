@@ -1,7 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Edit, Trash2, Eye, Download, User, FileText, Calendar, BarChart3, MoveRight, Stethoscope } from 'lucide-react'
-import { Project, chaptersApi } from '../../services/api'
+import { Project, chaptersApi, PROJECT_STATUS_LABEL, ProjectStatus } from '../../services/api'
+import { IconCalendar, IconDelete, IconDownload, IconEdit, IconEye, IconFile, IconMoveRight, IconReview, IconStats, IconUser } from '../ui/icons'
 
 interface ProjectCardProps {
   project: Project
@@ -29,34 +29,32 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   const genres = project.genre || []
   const tags = project.tags || [] // Support new tags
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: ProjectStatus) => {
     switch (status) {
-      case 'imported': return 'bg-yellow-100 text-yellow-700'
-      case 'draft': return 'bg-gray-100 text-gray-700'
-      case 'writing': return 'bg-blue-100 text-blue-700'
-      case 'completed': return 'bg-green-100 text-green-700'
-      case 'published': return 'bg-purple-100 text-purple-700'
-      default: return 'bg-gray-100 text-gray-700'
+      case 'draft':
+      case 'planning':
+        return 'bg-gray-100 text-gray-700'
+      case 'writing':
+      case 'reviewing':
+        return 'bg-blue-100 text-blue-700'
+      case 'completed':
+      case 'archived':
+        return 'bg-green-100 text-green-700'
+      case 'shelved':
+        return 'bg-red-100 text-red-700'
+      default:
+        return 'bg-gray-100 text-gray-700'
     }
   }
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'imported': return '已导入'
-      case 'draft': return '构思中'
-      case 'writing': return '创作中'
-      case 'completed': return '已完成'
-      case 'published': return '已发布'
-      default: return status
-    }
-  }
+  const getStatusText = (status: ProjectStatus) => PROJECT_STATUS_LABEL[status] ?? status
 
   return (
     <div className={`bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow ${compact ? 'p-4' : 'p-6'} border border-gray-100`}>
       <div className="flex justify-between items-start mb-2">
         <h3 className={`font-semibold text-gray-900 ${compact ? 'text-base' : 'text-xl'} line-clamp-2`}>
           <button
-            onClick={() => navigate(`/projects/${project.id}`)}
+            onClick={() => navigate(`/work/${project.id}`)}
             className="hover:text-blue-600 hover:underline transition-colors text-left"
             title="查看作品详情"
           >
@@ -77,20 +75,20 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       {/* Meta Info */}
       <div className="mb-3 space-y-1">
         <div className="flex items-center text-xs text-gray-500 gap-2">
-          <User size={14} /> {project.author}
+          <IconUser size={14} /> {project.author}
         </div>
         {collectionName && (
            <div className="flex items-center text-xs text-gray-500 gap-2">
-             <FileText size={14} /> {collectionName}
+             <IconFile size={14} /> {collectionName}
            </div>
         )}
         {!compact && (
           <div className="flex items-center text-xs text-gray-500 gap-2">
-             <Calendar size={14} /> {new Date(project.createdAt).toLocaleDateString()}
+             <IconCalendar size={14} /> {new Date(project.createdAt).toLocaleDateString()}
           </div>
         )}
         <div className="flex items-center text-xs text-gray-500 gap-2">
-          <BarChart3 size={14} /> {project.wordCount.toLocaleString()} 字
+          <IconStats size={14} /> {project.wordCount.toLocaleString()} 字
         </div>
       </div>
 
@@ -123,21 +121,21 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                 try {
                   const chapters = await chaptersApi.getByProjectId(project.id)
                   if (chapters && chapters.length > 0) {
-                     navigate(`/editor/${project.id}/${chapters[0].id}`)
+                     navigate(`/writing/${project.id}/${chapters[0].id}`)
                   } else {
-                     navigate(`/projects/${project.id}`)
+                     navigate(`/work/${project.id}`)
                   }
-                } catch { navigate(`/projects/${project.id}`) }
+                } catch { navigate(`/work/${project.id}`) }
               }}
             >
-              <Edit size={16} />
+              <IconEdit size={16} />
             </button>
             <button 
               className="p-1.5 text-gray-500 hover:bg-gray-100 rounded" 
               title="预览"
               onClick={() => onPreview(project)}
             >
-              <Eye size={16} />
+              <IconEye size={16} />
             </button>
             {project.status === 'completed' && onExport && (
               <button 
@@ -145,7 +143,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                 title="导出"
                 onClick={() => onExport(project)}
               >
-                <Download size={16} />
+                <IconDownload size={16} />
               </button>
             )}
              {project.status === 'completed' && onReview && (
@@ -154,7 +152,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                 title="AI 全书审阅"
                 onClick={() => onReview(project)}
               >
-                <Stethoscope size={16} />
+                <IconReview size={16} />
               </button>
             )}
              <button 
@@ -162,27 +160,19 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
               title="删除"
               onClick={() => onDelete(project.id)}
             >
-              <Trash2 size={16} />
+              <IconDelete size={16} />
             </button>
          </div>
 
          {/* Move Actions (Kanban Support) */}
          {onStatusChange && (
            <div className="flex gap-1">
-             {project.status === 'imported' && (
-                <button 
-                   onClick={() => onStatusChange(project, 'draft')}
-                   className="text-xs flex items-center gap-1 text-blue-600 hover:underline"
-                >
-                  开始创作 <MoveRight size={12} />
-                </button>
-             )}
-             {(project.status === 'draft' || project.status === 'writing') && (
+             {(project.status === 'draft' || project.status === 'writing' || project.status === 'planning') && (
                 <button 
                    onClick={() => onStatusChange(project, 'completed')}
                    className="text-xs flex items-center gap-1 text-green-600 hover:underline"
                 >
-                  完成 <MoveRight size={12} />
+                  完成 <IconMoveRight size={12} />
                 </button>
              )}
              {project.status === 'completed' && (

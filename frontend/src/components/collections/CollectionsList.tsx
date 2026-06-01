@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { collectionsApi, Collection, CreateCollectionData } from '../../services/api'
-import { Plus, Edit, Trash2, FolderOpen, Tag, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useNotifications } from '../../hooks/useNotifications'
 import { useLoading } from '../../hooks/useLoading'
 import { LoadingState } from '../ui/LoadingComponents'
 import ErrorBoundary from '../ui/ErrorBoundary'
+import { IconArrowRight, IconDelete, IconEdit, IconFolder, IconPlus, IconTag } from '../ui/icons'
 
 const CollectionsList: React.FC = () => {
   const [collections, setCollections] = useState<Collection[]>([])
@@ -60,14 +60,14 @@ const CollectionsList: React.FC = () => {
     if (collections.length === 0) {
       return (
         <div className="text-center py-12">
-          <FolderOpen className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <IconFolder className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">暂无文集</h3>
           <p className="text-gray-500 mb-4">创建您的第一个文集来组织小说作品</p>
           <button
             onClick={() => setShowCreateModal(true)}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
           >
-            <Plus className="w-4 h-4 mr-2" />
+            <IconPlus className="w-4 h-4 mr-2" />
             创建文集
           </button>
         </div>
@@ -97,7 +97,7 @@ const CollectionsList: React.FC = () => {
             onClick={() => setShowCreateModal(true)}
             className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-blue-600"
           >
-            <Plus size={20} />
+            <IconPlus size={20} />
             创建文集
           </button>
         </div>
@@ -141,21 +141,21 @@ const CollectionCard: React.FC<CollectionCardProps> = ({ collection, onDelete, o
         <h3 className="text-xl font-semibold">{collection.name}</h3>
         <div className="flex gap-2">
           <button onClick={onUpdate} className="text-blue-500 hover:text-blue-700" title="编辑文集">
-            <Edit size={18} />
+            <IconEdit size={18} />
           </button>
           <button
             onClick={() => onDelete(collection.id)}
             className="text-red-500 hover:text-red-700"
             title="删除文集"
           >
-            <Trash2 size={18} />
+            <IconDelete size={18} />
           </button>
           <button
             onClick={() => navigate(`/projects?collectionId=${collection.id}`)}
             className="text-gray-600 hover:text-gray-800"
             title="查看该文集下的项目"
           >
-            <ArrowRight size={18} />
+            <IconArrowRight size={18} />
           </button>
         </div>
       </div>
@@ -178,7 +178,7 @@ const CollectionCard: React.FC<CollectionCardProps> = ({ collection, onDelete, o
               key={index}
               className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-1 rounded text-sm"
             >
-              <Tag size={14} />
+              <IconTag size={14} />
               {tag}
             </span>
           ))}

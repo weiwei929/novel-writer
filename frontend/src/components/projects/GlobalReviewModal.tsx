@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Bot, Stethoscope, AlertTriangle, Clock } from 'lucide-react';
 import { aiApi } from '../../services/api';
 import ReactMarkdown from 'react-markdown';
+import { IconAlert, IconBot, IconCalendar, IconClose, IconReview } from '../ui/icons'
 
 interface GlobalReviewModalProps {
   isOpen: boolean;
@@ -63,7 +63,7 @@ export const GlobalReviewModal: React.FC<GlobalReviewModalProps> = ({
         <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/50 rounded-t-xl">
           <div className="flex items-center gap-3">
              <div className="bg-purple-100 p-2 rounded-lg">
-                <Stethoscope size={24} className="text-purple-600" />
+                <IconReview size={24} className="text-purple-600" />
              </div>
              <div>
                 <h2 className="text-xl font-bold text-gray-800">全书体检报告</h2>
@@ -71,7 +71,7 @@ export const GlobalReviewModal: React.FC<GlobalReviewModalProps> = ({
              </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
-            <X size={20} className="text-gray-500" />
+            <IconClose size={20} className="text-gray-500" />
           </button>
         </div>
 
@@ -81,7 +81,7 @@ export const GlobalReviewModal: React.FC<GlobalReviewModalProps> = ({
              <div className="flex flex-col items-center justify-center h-full space-y-4 py-12">
                 <div className="relative">
                     <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
-                    <Bot size={24} className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-purple-600" />
+                    <IconBot size={24} className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-purple-600" />
                 </div>
                 <div className="text-center">
                     <h3 className="text-lg font-medium text-gray-800">AI 正在通读全书...</h3>
@@ -95,7 +95,7 @@ export const GlobalReviewModal: React.FC<GlobalReviewModalProps> = ({
 
            {error && (
              <div className="flex flex-col items-center justify-center h-full py-12">
-                <AlertTriangle size={48} className="text-red-400 mb-4" />
+                <IconAlert size={48} className="text-red-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-800">无法完成审阅</h3>
                 <p className="text-gray-500 mt-2">{error}</p>
                 <button 
@@ -117,7 +117,7 @@ export const GlobalReviewModal: React.FC<GlobalReviewModalProps> = ({
         {/* Footer */}
         <div className="p-4 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-between items-center text-sm text-gray-500">
              <div className="flex items-center gap-2">
-                <Clock size={14} />
+                <IconCalendar size={14} />
                 <span>生成时间: {new Date().toLocaleTimeString()}</span>
              </div>
              <div className="flex gap-3">
