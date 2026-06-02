@@ -32,6 +32,7 @@ api.interceptors.response.use(
     // 401 → token 失效，清空并跳转到登录页
     if (error.response?.status === 401) {
       localStorage.removeItem('novel_auth_token')
+      window.dispatchEvent(new CustomEvent('novel:auth-expired'))
       window.location.href = '/'
       return Promise.reject(error)
     }
@@ -219,7 +220,13 @@ export interface FileReference {
 
 function normalizeScrapTags(tags: unknown): string[] {
   if (!tags) return []
-  if (Array.isArray(tags)) return tags.map(String)
+  if (Array.isArray(tags)) return tags.map(String).filter(Boolean)
+  if (typeof tags === 'string') {
+    return tags
+      .split(/[,，]/)
+      .map(t => t.trim())
+      .filter(Boolean)
+  }
   return []
 }
 
@@ -365,7 +372,15 @@ export type ProposalInput = {
 }
 
 export function getProposalMetadata(p: Proposal): ProposalMetadata {
-  return (p.metadata as ProposalMetadata) || {}
+  let meta: unknown = p.metadata
+  if (typeof meta === 'string') {
+    try {
+      meta = JSON.parse(meta) as ProposalMetadata
+    } catch {
+      meta = {}
+    }
+  }
+  return (meta && typeof meta === 'object' ? meta : {}) as ProposalMetadata
 }
 
 export interface WorkDetailResponse {
@@ -610,12 +625,14 @@ export const chaptersApi = {
 export const scrapsApi = {
   async getAll(): Promise<Scrap[]> {
     const response = await api.get('/scraps')
-    return (response.data || []).map(mapScrap)
+    const list = Array.isArray(response.data) ? response.data : []
+    return list.map(mapScrap)
   },
 
   async getByProjectId(projectId: string): Promise<Scrap[]> {
     const response = await api.get(`/scraps/project/${projectId}`)
-    return (response.data || []).map(mapScrap)
+    const list = Array.isArray(response.data) ? response.data : []
+    return list.map(mapScrap)
   },
 
   async create(data: { projectId?: string; content: string; tags?: string[]; note?: string }): Promise<Scrap> {
@@ -644,7 +661,7 @@ export const externalRefsApi = {
       ? `/external-refs?tag=${encodeURIComponent(params.tag)}`
       : '/external-refs'
     const response = await api.get(url)
-    return response.data || []
+    return Array.isArray(response.data) ? response.data : []
   },
 
   async getById(id: string): Promise<FileReference> {
@@ -747,7 +764,7 @@ export const proposalsApi = {
       ? `/proposals?status=${encodeURIComponent(params.status)}`
       : '/proposals'
     const response = await api.get(url)
-    return response.data || []
+    return Array.isArray(response.data) ? response.data : []
   },
 
   async list(): Promise<Proposal[]> {

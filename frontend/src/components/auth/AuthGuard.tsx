@@ -3,13 +3,10 @@
  * 单用户密码验证界面
  */
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
+import { Outlet, useLocation } from 'react-router-dom'
 import api from '../../services/api'
 import { IconClose, IconEye, IconEyeOff, IconInfo, IconLock } from '../ui/icons'
-
-interface AuthGuardProps {
-  children: React.ReactNode
-}
 
 interface AuthStatus {
   requireAuth: boolean
@@ -17,7 +14,8 @@ interface AuthStatus {
   message: string
 }
 
-const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
+const AuthGuard: React.FC = () => {
+  const location = useLocation()
   const [authStatus, setAuthStatus] = useState<AuthStatus | null>(null)
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -25,12 +23,18 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const [error, setError] = useState<string | null>(null)
   const [bannerDismissed, setBannerDismissed] = useState(false)
 
-  // 检查认证状态
-  const checkAuthStatus = async () => {
+  // 检查认证状态（每次路由变化或会话失效时重新校验）
+  const checkAuthStatus = useCallback(async () => {
     try {
       const response = await api.get<AuthStatus>('/auth/status')
-      if (response.data) {
+      if (response.data && typeof response.data.authenticated === 'boolean') {
         setAuthStatus(response.data)
+      } else {
+        setAuthStatus({
+          requireAuth: true,
+          authenticated: false,
+          message: '需要认证',
+        })
       }
     } catch (error) {
       console.error('认证状态检查失败:', error)
@@ -40,7 +44,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
         message: '需要认证',
       })
     }
-  }
+  }, [])
 
   // 处理登录
   const handleLogin = async (e: React.FormEvent) => {
@@ -87,9 +91,20 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     }
   }
 
-  // 组件挂载时检查认证状态
   useEffect(() => {
-    checkAuthStatus()
+    void checkAuthStatus()
+  }, [checkAuthStatus, location.pathname])
+
+  useEffect(() => {
+    const onExpired = () => {
+      setAuthStatus({
+        requireAuth: true,
+        authenticated: false,
+        message: '会话已过期，请重新登录',
+      })
+    }
+    window.addEventListener('novel:auth-expired', onExpired)
+    return () => window.removeEventListener('novel:auth-expired', onExpired)
   }, [])
 
   // 加载中状态
@@ -104,8 +119,8 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     )
   }
 
-  // 不需要认证或已认证，直接显示应用
-  if (!authStatus.requireAuth || authStatus.authenticated) {
+  // 已认证才展示应用（requireAuth 为 false 时视为开放访问）
+  if (authStatus.authenticated || authStatus.requireAuth === false) {
     return (
       <div>
         {/* 认证状态栏 */}
@@ -131,7 +146,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
             </div>
           </div>
         )}
-        {children}
+        <Outlet />
       </div>
     )
   }

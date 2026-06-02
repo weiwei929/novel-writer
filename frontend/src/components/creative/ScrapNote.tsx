@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { scrapsApi, type Scrap } from '../../services/api'
 import { useNotifications } from '../../hooks/useNotifications'
 import ThreeColumnLayout from './ThreeColumnLayout'
@@ -17,6 +17,8 @@ import {
 
 export default function ScrapNote() {
   const { success, error: notifyError } = useNotifications()
+  const notifyErrorRef = useRef(notifyError)
+  notifyErrorRef.current = notifyError
   const [scraps, setScraps] = useState<Scrap[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -35,11 +37,11 @@ export default function ScrapNote() {
       const data = await scrapsApi.getAll()
       setScraps(data)
     } catch {
-      notifyError('加载失败', '无法获取灵感手记')
+      notifyErrorRef.current('加载失败', '无法获取灵感手记')
     } finally {
       setLoading(false)
     }
-  }, [notifyError])
+  }, [])
 
   useEffect(() => {
     void load()

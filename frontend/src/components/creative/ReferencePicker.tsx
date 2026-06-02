@@ -51,11 +51,10 @@ export default function ReferencePicker({
   }, [])
 
   useEffect(() => {
-    if (open) {
-      setPicked(selected)
-      void load()
-    }
-  }, [open, selected, load])
+    if (!open) return
+    setPicked(selected)
+    void load()
+  }, [open, load])
 
   if (!open) return null
 

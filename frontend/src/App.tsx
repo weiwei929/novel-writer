@@ -64,6 +64,9 @@ const SuspenseWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
 const router = createBrowserRouter([
   {
+    element: <AuthGuard />,
+    children: [
+  {
     path: '/',
     element: (
       <Layout>
@@ -329,16 +332,16 @@ const router = createBrowserRouter([
     path: '/api-test',
     element: <Navigate to="/" replace />,
   },
+    ],
+  },
 ])
 
 export default function App() {
   return (
     <ErrorBoundary>
-      <AuthGuard>
-        <RouterProvider router={router} />
-        <NotificationContainer />
-        <LoadingOverlay />
-      </AuthGuard>
+      <RouterProvider router={router} />
+      <NotificationContainer />
+      <LoadingOverlay />
     </ErrorBoundary>
   )
 }

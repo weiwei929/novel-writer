@@ -12,9 +12,9 @@ import TagInput, { TagFilterBar } from './TagInput'
 import ReferencePicker from './ReferencePicker'
 
 function isPendingDiscussion(p: Proposal): boolean {
-  if (p.status !== 'draft') return false
+  if (p.status !== 'draft' && p.status !== 'rejected') return false
   const meta = getProposalMetadata(p)
-  return !meta._discussionSubmitted
+  return meta._discussionSubmitted !== true
 }
 
 function isFormedProposal(p: Proposal): boolean {

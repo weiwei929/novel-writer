@@ -31,6 +31,8 @@ function collectRefTags(refs: FileReference[]): string[] {
 
 export default function ExternalRefs() {
   const { success, error: notifyError } = useNotifications()
+  const notifyErrorRef = useRef(notifyError)
+  notifyErrorRef.current = notifyError
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [refs, setRefs] = useState<FileReference[]>([])
   const [loading, setLoading] = useState(true)
@@ -50,11 +52,11 @@ export default function ExternalRefs() {
     try {
       setRefs(await externalRefsApi.getAll())
     } catch {
-      notifyError('加载失败', '无法获取外来参考')
+      notifyErrorRef.current('加载失败', '无法获取外来参考')
     } finally {
       setLoading(false)
     }
-  }, [notifyError])
+  }, [])
 
   useEffect(() => {
     void load()

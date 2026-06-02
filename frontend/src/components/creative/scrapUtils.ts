@@ -19,7 +19,13 @@ export function setScrapProcessingType(tags: string[], type: ScrapProcessingType
 
 export function normalizeTagsField(tags?: string[] | string): string[] {
   if (!tags) return []
-  if (Array.isArray(tags)) return tags
+  if (Array.isArray(tags)) return tags.map(String).filter(Boolean)
+  if (typeof tags === 'string') {
+    return tags
+      .split(/[,，]/)
+      .map(t => t.trim())
+      .filter(Boolean)
+  }
   return []
 }
 
