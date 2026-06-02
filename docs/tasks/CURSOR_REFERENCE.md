@@ -471,3 +471,52 @@ interface AISettings {
 - **不要出现「世界观」** — 统一用「作品设定」（AI Prompt 除外）
 - **代码变量名用英文，UI 标签用中文**
 - **不问「我要不要提交」** — 任务卡里写明提交时机
+
+---
+
+## 十一、VPS 开发规范
+
+> 与 Claude 对齐：`docs/plan/ALIGNMENT-2026-06-02.md`  
+> 复盘：`docs/tasks/REPORT-TASK-102-CREATIVE-GROUP-INCIDENT-2026-06-02.md`
+
+### 11.1 后端
+
+- `nodemon` 使用 `backend/nodemon.json`，**仅 watch `src/`**，排除 `data/`、`prisma/dev.db`
+- 开发会话文件：`/tmp/novel-writer-sessions.json`（避免写项目目录触发重启）
+- **后端重启后**内存/文件会话可能失效；前端须复检 token（见 `AuthGuard`）
+- 生产域名 API：`Caddy` 将 `/api/*` 反代到 `127.0.0.1:5000`
+
+### 11.2 前端
+
+- **禁止**在 `useCallback` 依赖中放入 `useNotifications()` 返回的函数（已改为 Zustand + `useCallback` 稳定化）
+- 列表页 `load`：`useEffect` 依赖仅 `[load]` 且 `load` 依赖稳定；或 `useRef` 存 `notifyError`
+- **空数据**须显示引导文案（如「暂无讨论，点击新建」），勿长期停在「加载中…」
+- 旧数据兼容：`Scrap.tags` 可能为 JSON 数组或逗号分隔字符串，统一经 `normalizeScrapTags` / `normalizeTagsField`
+- `AuthGuard` 须在 **路由树内**（`Outlet`），并在 `location.pathname` 变化时复检 `/auth/status`
+
+### 11.3 部署（novel.pf2008.com）
+
+- **生产**：`Caddy` → `frontend/dist` 静态 + `/api` → `:5000`；**不要**与 Vite dev 混用
+- `index.html` 配置 `Cache-Control: no-cache`（防旧 HTML 引用已删除的 lazy chunk）
+- 发版后 **hard refresh**（`Ctrl+Shift+R`）验收；若 chunk 404，先清站点缓存
+- 本地 dev：`frontend` 端口 3000，`vite` 代理 `/api` → 5000
+
+### 11.4 提交前自测清单（Cursor）
+
+```
+□ cd backend && npm run build && cd ../frontend && npx tsc --noEmit && npm run build
+□ hard refresh 后无 chunk 404
+□ 后端重启后：未登录跳登录页；已失效 token 不显示「已通过认证」
+□ 创意组各 Tab 空列表有引导文案，无无限「加载中」
+□ 列表页 Network 无同一 API 刷屏
+```
+
+### 11.5 任务卡协作（Claude 出卡 / Cursor 执行）
+
+| 侧 | 义务 |
+|----|------|
+| Claude | 任务卡末尾加「工程注意事项」；验收含持久化/边界/部署三类 |
+| Cursor | 实现层问题先自查；非实现层出报告再讨论设计 |
+| 双方 | 设计问题不用实现糊，实现问题不用设计补；信息互通 |
+
+**原则**：各归各的，但对齐记录与参考文档保持更新。
