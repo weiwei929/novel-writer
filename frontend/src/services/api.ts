@@ -451,6 +451,11 @@ export const projectsApi = {
     return response.data
   },
 
+  async transition(id: string, to: string, note?: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/transition`, { to, note })
+    return response.data
+  },
+
   async getShelved(): Promise<Project[]> {
     return this.getAll(undefined, 'shelved')
   },

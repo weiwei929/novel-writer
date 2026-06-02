@@ -232,6 +232,61 @@ const ShelveProjectSchema = z.object({
   source: z.string().optional(),
 })
 
+const TransitionTargetSchema = z.enum([
+  'draft',
+  'planning',
+  'writing',
+  'reviewing',
+  'completed',
+  'shelved',
+])
+
+const TransitionRequestSchema = z.object({
+  to: TransitionTargetSchema,
+  note: z.string().optional(),
+})
+
+const ALLOWED_TRANSITIONS: Record<string, readonly z.infer<typeof TransitionTargetSchema>[]> = {
+  draft: ['planning', 'shelved'],
+  planning: ['writing', 'draft', 'shelved'],
+  writing: ['reviewing', 'planning', 'shelved'],
+  reviewing: ['completed', 'writing', 'shelved'],
+  completed: ['reviewing', 'shelved'],
+  shelved: [],
+}
+
+function appendLastTransition(
+  metadata: Record<string, unknown>,
+  from: string,
+  to: string,
+  note?: string
+): Record<string, unknown> {
+  return {
+    ...metadata,
+    _lastTransition: {
+      from,
+      to,
+      ...(note?.trim() ? { note: note.trim() } : {}),
+      timestamp: new Date().toISOString(),
+    },
+  }
+}
+
+function appendShelvedMetadata(
+  metadata: Record<string, unknown>,
+  previousStatus: string,
+  source: string
+): Record<string, unknown> {
+  return {
+    ...metadata,
+    _shelved: {
+      previousStatus,
+      shelvedAt: new Date().toISOString(),
+      source,
+    },
+  }
+}
+
 // Chapter Planning Schemas
 const ChapterPlanItemSchema = z.object({
   id: z.string(),
@@ -530,6 +585,57 @@ export async function projectRoutes(app: FastifyInstance) {
       return ApiResponse.success(withMappedProjectStatus(updated), '已移入作品暂存')
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Shelve failed'
+      req.log.error(e)
+      return reply.status(500).send(ApiResponse.error(message, 500))
+    }
+  })
+
+  // POST /projects/:id/transition — 相邻阶段流转（推进/回退/暂存）
+  app.post('/:id/transition', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    const { id } = req.params
+    const parsed = TransitionRequestSchema.safeParse(req.body ?? {})
+    if (!parsed.success) {
+      return reply.status(400).send({ success: false, error: parsed.error.format() })
+    }
+
+    try {
+      const project = await prisma.project.findUnique({ where: { id } })
+      if (!project) {
+        return reply.status(404).send(ApiResponse.error('Project not found', 404))
+      }
+
+      const from = mapProjectStatus(project.status)
+      const { to, note } = parsed.data
+
+      if (from === 'shelved') {
+        return reply.status(422).send(ApiResponse.error('暂存中的作品请使用还原接口', 422))
+      }
+
+      const allowed = ALLOWED_TRANSITIONS[from] ?? []
+      if (!allowed.includes(to)) {
+        return reply.status(422).send(
+          ApiResponse.error(`不允许从「${from}」流转到「${to}」`, 422)
+        )
+      }
+
+      const baseMetadata = (project.metadata as Record<string, unknown>) || {}
+      let metadata = appendLastTransition(baseMetadata, from, to, note)
+
+      if (to === 'shelved') {
+        metadata = appendShelvedMetadata(metadata, from, 'stage_transition')
+      }
+
+      const updated = await prisma.project.update({
+        where: { id },
+        data: {
+          status: to,
+          metadata: metadata as Prisma.InputJsonValue,
+        },
+      })
+
+      return ApiResponse.success(withMappedProjectStatus(updated), '状态已更新')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Transition failed'
       req.log.error(e)
       return reply.status(500).send(ApiResponse.error(message, 500))
     }

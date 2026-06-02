@@ -58,6 +58,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
               onDelete={onDelete}
               onPreview={onPreview}
               onExport={onExport}
+              onUpdate={onProjectUpdate}
               onStatusChange={handleStatusChange}
             />
           ))}
@@ -83,6 +84,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
               onDelete={onDelete}
               onPreview={onPreview}
               onExport={onExport}
+              onUpdate={onProjectUpdate}
               onStatusChange={(proj) => handleStatusChange(proj, 'draft')}
               onReview={handleReview}
             />

@@ -12,6 +12,11 @@ import {
 import { useWorldStore } from '../stores/worldStore'
 import { useNotifications } from '../hooks/useNotifications'
 import ProjectStatusBadge from '../components/projects/ProjectStatusBadge'
+import StageTransitionModal, {
+  nextStatusForTransition,
+  prevStatusForTransition,
+  type StageTransitionAction,
+} from '../components/projects/StageTransitionModal'
 import WorldBuildingPage from './creative/WorldBuildingPage'
 import ContentMetadataCard from '../components/metadata/ContentMetadataCard'
 import ChapterContentModal from '../components/editor/ChapterContentModal'
@@ -56,6 +61,8 @@ export default function WorkDetailPage() {
 
   const [showPlanning, setShowPlanning] = useState(false)
   const [showMetadataEditor, setShowMetadataEditor] = useState(false)
+  const [showTransition, setShowTransition] = useState(false)
+  const [transitionLoading, setTransitionLoading] = useState(false)
 
   const [synopsisModal, setSynopsisModal] = useState<{
     order: number
@@ -165,6 +172,44 @@ export default function WorkDetailPage() {
     }
   }
 
+  const handleTransition = async (action: StageTransitionAction, note?: string) => {
+    if (!project) return
+    const toMap: Record<StageTransitionAction, string | undefined> = {
+      advance: nextStatusForTransition[project.status],
+      retreat: prevStatusForTransition[project.status],
+      shelve: 'shelved',
+    }
+    const to = toMap[action]
+    if (!to) {
+      notifyError('无法流转', '当前状态不支持该操作')
+      return
+    }
+    try {
+      setTransitionLoading(true)
+      await projectsApi.transition(project.id, to, note)
+      const msg =
+        action === 'advance' ? '推进' : action === 'retreat' ? '回退' : '移入暂存'
+      notifySuccess(`作品已${msg}`)
+      setShowTransition(false)
+      await load()
+    } catch {
+      notifyError('流转失败', '无法更新作品状态')
+    } finally {
+      setTransitionLoading(false)
+    }
+  }
+
+  const stageManageButton = (
+    <button
+      type="button"
+      onClick={() => setShowTransition(true)}
+      disabled={transitionLoading}
+      className="px-3 py-1.5 text-sm border border-amber-200 text-amber-800 rounded-lg hover:bg-amber-50 disabled:opacity-50"
+    >
+      阶段管理
+    </button>
+  )
+
   const startEditTitle = (chapter: Chapter) => {
     setEditingTitleId(chapter.id)
     setEditingTitle(chapter.title)
@@ -211,12 +256,15 @@ export default function WorkDetailPage() {
     switch (project.status) {
       case 'draft':
         return (
-          <button
-            onClick={() => setActiveTab('setting')}
-            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
-          >
-            编辑作品设定
-          </button>
+          <>
+            <button
+              onClick={() => setActiveTab('setting')}
+              className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
+            >
+              编辑作品设定
+            </button>
+            {stageManageButton}
+          </>
         )
       case 'planning':
         return (
@@ -234,6 +282,7 @@ export default function WorkDetailPage() {
             >
               编辑元数据
             </button>
+            {stageManageButton}
           </>
         )
       case 'writing':
@@ -253,21 +302,23 @@ export default function WorkDetailPage() {
               <IconList size={14} />
               管理章节规划
             </button>
+            {stageManageButton}
           </>
         )
       case 'reviewing':
-        return (
-          <span className="text-xs text-gray-400 px-2 py-1">审阅操作（开发中）</span>
-        )
+        return stageManageButton
       case 'completed':
         return (
-          <button
-            onClick={() => void handleExport()}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-green-200 text-green-700 rounded-lg hover:bg-green-50 text-sm"
-          >
-            <IconDownload size={14} />
-            导出
-          </button>
+          <>
+            <button
+              onClick={() => void handleExport()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-green-200 text-green-700 rounded-lg hover:bg-green-50 text-sm"
+            >
+              <IconDownload size={14} />
+              导出
+            </button>
+            {stageManageButton}
+          </>
         )
       case 'archived':
         return null
@@ -581,6 +632,13 @@ export default function WorkDetailPage() {
           initialMode="view_all"
         />
       )}
+
+      <StageTransitionModal
+        open={showTransition}
+        project={project}
+        onConfirm={(action, note) => void handleTransition(action, note)}
+        onCancel={() => setShowTransition(false)}
+      />
     </div>
   )
 }
