@@ -8,7 +8,7 @@ import Layout from './components/Layout'
 import LoadingSpinner from './components/ui/LoadingComponents'
 
 const HomePage = lazy(() => import('./pages/HomePage'))
-const CollectionsPage = lazy(() => import('./pages/CollectionsPage'))
+const LibraryPage = lazy(() => import('./pages/LibraryPage'))
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage'))
 const WritingEditorPage = lazy(() => import('./pages/WritingEditorPage'))
 const StatsPage = lazy(() => import('./pages/StatsPage'))
@@ -105,17 +105,17 @@ const router = createBrowserRouter([
   },
   {
     path: '/library',
-    element: <Navigate to="/collections" replace />,
-  },
-  {
-    path: '/collections',
     element: (
       <Layout>
         <SuspenseWrapper>
-          <CollectionsPage />
+          <LibraryPage />
         </SuspenseWrapper>
       </Layout>
     ),
+  },
+  {
+    path: '/collections',
+    element: <Navigate to="/library" replace />,
   },
   {
     path: '/planning/proposals',

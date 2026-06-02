@@ -21,6 +21,8 @@ const SOURCE_LABELS: Record<string, string> = {
   writing: '创作室',
   review: '编审部',
   library: '文集库',
+  project_card: '作品卡片',
+  stage_transition: '阶段管理',
 }
 
 function formatRelativeTime(iso: string): string {

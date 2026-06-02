@@ -3,12 +3,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   chaptersApi,
+  collectionsApi,
   projectsApi,
   workApi,
   type Chapter,
   type ChapterPlanItem,
+  type Collection,
   type WorkDetailResponse,
 } from '../services/api'
+import CollectionPickerModal from '../components/library/CollectionPickerModal'
+import CreateCollectionModal from '../components/library/CreateCollectionModal'
 import { useWorldStore } from '../stores/worldStore'
 import { useNotifications } from '../hooks/useNotifications'
 import ProjectStatusBadge from '../components/projects/ProjectStatusBadge'
@@ -63,6 +67,9 @@ export default function WorkDetailPage() {
   const [showMetadataEditor, setShowMetadataEditor] = useState(false)
   const [showTransition, setShowTransition] = useState(false)
   const [transitionLoading, setTransitionLoading] = useState(false)
+  const [showLibraryPicker, setShowLibraryPicker] = useState(false)
+  const [showCreateCollection, setShowCreateCollection] = useState(false)
+  const [collections, setCollections] = useState<Collection[]>([])
 
   const [synopsisModal, setSynopsisModal] = useState<{
     order: number
@@ -169,6 +176,52 @@ export default function WorkDetailPage() {
       navigate('/shelf')
     } catch {
       notifyError('删除失败', '无法删除作品')
+    }
+  }
+
+  const loadCollections = useCallback(async () => {
+    try {
+      const cols = await collectionsApi.getAll()
+      setCollections(cols)
+    } catch {
+      notifyError('加载失败', '无法获取文集列表')
+    }
+  }, [notifyError])
+
+  const openLibraryPicker = () => {
+    void loadCollections()
+    setShowLibraryPicker(true)
+  }
+
+  const handleAssignCollection = async (collectionId: string | null) => {
+    if (!project) return
+    try {
+      await projectsApi.update(project.id, { collectionId })
+      notifySuccess(collectionId ? '已归入文集' : '已移出文集')
+      setShowLibraryPicker(false)
+      await load()
+    } catch {
+      notifyError('操作失败', '无法更新文集归属')
+    }
+  }
+
+  const handleCreateCollectionFromPicker = async (data: {
+    name: string
+    description?: string
+  }) => {
+    try {
+      const created = await collectionsApi.create(data)
+      notifySuccess('文集已创建')
+      setShowCreateCollection(false)
+      await loadCollections()
+      if (project) {
+        await projectsApi.update(project.id, { collectionId: created.id })
+        notifySuccess('已归入新文集')
+        setShowLibraryPicker(false)
+        await load()
+      }
+    } catch {
+      notifyError('创建失败')
     }
   }
 
@@ -310,6 +363,13 @@ export default function WorkDetailPage() {
       case 'completed':
         return (
           <>
+            <button
+              type="button"
+              onClick={openLibraryPicker}
+              className="px-3 py-1.5 text-sm border border-emerald-200 text-emerald-800 rounded-lg hover:bg-emerald-50"
+            >
+              归入文集
+            </button>
             <button
               onClick={() => void handleExport()}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-green-200 text-green-700 rounded-lg hover:bg-green-50 text-sm"
@@ -638,6 +698,27 @@ export default function WorkDetailPage() {
         project={project}
         onConfirm={(action, note) => void handleTransition(action, note)}
         onCancel={() => setShowTransition(false)}
+      />
+
+      <CollectionPickerModal
+        open={showLibraryPicker}
+        collections={collections}
+        currentCollectionId={project.collectionId}
+        onConfirm={id => void handleAssignCollection(id)}
+        onCancel={() => setShowLibraryPicker(false)}
+        onCreateNew={() => {
+          setShowLibraryPicker(false)
+          setShowCreateCollection(true)
+        }}
+      />
+
+      <CreateCollectionModal
+        open={showCreateCollection}
+        onConfirm={data => void handleCreateCollectionFromPicker(data)}
+        onCancel={() => {
+          setShowCreateCollection(false)
+          if (project.status === 'completed') setShowLibraryPicker(true)
+        }}
       />
     </div>
   )

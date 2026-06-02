@@ -212,6 +212,7 @@ const UpdateProjectSchema = z.object({
   description: z.string().optional(),
   author: z.string().optional(),
   status: z.enum(PROJECT_STATUSES).optional(),
+  collectionId: z.string().nullable().optional(),
   coverImage: z.string().optional(),
   metadata: z.any().optional(), // Allow any JSON object/value
   tags: z.any().optional(),     // Allow any JSON array/value
@@ -539,9 +540,24 @@ export async function projectRoutes(app: FastifyInstance) {
       }
     })
 
-    let data = projects.map(withMappedProjectStatus)
+    let data = projects.map(p => {
+      const mapped = withMappedProjectStatus(p)
+      const count = (p as { _count?: { chapters?: number } })._count
+      return {
+        ...mapped,
+        chapterCount: count?.chapters ?? 0,
+      }
+    })
     if (statusFilter) {
-      data = data.filter(p => p.status === statusFilter)
+      const statuses = statusFilter
+        .split(',')
+        .map(s => mapProjectStatus(s.trim()))
+        .filter(Boolean)
+      if (statuses.length === 1) {
+        data = data.filter(p => p.status === statuses[0])
+      } else if (statuses.length > 1) {
+        data = data.filter(p => statuses.includes(p.status))
+      }
     }
 
     return { success: true, data }

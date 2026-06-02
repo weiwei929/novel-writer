@@ -80,16 +80,28 @@ export async function collectionRoutes(app: FastifyInstance) {
     }
   })
 
-  // DELETE /collections/:id
+  // DELETE /collections/:id — 仅允许删除空文集
   app.delete('/:id', async (req: FastifyRequest<GetByIdParams>, reply) => {
     try {
+      const existing = await prisma.collection.findUnique({
+        where: { id: req.params.id },
+        include: { _count: { select: { projects: true } } },
+      })
+      if (!existing) {
+        return reply.status(404).send({ success: false, error: 'Collection not found' })
+      }
+      if (existing._count.projects > 0) {
+        return reply.status(400).send({
+          success: false,
+          error: '文集内仍有作品，无法删除',
+        })
+      }
       await prisma.collection.delete({
-        where: { id: req.params.id }
+        where: { id: req.params.id },
       })
       return { success: true, message: 'Collection deleted' }
     } catch (e) {
-      // Prisma error for Not Found or Foreign Key constraint
-      return reply.status(404).send({ success: false, error: 'Collection not found or has projects' })
+      return reply.status(404).send({ success: false, error: 'Collection not found' })
     }
   })
 }

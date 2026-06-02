@@ -362,8 +362,14 @@ export const projectsApi = {
         tags: p.tags || [],
         metadata: p.metadata || {},
         genre: p.tags || [],
-        status: p.status || 'draft'
+        status: p.status || 'draft',
+        chapterCount: p.chapterCount ?? p._count?.chapters ?? 0,
+        collectionId: p.collectionId ?? undefined,
     }))
+  },
+
+  async getLibraryProjects(): Promise<Project[]> {
+    return this.getAll(undefined, 'completed,archived')
   },
 
   async getById(id: string): Promise<Project> {
@@ -381,7 +387,10 @@ export const projectsApi = {
     return response.data
   },
 
-  async update(id: string, data: Partial<Project>): Promise<Project> {
+  async update(
+    id: string,
+    data: Omit<Partial<Project>, 'collectionId'> & { collectionId?: string | null }
+  ): Promise<Project> {
     const response = await api.put(`/projects/${id}`, data)
     return response.data
   },
