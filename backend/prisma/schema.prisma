@@ -199,6 +199,26 @@ model CreativeFlow {
 // Proposal (企划建议书) - TASK-008
 // ---------------------------------------------------------
 
+// ---------------------------------------------------------
+// External File Reference (外来参考) - TASK-101
+// ---------------------------------------------------------
+
+model FileReference {
+  id              String   @id @default(uuid())
+  fileName        String
+  fileContent     String?
+  fileType        String   @default("md")
+  sourceUrl       String?
+  processingType  String   @default("none") // complete | partial | none (Type 1/2/3)
+  proposalId      String?
+  annotations     Json?
+  comment         String?
+  tags            Json?
+  metadata        Json?    // { title, paragraphs, paragraphCount }
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
 model Proposal {
   id          String   @id @default(uuid())
   title       String

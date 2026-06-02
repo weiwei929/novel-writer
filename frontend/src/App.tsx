@@ -12,12 +12,13 @@ const LibraryPage = lazy(() => import('./pages/LibraryPage'))
 const WritingEditorPage = lazy(() => import('./pages/WritingEditorPage'))
 const StatsPage = lazy(() => import('./pages/StatsPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
-const ScrapsPage = lazy(() => import('./pages/ScrapsPage'))
+const CreativePage = lazy(() => import('./pages/CreativePage'))
+const ScrapNote = lazy(() => import('./components/creative/ScrapNote'))
+const ExternalRefs = lazy(() => import('./components/creative/ExternalRefs'))
 const FileManagerPage = lazy(() => import('./pages/FileManagerPage'))
 const ReviewPage = lazy(() => import('./pages/ReviewPage'))
 const WorkDetailPage = lazy(() => import('./pages/WorkDetailPage'))
 const ShelfPage = lazy(() => import('./pages/ShelfPage'))
-const ReferencesPage = lazy(() => import('./pages/creative/ReferencesPage'))
 const AiSearchPage = lazy(() => import('./pages/creative/AiSearchPage'))
 const ChatPage = lazy(() => import('./pages/creative/ChatPage'))
 const ProposalsPage = lazy(() => import('./pages/creative/ProposalsPage'))
@@ -238,63 +239,67 @@ const router = createBrowserRouter([
   },
   {
     path: '/creative/references',
-    element: (
-      <Layout>
-        <SuspenseWrapper>
-          <ReferencesPage />
-        </SuspenseWrapper>
-      </Layout>
-    ),
+    element: <Navigate to="/creative/external-refs" replace />,
   },
   {
-    path: '/creative/scraps',
+    path: '/creative',
     element: (
       <Layout>
         <SuspenseWrapper>
-          <ScrapsPage />
+          <CreativePage />
         </SuspenseWrapper>
       </Layout>
     ),
-  },
-  {
-    path: '/creative/ai-search',
-    element: (
-      <Layout>
-        <SuspenseWrapper>
-          <AiSearchPage />
-        </SuspenseWrapper>
-      </Layout>
-    ),
-  },
-  {
-    path: '/creative/chat',
-    element: (
-      <Layout>
-        <SuspenseWrapper>
-          <ChatPage />
-        </SuspenseWrapper>
-      </Layout>
-    ),
-  },
-  {
-    path: '/creative/proposals',
-    element: (
-      <Layout>
-        <SuspenseWrapper>
-          <ProposalsPage />
-        </SuspenseWrapper>
-      </Layout>
-    ),
-  },
-  {
-    path: '/creative/proposals/:id',
-    element: (
-      <Layout>
-        <SuspenseWrapper>
-          <ProposalDetailPage />
-        </SuspenseWrapper>
-      </Layout>
-    ),
+    children: [
+      {
+        path: 'scraps',
+        element: (
+          <SuspenseWrapper>
+            <ScrapNote />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: 'external-refs',
+        element: (
+          <SuspenseWrapper>
+            <ExternalRefs />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: 'ai-search',
+        element: (
+          <SuspenseWrapper>
+            <AiSearchPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: 'chat',
+        element: (
+          <SuspenseWrapper>
+            <ChatPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: 'proposals',
+        element: (
+          <SuspenseWrapper>
+            <ProposalsPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: 'proposals/:id',
+        element: (
+          <SuspenseWrapper>
+            <ProposalDetailPage />
+          </SuspenseWrapper>
+        ),
+      },
+    ],
   },
   {
     path: '/scraps',

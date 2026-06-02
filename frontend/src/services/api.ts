@@ -188,6 +188,45 @@ export interface Scrap {
   createdAt: string
 }
 
+export type ExternalRefProcessingType = 'complete' | 'partial' | 'none'
+
+export interface ExternalRefAnnotation {
+  paragraphIndex: number
+  content: string
+  note?: string
+  tags?: string[]
+}
+
+export interface FileReference {
+  id: string
+  fileName: string
+  fileContent?: string | null
+  fileType: string
+  sourceUrl?: string | null
+  processingType: ExternalRefProcessingType
+  proposalId?: string | null
+  annotations: ExternalRefAnnotation[]
+  comment?: string | null
+  tags: string[]
+  metadata?: {
+    title?: string
+    paragraphs?: string[]
+    paragraphCount?: number
+  }
+  createdAt: string
+  updatedAt: string
+}
+
+function normalizeScrapTags(tags: unknown): string[] {
+  if (!tags) return []
+  if (Array.isArray(tags)) return tags.map(String)
+  return []
+}
+
+function mapScrap(s: Scrap & { tags?: unknown }): Scrap {
+  return { ...s, tags: normalizeScrapTags(s.tags) }
+}
+
 // --- 作品设定（TASK-006 后端 / TASK-007 前端 / TASK-008 双锚点）---
 // 内部标识符沿用 world/Character 等命名；用户可见 UI 标签统一为「作品设定」
 
@@ -546,27 +585,56 @@ export const chaptersApi = {
 export const scrapsApi = {
   async getAll(): Promise<Scrap[]> {
     const response = await api.get('/scraps')
-    return response.data
+    return (response.data || []).map(mapScrap)
   },
 
   async getByProjectId(projectId: string): Promise<Scrap[]> {
     const response = await api.get(`/scraps/project/${projectId}`)
-    return response.data
+    return (response.data || []).map(mapScrap)
   },
-  
+
   async create(data: { projectId?: string; content: string; tags?: string[]; note?: string }): Promise<Scrap> {
     const response = await api.post('/scraps', data)
-    return response.data
+    return mapScrap(response.data)
   },
 
   async update(id: string, data: { content?: string; tags?: string[]; note?: string; projectId?: string }): Promise<Scrap> {
     const response = await api.put(`/scraps/${id}`, data)
+    return mapScrap(response.data)
+  },
+
+  async delete(id: string): Promise<void> {
+    await api.delete(`/scraps/${id}`)
+  },
+}
+
+export const externalRefsApi = {
+  async importFile(fileName: string, content: string): Promise<FileReference> {
+    const response = await api.post('/external-refs/import', { fileName, content })
+    return response.data
+  },
+
+  async getAll(params?: { tag?: string }): Promise<FileReference[]> {
+    const url = params?.tag
+      ? `/external-refs?tag=${encodeURIComponent(params.tag)}`
+      : '/external-refs'
+    const response = await api.get(url)
+    return response.data || []
+  },
+
+  async getById(id: string): Promise<FileReference> {
+    const response = await api.get(`/external-refs/${id}`)
+    return response.data
+  },
+
+  async update(id: string, data: Partial<FileReference>): Promise<FileReference> {
+    const response = await api.put(`/external-refs/${id}`, data)
     return response.data
   },
 
   async delete(id: string): Promise<void> {
-     await api.delete(`/scraps/${id}`)
-  }
+    await api.delete(`/external-refs/${id}`)
+  },
 }
 
 
