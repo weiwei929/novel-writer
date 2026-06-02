@@ -321,6 +321,23 @@ export type CreativeFlowInput = {
 }
 
 // 企划建议书（TASK-008 后端已实现）
+export interface ProposalReference {
+  type: 'scrap' | 'file_ref'
+  id: string
+  title: string
+  processingType?: 'complete' | 'partial' | 'none'
+  paragraphIndices?: number[]
+}
+
+export interface ProposalMetadata {
+  _evaluation?: string
+  _tags?: string[]
+  _discussionSubmitted?: boolean
+  _sourceRef?: { type: string; id: string; title?: string }
+  _rejectNote?: string
+  _shelveNote?: string
+}
+
 export interface Proposal {
   id: string
   title: string
@@ -328,19 +345,27 @@ export interface Proposal {
   innovation?: string | null
   coreSetting?: string | null
   status: ProposalStatus
-  references?: any
+  references?: ProposalReference[] | null
   sourceNotes?: string | null
+  metadata?: ProposalMetadata | null
   projectId?: string | null
   createdAt: string
   updatedAt: string
 }
+
 export type ProposalInput = {
   title: string
   synopsis?: string | null
   innovation?: string | null
   coreSetting?: string | null
-  references?: any
+  references?: ProposalReference[]
   sourceNotes?: string | null
+  metadata?: ProposalMetadata
+  status?: ProposalStatus
+}
+
+export function getProposalMetadata(p: Proposal): ProposalMetadata {
+  return (p.metadata as ProposalMetadata) || {}
 }
 
 export interface WorkDetailResponse {
@@ -717,31 +742,52 @@ export const worldApi = {
 
 // 企划建议书 API（TASK-008 后端：/api/v2/proposals）
 export const proposalsApi = {
-  async list(): Promise<Proposal[]> {
-    const response = await api.get('/proposals')
+  async getAll(params?: { status?: string }): Promise<Proposal[]> {
+    const url = params?.status
+      ? `/proposals?status=${encodeURIComponent(params.status)}`
+      : '/proposals'
+    const response = await api.get(url)
     return response.data || []
   },
+
+  async list(): Promise<Proposal[]> {
+    return this.getAll()
+  },
+
   async getById(id: string): Promise<Proposal> {
     const response = await api.get(`/proposals/${id}`)
     return response.data
   },
+
   async create(data: ProposalInput): Promise<Proposal> {
     const response = await api.post('/proposals', data)
     return response.data
   },
+
   async update(id: string, data: Partial<ProposalInput>): Promise<Proposal> {
     const response = await api.put(`/proposals/${id}`, data)
     return response.data
   },
+
   async updateStatus(id: string, status: Proposal['status']): Promise<Proposal> {
     const response = await api.put(`/proposals/${id}/status`, { status })
     return response.data
   },
-  // 通过立项：后端建项目 + 作品设定 re-key + 提案归档，返回新项目 ID
-  async approve(id: string): Promise<{ projectId: string }> {
+
+  async evaluate(
+    id: string,
+    action: 'approve' | 'reject' | 'shelve',
+    note?: string
+  ): Promise<{ projectId?: string; proposal?: Proposal }> {
+    const response = await api.put(`/proposals/${id}/evaluate`, { action, note })
+    return response.data
+  },
+
+  async approve(id: string): Promise<{ projectId: string; project?: Project }> {
     const response = await api.put(`/proposals/${id}/approve`)
     return response.data
   },
+
   async delete(id: string): Promise<void> {
     await api.delete(`/proposals/${id}`)
   },

@@ -37,9 +37,9 @@ const PHASES: Phase[] = [
     sub: [
       { path: '/creative/scraps', label: '灵感手记' },
       { path: '/creative/external-refs', label: '外来参考' },
-      { path: '/creative/ai-search', label: 'AI 搜索' },
       { path: '/creative/chat', label: '创意讨论' },
       { path: '/creative/proposals', label: '企划建议书' },
+      { path: '/creative/ai-search', label: 'AI 搜索' },
     ],
   },
   {

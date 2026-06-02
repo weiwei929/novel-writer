@@ -20,9 +20,9 @@ const ReviewPage = lazy(() => import('./pages/ReviewPage'))
 const WorkDetailPage = lazy(() => import('./pages/WorkDetailPage'))
 const ShelfPage = lazy(() => import('./pages/ShelfPage'))
 const AiSearchPage = lazy(() => import('./pages/creative/AiSearchPage'))
-const ChatPage = lazy(() => import('./pages/creative/ChatPage'))
-const ProposalsPage = lazy(() => import('./pages/creative/ProposalsPage'))
 const ProposalDetailPage = lazy(() => import('./pages/creative/ProposalDetailPage'))
+const CreativeDiscussion = lazy(() => import('./components/creative/CreativeDiscussion'))
+const PlanningProposal = lazy(() => import('./components/creative/PlanningProposal'))
 const ProposalReviewPage = lazy(() => import('./pages/planning/ProposalReviewPage'))
 const ProposalEvalPage = lazy(() => import('./pages/planning/ProposalEvalPage'))
 const MetadataListPage = lazy(() => import('./pages/planning/MetadataListPage'))
@@ -268,18 +268,10 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: 'ai-search',
-        element: (
-          <SuspenseWrapper>
-            <AiSearchPage />
-          </SuspenseWrapper>
-        ),
-      },
-      {
         path: 'chat',
         element: (
           <SuspenseWrapper>
-            <ChatPage />
+            <CreativeDiscussion />
           </SuspenseWrapper>
         ),
       },
@@ -287,7 +279,15 @@ const router = createBrowserRouter([
         path: 'proposals',
         element: (
           <SuspenseWrapper>
-            <ProposalsPage />
+            <PlanningProposal />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: 'ai-search',
+        element: (
+          <SuspenseWrapper>
+            <AiSearchPage />
           </SuspenseWrapper>
         ),
       },

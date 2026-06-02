@@ -3,9 +3,9 @@ import { NavLink, Outlet, useLocation, Navigate } from 'react-router-dom'
 const TABS = [
   { path: '/creative/scraps', label: '灵感手记', enabled: true },
   { path: '/creative/external-refs', label: '外来参考', enabled: true },
+  { path: '/creative/chat', label: '创意讨论', enabled: true },
+  { path: '/creative/proposals', label: '企划建议书', enabled: true },
   { path: '/creative/ai-search', label: 'AI 搜索', enabled: false },
-  { path: '/creative/chat', label: '创意讨论', enabled: false },
-  { path: '/creative/proposals', label: '企划建议书', enabled: false },
 ] as const
 
 export default function CreativePage() {

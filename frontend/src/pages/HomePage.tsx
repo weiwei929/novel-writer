@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   IconCreative,
@@ -10,40 +10,34 @@ import {
   type IconComponent,
 } from '../components/ui/icons'
 import {
-  chaptersApi,
-  projectsApi,
-  type Chapter,
-  type Project,
-  type ProjectStatus,
-} from '../services/api'
-import ProjectStatusBadge from '../components/projects/ProjectStatusBadge'
+  getDashboardOverview,
+  type DashboardOverview,
+  type DashboardStageId,
+} from '../services/dashboard'
 
-type StageId = 'ideation' | 'planning' | 'writing' | 'review' | 'library'
-
-interface StageConfig {
-  id: StageId
+const STAGE_META: {
+  id: DashboardStageId
   label: string
   icon: IconComponent
   to: string
-  statuses: ProjectStatus[]
+  countSuffix: string
+  disabled?: boolean
   accent: string
-}
-
-const STAGES: StageConfig[] = [
+}[] = [
   {
-    id: 'ideation',
+    id: 'creative',
     label: '创意组',
     icon: IconCreative,
-    to: '/creative/references',
-    statuses: ['draft'],
+    to: '/creative/scraps',
+    countSuffix: '个提案',
     accent: 'text-amber-600 bg-amber-50',
   },
   {
     id: 'planning',
     label: '企划课',
     icon: IconPlanning,
-    to: '/planning/proposals',
-    statuses: ['planning'],
+    to: '/planning/projects',
+    countSuffix: '个立项',
     accent: 'text-blue-600 bg-blue-50',
   },
   {
@@ -51,7 +45,7 @@ const STAGES: StageConfig[] = [
     label: '创作室',
     icon: IconWriting,
     to: '/writing/projects',
-    statuses: ['writing'],
+    countSuffix: '部创作中',
     accent: 'text-indigo-600 bg-indigo-50',
   },
   {
@@ -59,23 +53,19 @@ const STAGES: StageConfig[] = [
     label: '编审部',
     icon: IconReview,
     to: '/review',
-    statuses: ['reviewing'],
-    accent: 'text-violet-600 bg-violet-50',
+    countSuffix: '即将推出',
+    disabled: true,
+    accent: 'text-gray-400 bg-gray-100',
   },
   {
     id: 'library',
     label: '文集库',
     icon: IconLibrary,
     to: '/library',
-    statuses: ['completed', 'archived'],
+    countSuffix: '部归档',
     accent: 'text-emerald-600 bg-emerald-50',
   },
 ]
-
-interface ContinueTarget {
-  project: Project
-  chapter: Chapter
-}
 
 function formatRelativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -84,132 +74,55 @@ function formatRelativeTime(iso: string): string {
   if (minutes < 60) return `${minutes} 分钟前`
   const hours = Math.floor(minutes / 60)
   if (hours < 24) return `${hours} 小时前`
-  const days = Math.floor(hours / 24)
-  if (days < 30) return `${days} 天前`
-  return new Date(iso).toLocaleDateString('zh-CN')
-}
-
-function countByStage(projects: Project[]): Record<StageId, number> {
-  const counts: Record<StageId, number> = {
-    ideation: 0,
-    planning: 0,
-    writing: 0,
-    review: 0,
-    library: 0,
-  }
-  for (const p of projects) {
-    if (p.status === 'shelved') continue
-    const stage = STAGES.find(s => s.statuses.includes(p.status))
-    if (stage) counts[stage.id] += 1
-  }
-  return counts
-}
-
-function Skeleton({ className = '' }: { className?: string }) {
-  return <div className={`animate-pulse bg-gray-200 rounded-lg ${className}`} />
+  return new Date(iso).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 const HomePage: React.FC = () => {
   const [loading, setLoading] = useState(true)
-  const [projects, setProjects] = useState<Project[]>([])
-  const [continueTarget, setContinueTarget] = useState<ContinueTarget | null>(null)
+  const [overview, setOverview] = useState<DashboardOverview | null>(null)
+  const [selectedStage, setSelectedStage] = useState<DashboardStageId>('creative')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
-
-    const load = async () => {
-      setLoading(true)
-      setError(null)
+    void (async () => {
       try {
-        const all = await projectsApi.getAll()
-        if (cancelled) return
-        setProjects(all)
-
-        const sorted = [...all].sort(
-          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        )
-
-        const writingProjects = sorted.filter(p => p.status === 'writing')
-        for (const p of writingProjects.slice(0, 5)) {
-          const chapters = await chaptersApi.getByProjectId(p.id)
-          if (cancelled) return
-          if (chapters.length === 0) continue
-          const sortedCh = [...chapters].sort(
-            (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-          )
-          const withContent = sortedCh.find(c => c.content?.trim())
-          if (withContent) {
-            setContinueTarget({ project: p, chapter: withContent })
-            break
-          }
-        }
-      } catch (e) {
+        const data = await getDashboardOverview()
         if (!cancelled) {
-          console.error(e)
-          setError('加载作品数据失败')
+          setOverview(data)
+          const firstWithData = STAGE_META.find(s => {
+            if (s.disabled) return false
+            return data[s.id].count > 0
+          })
+          if (firstWithData) setSelectedStage(firstWithData.id)
         }
+      } catch {
+        if (!cancelled) setError('加载仪表盘数据失败')
       } finally {
         if (!cancelled) setLoading(false)
       }
-    }
-
-    load()
+    })()
     return () => {
       cancelled = true
     }
   }, [])
 
-  const stageCounts = useMemo(() => countByStage(projects), [projects])
-
-  const recentProjects = useMemo(
-    () =>
-      [...projects]
-        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-        .slice(0, 5),
-    [projects]
-  )
-
-  const greetingName = useMemo(() => {
-    const fromContinue = continueTarget?.project.author
-    const fromRecent = recentProjects[0]?.author
-    return fromContinue || fromRecent || '创作者'
-  }, [continueTarget, recentProjects])
-
-  const lastEditedLabel = useMemo(() => {
-    if (continueTarget) return formatRelativeTime(continueTarget.chapter.updatedAt)
-    if (recentProjects[0]) return formatRelativeTime(recentProjects[0].updatedAt)
-    return null
-  }, [continueTarget, recentProjects])
-
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-9 w-48" />
-          <Skeleton className="h-5 w-24" />
-        </div>
-        <Skeleton className="h-36 w-full" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          {STAGES.map(s => (
-            <Skeleton key={s.id} className="h-28" />
-          ))}
-        </div>
-        <Skeleton className="h-52 w-full" />
+      <div className="max-w-5xl mx-auto py-16 text-center text-gray-400 text-sm">
+        加载中…
       </div>
     )
   }
 
+  const stage = STAGE_META.find(s => s.id === selectedStage)!
+  const slice = overview?.[selectedStage]
+
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">欢迎回来，{greetingName}</h1>
-          <p className="text-sm text-gray-500 mt-1">小说创作管道一览</p>
-        </div>
-        {lastEditedLabel && (
-          <span className="text-sm text-gray-400">上次编辑 · {lastEditedLabel}</span>
-        )}
+    <div className="max-w-5xl mx-auto space-y-8 animate-fade-in">
+      <header>
+        <h1 className="text-2xl font-bold text-gray-900">我的创作台</h1>
+        <p className="text-sm text-gray-500 mt-1">五段管线一览</p>
       </header>
 
       {error && (
@@ -218,100 +131,112 @@ const HomePage: React.FC = () => {
         </div>
       )}
 
-      {/* 继续创作 */}
-      {continueTarget ? (
-        <Link
-          to={`/writing/${continueTarget.project.id}/${continueTarget.chapter.id}`}
-          className="block rounded-xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-white p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-indigo-600 uppercase tracking-wide mb-1">
-                继续创作
-              </p>
-              <h2 className="text-xl font-semibold text-gray-900 truncate">
-                {continueTarget.chapter.title}
-              </h2>
-              <p className="text-sm text-gray-600 mt-1">
-                {continueTarget.project.title} · 第 {continueTarget.chapter.order} 章
-              </p>
-              <p className="text-xs text-gray-400 mt-2">
-                {formatRelativeTime(continueTarget.chapter.updatedAt)}
-              </p>
-            </div>
-            <span className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg">
-              进入创作室
-              <IconArrowRight size={16} />
-            </span>
-          </div>
-        </Link>
-      ) : (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center">
-          <p className="text-gray-600 mb-4">还没有创作中的作品</p>
-          <Link
-            to="/creative/references"
-            className="inline-flex items-center gap-1.5 text-indigo-600 font-medium hover:text-indigo-800"
-          >
-            开始新作品
-            <IconArrowRight size={16} />
-          </Link>
-        </div>
-      )}
-
-      {/* 五阶段卡片 */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        {STAGES.map(stage => {
-          const Icon = stage.icon
-          const count = stageCounts[stage.id]
-          return (
-            <Link
-              key={stage.id}
-              to={stage.to}
-              className="group rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-gray-300"
+        {STAGE_META.map(s => {
+          const Icon = s.icon
+          const count = overview?.[s.id].count ?? 0
+          const isSelected = selectedStage === s.id
+          const inner = (
+            <div
+              className={`rounded-xl border p-4 shadow-sm transition-all h-full ${
+                s.disabled
+                  ? 'border-gray-200 bg-gray-50 opacity-70 cursor-not-allowed'
+                  : isSelected
+                    ? 'border-amber-400 bg-amber-50/50 ring-2 ring-amber-200'
+                    : 'border-gray-200 bg-white hover:shadow-md cursor-pointer'
+              }`}
             >
-              <div
-                className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${stage.accent}`}
-              >
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${s.accent}`}>
                 <Icon size={20} />
               </div>
-              <div className="text-sm font-semibold text-gray-900">{stage.label}</div>
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-2xl font-bold text-gray-900">{count}</span>
-                <span className="text-xs text-gray-500">个作品</span>
+              <div className="text-sm font-semibold text-gray-900">{s.label}</div>
+              <div className="mt-2 text-lg font-bold text-gray-900">
+                {s.disabled ? '即将推出' : count}
               </div>
-            </Link>
+              {!s.disabled && (
+                <div className="text-xs text-gray-500">{s.countSuffix}</div>
+              )}
+            </div>
+          )
+          if (s.disabled) {
+            return <div key={s.id}>{inner}</div>
+          }
+          return (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => setSelectedStage(s.id)}
+              className="text-left w-full"
+            >
+              {inner}
+            </button>
           )
         })}
       </div>
 
-      {/* 最近作品 */}
       <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-900">最近作品</h2>
+        <div className="px-5 py-4 border-b flex items-center justify-between">
+          <h2 className="text-base font-semibold text-gray-900">{stage.label}</h2>
+          <Link
+            to={stage.to}
+            className="text-sm text-amber-700 hover:underline inline-flex items-center gap-1"
+          >
+            查看更多
+            <IconArrowRight size={14} />
+          </Link>
         </div>
-        {recentProjects.length === 0 ? (
-          <p className="px-5 py-8 text-sm text-gray-500 text-center">暂无作品</p>
+        {!slice || slice.items.length === 0 ? (
+          <p className="px-5 py-10 text-sm text-gray-400 text-center">暂无内容</p>
         ) : (
-          <ul className="divide-y divide-gray-100">
-            {recentProjects.map(p => (
-              <li key={p.id}>
+          <ul className="divide-y">
+            {slice.items.map(item => (
+              <li key={item.id}>
                 <Link
-                  to={`/work/${p.id}`}
-                  className="flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-gray-50 transition-colors"
+                  to={item.href}
+                  className="flex items-center justify-between px-5 py-3.5 hover:bg-gray-50"
                 >
-                  <div className="min-w-0 flex items-center gap-3">
-                    <span className="font-medium text-gray-900 truncate">{p.title}</span>
-                    <ProjectStatusBadge status={p.status} />
+                  <div className="min-w-0">
+                    <span className="font-medium text-gray-900">{item.title}</span>
+                    {item.statusLabel && (
+                      <span className="ml-2 text-xs text-gray-500">{item.statusLabel}</span>
+                    )}
                   </div>
-                  <span className="text-xs text-gray-400 shrink-0">
-                    {formatRelativeTime(p.updatedAt)}
-                  </span>
+                  {item.updatedAt && (
+                    <span className="text-xs text-gray-400 shrink-0">
+                      {formatRelativeTime(item.updatedAt)}
+                    </span>
+                  )}
                 </Link>
               </li>
             ))}
           </ul>
         )}
       </section>
+
+      {overview && overview.activity.length > 0 && (
+        <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b">
+            <h2 className="text-base font-semibold text-gray-900">最近动态</h2>
+          </div>
+          <ul className="divide-y">
+            {overview.activity.map((a, i) => (
+              <li key={i} className="px-5 py-3 text-sm">
+                {a.href ? (
+                  <Link to={a.href} className="text-gray-700 hover:text-blue-600">
+                    <span className="text-gray-400 mr-2">{formatRelativeTime(a.time)}</span>
+                    {a.text}
+                  </Link>
+                ) : (
+                  <>
+                    <span className="text-gray-400 mr-2">{formatRelativeTime(a.time)}</span>
+                    {a.text}
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   )
 }

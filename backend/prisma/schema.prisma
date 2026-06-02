@@ -226,8 +226,9 @@ model Proposal {
   innovation  String?  // 创新点
   coreSetting String?  // 核心设定（高层自由描述）
   status      String   @default("draft") // draft | submitted | evaluated | approved | rejected | shelved
-  references  Json?    // 外来参考/碎片ID列表（UI 轻处理）
+  references  Json?    // 引用材料列表 [{ type, id, title, processingType? }]
   sourceNotes String?  // 来源讨论记录
+  metadata    Json?    // _evaluation, _tags, _discussionSubmitted, _sourceRef 等
 
   projectId   String?  // 立项后关联项目
   project     Project? @relation(fields: [projectId], references: [id])
