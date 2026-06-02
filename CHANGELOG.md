@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.0.0] — 2026-06-02
+
+### Added
+
+- **2.0 主页仪表盘** — 五段管线进度与「继续创作」入口
+- **作品详情中枢** — `/work/:id` 三 Tab（设定 / 章节 / 元数据）
+- **创作室编辑器** — `/writing/:projectId/:chapterId` 纯 Markdown + 参考侧栏
+- **管线闭环** — 相邻状态流转、阶段管理弹窗、作品暂存
+- **文集库** — `/library` 文集侧栏、归入/移出、Markdown 导出
+- **作品暂存** — `/shelf` 软删除与还原
+
+### Changed
+
+- **路由** — 1.0 路径重定向：`/projects`→`/`、`/projects/:id`→`/work/:id`、`/editor/*`→`/writing` 或 `/work`、`/collections`→`/library`
+- **文档** — `CURSOR_REFERENCE.md` 与当前 2.0 路由/文案对齐（「作品暂存」）
+
+### Removed
+
+- **1.0 页面** — `EnhancedEditorPage`、`ProjectDetailPage`、`CollectionsPage`、`ProjectsPage`、`ApiTestPage`、`CollectionsList`、`ProjectsList`
+
+---
+
 ## [Unreleased] — 2026-05-29
 
 ### Added

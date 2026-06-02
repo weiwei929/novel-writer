@@ -18,7 +18,7 @@ const ReviewPage: React.FC = () => {
         </p>
         <div className="mt-6">
           <Link
-            to="/projects"
+            to="/"
             className="inline-flex items-center space-x-2 bg-amber-600 text-white px-5 py-2.5 rounded-lg hover:bg-amber-700 transition-colors"
           >
             <span>前往作品列表</span>

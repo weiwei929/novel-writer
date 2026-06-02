@@ -27,64 +27,62 @@
 
 ## 三、四级导航结构
 
+### L1 主导航（当前 2.0 已实现）
+
+Layout 顶部五段 + 全局入口中，**已接通**的主要动线：
+
 ```
-L1 主导航（5项，顶部 Tab 栏）
 [创意组] [企划课] [创作室] [编审部] [文集库]
-
-L2 子导航（仅创意组/企划课有，Tab 切换）
-创意组: [外来参考] [灵感碎片] [AI搜索] [创意讨论] [企划建议书]
-企划课: [企划建议书] [作品内容元数据] [立项评估] [立项作品]
-
-L3 作品级（列表 → 详情页）
-子 Tab → 作品名称列表 → 点击 → 详情页（统一入口 /work/:id）
-
-L4 章节级（仅创作室）
-编辑器 + 参考面板
+右上角：[数据统计] [系统设置] [作品暂存]
 ```
 
-右上角全局入口（不占 L1 主导航位）：`[数据统计] [系统设置] [暂存阁]`
-
-### 路由结构对应
+### L1 主导航（完整规划，部分待实现）
 
 ```
-/creative           → 创意组 L1
-/creative/references    → 外来参考 L2
-/creative/scraps        → 灵感碎片 L2
-/creative/ai-search     → AI 搜索 L2
-/creative/chat          → 创意讨论 L2
-/creative/proposals     → 企划建议书 L2
-/creative/proposals/:id → 提案详情（过渡，后续并入 /work/:id）
+[创意组] [企划课] [创作室] [编审部] [文集库]
+```
 
-/work/:id           → 统一作品详情页 L3（中枢 ★）
-                       提案阶段显示提案数据，立项后显示项目数据
-                       按 status 切换操作栏和行为
+编审部工作台、创意组部分 L2 仍为占位页；企划课/创作室/文集库/作品暂存已可用。
 
-/planning           → 企划课 L1
-/planning/proposals     → 企划建议书评估 L2
-/planning/proposals/:id → 评估详情 L3（过渡，后续并入 /work/:id）
-/planning/metadata              → 作品内容元数据 L2
-/planning/metadata/:projectId   → 元数据详情 L3（过渡，后续并入 /work/:id）
-/planning/evaluation   → 立项评估 L2
-/planning/projects     → 立项作品列表 L2
+### L2–L4（概要）
 
-/writing            → 创作室 L1
-/writing/projects      → 创作中作品列表 L2
-/writing/:projectId/:chapterId → 编辑器 L4
+- **L2**：创意组/企划课子 Tab（见下方路由）
+- **L3**：作品列表 → `/work/:id` 统一详情中枢
+- **L4**：`/writing/:projectId/:chapterId` 创作室编辑器
 
-/review             → 编审部 L1（搁置）
-/review/projects       → 待审作品列表 L2
+### 路由结构（当前 2.0 实际）
 
-/library            → 文集库 L1（搁置）
-/library/projects      → 归档作品列表 L2
-
-# 全局功能（右上角入口，不占 L1 主导航位）
-/stats              → 数据统计
+```
+/                   → 主页仪表盘
+/work/:id           → 统一作品详情页（L3 中枢 ★）
+/writing/:projectId/:chapterId → 创作室编辑器（L4）
+/writing/:projectId → 创作室作品入口（无章节时）
+/writing/projects   → 创作中作品列表
+/library            → 文集库（已完成/已归档 + 文集归类）
+/shelf              → 作品暂存（软删除，可还原）
 /settings           → 系统设置
-/shelf              → 暂存阁（软删除回收站）
+/stats              → 数据统计
 
-# 兼容重定向
-/editor/*           → /writing/*（全局重定向，见 TASK-011）
-/projects/*         → 逐步降级，最终指向 /work/:id 或首页
+# 创意组 / 企划课（L1 子路由）
+/creative/references、/creative/scraps、/creative/ai-search、/creative/chat、/creative/proposals …
+/planning/proposals、/planning/metadata、/planning/evaluation、/planning/projects …
+
+# 编审部（占位）
+/review             → 编审部说明页（建设中）
+
+# 1.0 遗留入口（保留或重定向）
+/scraps             → 重定向 /creative/scraps
+/files              → 文件导入导出（FileManagerPage）
+/creative/scraps    → 灵感碎片（ScrapsPage）
+
+# 兼容重定向（P2 已落地）
+/projects           → /
+/projects/:id       → /work/:id
+/editor/:projectId/:chapterId → /writing/:projectId/:chapterId
+/editor/:projectId  → /work/:projectId
+/editor             → /writing/projects
+/collections        → /library
+/api-test           → /
 ```
 
 ### `/work/:id` 中枢行为
@@ -95,8 +93,8 @@ L4 章节级（仅创作室）
   企划阶段 → 显示项目数据（作品设定只读，含操作栏）
   创作阶段 → 显示章节列表 + 「进入创作室」按钮
   审阅阶段 → 全只读 + 审阅操作栏
-  文集库   → 全只读 + 归入文集/导出
-  暂存阁   → 全只读 + 还原/彻底删除
+  文集库   → 全只读 + 归入文集/导出（`completed`；`archived` 亦出现在文集库列表，详情页暂无「归入文集」）
+  作品暂存 → 全只读 + 还原/彻底删除
 ```
 
 DB 模型名仍为 `Project`，前端路由叫 `work`，两者不一致是允许的。
@@ -125,7 +123,7 @@ interface StageTransition {
 
 阶段内不设回退，可配置"不玩了"删除按钮，同样落入回收站。
 
-> **2.0 落地说明（TASK-011+）：** `pool` / `trash` 在数据层统一收敛为 `status: 'shelved'`，原状态保存在 `metadata._shelved = { previousStatus, shelvedAt, source }`。暂存阁入口为 `/shelf`，还原时回到原状态，彻底删除才真删。
+> **2.0 落地说明（TASK-011+）：** `pool` / `trash` 在数据层统一收敛为 `status: 'shelved'`，原状态保存在 `metadata._shelved = { previousStatus, shelvedAt, source }`。作品暂存入口为 `/shelf`，还原时回到原状态，彻底删除才真删。
 
 ---
 
@@ -143,7 +141,7 @@ model Project {
   coverImage  String?
   status      String   @default("draft")  // draft | planning | writing | reviewing | completed | archived | shelved
   wordCount   Int      @default(0)
-  metadata    Json?    // 保留现有结构；_shelved 存暂存阁元数据
+  metadata    Json?    // 保留现有结构；_shelved 存作品暂存元数据
   masterPrompt String? // 保留
   tags        Json?
   createdAt   DateTime @default(now())
@@ -302,9 +300,9 @@ model Proposal {
   updatedAt   DateTime @updatedAt
 }
 
-// 暂存阁（统一的状态管理）
+// 作品暂存（统一的状态管理）
 // 不新增模型，通过 Project.status 和 Proposal.status 扩展值管理
-// status: "shelved" = 暂存阁（软删除，保留完整状态可还原）
+// status: "shelved" = 作品暂存（软删除，保留完整状态可还原）
 // metadata._shelved = { previousStatus, shelvedAt, source }
 
 // 修订快照
@@ -333,6 +331,8 @@ export const PROPOSAL_STATUSES = [
 ```
 
 存量旧状态兼容映射（`imported→draft`, `published→completed`, `pooled/trashed→shelved`）集中在 service 层，不散落在页面。
+
+`completed` 与 `archived` 均可在文集库（`/library`）列表中展示；详情页「归入文集」入口目前仅对 `completed` 开放。
 
 ---
 
@@ -385,7 +385,7 @@ frontend/src/
 │   ├── WorkDetailPage.tsx    ← 统一作品详情页（/work/:id，中枢）
 │   ├── ReviewPage.tsx        ← 编审部页面
 │   ├── LibraryPage.tsx       ← 文集库页面
-│   └── ShelfPage.tsx         ← 暂存阁页面
+│   └── ShelfPage.tsx         ← 作品暂存页面
 └── services/
     └── api.ts                ← 扩展 API 方法
 ```

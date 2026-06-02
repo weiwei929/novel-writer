@@ -9,12 +9,11 @@ import LoadingSpinner from './components/ui/LoadingComponents'
 
 const HomePage = lazy(() => import('./pages/HomePage'))
 const LibraryPage = lazy(() => import('./pages/LibraryPage'))
-const ProjectsPage = lazy(() => import('./pages/ProjectsPage'))
 const WritingEditorPage = lazy(() => import('./pages/WritingEditorPage'))
 const StatsPage = lazy(() => import('./pages/StatsPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
-const ApiTestPage = lazy(() => import('./pages/ApiTestPage'))
 const ScrapsPage = lazy(() => import('./pages/ScrapsPage'))
+const FileManagerPage = lazy(() => import('./pages/FileManagerPage'))
 const ReviewPage = lazy(() => import('./pages/ReviewPage'))
 const WorkDetailPage = lazy(() => import('./pages/WorkDetailPage'))
 const ShelfPage = lazy(() => import('./pages/ShelfPage'))
@@ -28,15 +27,25 @@ const ProposalEvalPage = lazy(() => import('./pages/planning/ProposalEvalPage'))
 const MetadataListPage = lazy(() => import('./pages/planning/MetadataListPage'))
 const MetadataProjectPage = lazy(() => import('./pages/planning/MetadataProjectPage'))
 const EvaluationPage = lazy(() => import('./pages/planning/EvaluationPage'))
+const PlanningProjectsPage = lazy(() => import('./pages/planning/PlanningProjectsPage'))
 const WritingProjectsPage = lazy(() => import('./pages/writing/WritingProjectsPage'))
 const WritingProjectPage = lazy(() => import('./pages/writing/WritingProjectPage'))
 
 import { PageWrapper as UI_PageWrapper } from './components/layout/PageWrapper'
 
+const ProjectWorkRedirect: React.FC = () => {
+  const { id } = useParams()
+  return <Navigate to={id ? `/work/${id}` : '/'} replace />
+}
+
 const EditorWritingRedirect: React.FC = () => {
   const { projectId, chapterId } = useParams()
-  if (chapterId) return <Navigate to={`/writing/${projectId}/${chapterId}`} replace />
-  if (projectId) return <Navigate to={`/writing/${projectId}`} replace />
+  if (projectId && chapterId) {
+    return <Navigate to={`/writing/${projectId}/${chapterId}`} replace />
+  }
+  if (projectId) {
+    return <Navigate to={`/work/${projectId}`} replace />
+  }
   return <Navigate to="/writing/projects" replace />
 }
 
@@ -172,7 +181,7 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <SuspenseWrapper>
-          <ProjectsPage />
+          <PlanningProjectsPage />
         </SuspenseWrapper>
       </Layout>
     ),
@@ -213,7 +222,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/projects/:id',
-    element: <Navigate to="/" replace />,
+    element: <ProjectWorkRedirect />,
   },
   {
     path: '/editor/:projectId/:chapterId',
@@ -289,11 +298,17 @@ const router = createBrowserRouter([
   },
   {
     path: '/scraps',
-    element: <Navigate to="/" replace />,
+    element: <Navigate to="/creative/scraps" replace />,
   },
   {
     path: '/files',
-    element: <Navigate to="/" replace />,
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <FileManagerPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
   },
   {
     path: '/review',
@@ -307,13 +322,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/api-test',
-    element: (
-      <Layout>
-        <SuspenseWrapper>
-          <ApiTestPage />
-        </SuspenseWrapper>
-      </Layout>
-    ),
+    element: <Navigate to="/" replace />,
   },
 ])
 
