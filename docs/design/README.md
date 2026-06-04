@@ -1,12 +1,12 @@
 # 设计文档索引
 
-## Day 1（v4.1，2026-06-04 定案）— 当前权威
+## Day 1（v4.1.1，2026-06-04 定案）— 当前权威（以 VPS `v2-dev` 提交为准）
 
 | 顺序 | 文件 | 用途 |
 |------|------|------|
 | 0 | [day1-handoff-brief.md](./day1-handoff-brief.md) | 5 分钟入门（Cursor 第一句读这个） |
-| 1 | [overall-architecture.md](./overall-architecture.md) | **v4.1 权威全文** |
-| 2 | [v2-migration-map.md](./v2-migration-map.md) | 资产迁移表（TASK-200 前必审） |
+| 1 | [overall-architecture.md](./overall-architecture.md) | **v4.1.1 权威全文** |
+| 2 | [v2-migration-map.md](./v2-migration-map.md) | 资产迁移表 §2.2 决策子表（TASK-200 前必审） |
 | 3 | [code-conflict-analysis.md](./code-conflict-analysis.md) | C-01~C-18 + M1/M2/M3 |
 | 4 | [day1-vps-code-index.md](./day1-vps-code-index.md) | VPS 代码对照 |
 | — | [../plan/DAY1-DESIGN-REVIEW-v4.1-addendum.md](../plan/DAY1-DESIGN-REVIEW-v4.1-addendum.md) | v4.1 冷评落库说明 |

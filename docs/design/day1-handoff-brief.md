@@ -1,7 +1,7 @@
 # Day 1 Handoff 简报（给 Cursor 的 5 分钟入门）
 
 > 用法：发给 Cursor 第一句发「读 `docs/design/day1-handoff-brief.md` 入门」即可  
-> **权威全文**：`docs/design/overall-architecture.md` **v4.1**（2026-06-04）  
+> **权威全文**：`docs/design/overall-architecture.md` **v4.1.1**（VPS `v2-dev` 为准，勿用本机草稿）  
 > **第 0 步（发卡前）**：`docs/design/v2-migration-map.md`  
 > 冲突分析：`docs/design/code-conflict-analysis.md`（C-01~C-18）  
 > VPS 代码对照：`docs/design/day1-vps-code-index.md`
@@ -16,7 +16,7 @@
 
 | 部门 | 状态范围 | 三选一节点 |
 |------|---------|-----------|
-| 创意组 | creating/created/**approved**/shelved | **created**（提案决策） |
+| 创意组 | creating/created/**approved**/shelved | **created**（提案决策）；L2 Tab「**灵感手记**」 |
 | 企划课 | planning/planned | **planning**（立项决策） |
 | 创作室 | planned/writing/written | **written**（提交审阅） |
 | 编审部 | reviewing/reviewed | **reviewed**（文集入库） |

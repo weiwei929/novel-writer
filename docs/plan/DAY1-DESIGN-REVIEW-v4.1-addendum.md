@@ -1,34 +1,50 @@
-# Day 1 设计审阅 — v4.1 落库说明
+# Day 1 设计审阅 — v4.1 / v4.1.1 落库说明
 
-> **日期**：2026-06-04  
-> **动作**：将 Claude Day 1 锁定稿 + Cursor 冷评修订合入仓库  
-> **权威源**：`docs/design/overall-architecture.md` v4.1
+> **v4.1**：2026-06-04，`ecec09a`  
+> **v4.1.1**：Claude 对齐微修订（灵感手记、`_planningPhase`、迁移 Q1/Q2）
 
 ---
 
-## v4.1 相对 v4 / 仓库 v3 的修订
+## 权威源（VPS 仓库为准）
 
-| 修订点 | 落库处理 |
-|--------|----------|
-| `shelved` 仅主动暂存；通过 → `approved` | §0 + §4.4 已统一（原 §4.4 误写 shelved 已改） |
-| `accept-into-planning` / `confirm-greenlight` | §0 API 表 |
-| 节点 #2 退回 → planning in-progress | §二 + §4.5 |
-| Chapter 仅 draft/writing/completed | §0 |
-| 正式立项 → `planned`（非 `draft`） | §4.5 已改 |
-| L2「立项总账」命名 | §一 ASCII 图已改 |
-| 实现文件名 | §5.6 → `WorkDetailPage.tsx` |
+```
+入门 → docs/design/day1-handoff-brief.md
+全文 → docs/design/overall-architecture.md v4.1.1
+映射 → docs/design/v2-migration-map.md v4.1.1
+索引 → docs/design/README.md + docs/tasks/CURSOR_REFERENCE.md
+day1-design.md → 06-03 快照（非权威）
+```
 
-## 新增文档
+Claude 本机 v4.1 草稿**不是**权威源；以 VPS `v2-dev` 提交为准。
 
-- `docs/design/v2-migration-map.md` — D1~D4 + Proposal/Project 映射 + M1 阻塞说明
-- `docs/design/code-conflict-analysis.md` — 升至 C-01~C-18 + 10 步 + M1/M2/M3
+## v4.1 落库修正（ecec09a）
 
-## 落库时未改的设计债（留 Day 2/3）
+- `shelved` / `approved` / `planned` / 立项总账 / §4.4 等内部矛盾
+- 新增 `v2-migration-map.md`、`code-conflict-analysis` C-01~18
 
-- §6.3 编审「退回修改 → 创作室」与「跨阶段不退回」需在编审部专稿中拆语义（本阶段 `reviewed → reviewing` vs 批注回流）
-- 创意组 L2 仍写「灵感碎片」；VPS UI 为「灵感手记」— 实现以代码为准（D1 适配）
+## v4.1.1 微修订（Claude 回应 Cursor）
+
+| 项 | 处理 |
+|----|------|
+| L2「灵感碎片」→「灵感手记」 | `overall-architecture.md` §一/§3.3/§8.4；`CURSOR_REFERENCE.md` |
+| `metadata._planningPhase` | `v2-migration-map.md` §0；`overall-architecture.md` §二 |
+| Proposal `approved` + Project `planning` 双轨 | `v2-migration-map.md` §2.1 |
+| 迁移 Q1 proposalId / Q2 draft 区分 | `v2-migration-map.md` §2.2 |
+| evaluate 存量 SQL | `v2-migration-map.md` §2.3 |
+
+## 仓库中不存在的 Claude 引用文件
+
+- `planning-dept-v2.md`、`day1-design-source.md` — **未在 VPS 仓库**；内容已并入 `overall-architecture.md` §四。若 Claude 本机仍有副本，以 VPS 为准合并后删除重复。
+
+## 暂不 push
+
+v4.1.1 文档稳定后再 push `origin/v2-dev`（用户/Claude 共识）。
+
+## 设计债（Day 2+）
+
+- §6.3 编审「退回修改」与跨阶段不退回 — Day 2 编审专稿
+- `planningPhase` 真字段 — Day 1.1+
 
 ## 发卡门禁
 
-1. 评审 `v2-migration-map.md` §3 Proposal、§4 Project  
-2. **再发** TASK-200（M1 only）
+§2.2 决策子表评审通过 → TASK-200（仅 M1）。

@@ -85,7 +85,7 @@ Layout 顶部五段 + 全局入口中，**已接通**的主要动线：
 # 1.0 遗留入口（保留或重定向）
 /scraps             → 重定向 /creative/scraps
 /files              → 文件导入导出（FileManagerPage）
-/creative/scraps    → 灵感碎片（ScrapsPage）
+/creative/scraps    → 灵感手记（ScrapNote / scraps）
 
 # 兼容重定向（P2 已落地）
 /projects           → /
