@@ -60,7 +60,7 @@ submittedToPlanningAt → greenlitAt → writingStartedAt → workCompletedAt
 
 1. `docs/design/overall-architecture.md` — **v4.1 权威全文**
 2. `docs/design/v2-migration-map.md` — 资产映射（**TASK-200 前必审**）
-3. `docs/design/code-conflict-analysis.md` — C-01~C-18 + 10 步顺序
+3. `docs/design/code-conflict-analysis.md` — C-01~C-22（C-19~21 为 schema/UI 裂缝）
 4. `docs/design/day1-vps-code-index.md` — VPS 实际路径对照
 
 > `day1-design.md` 为 2026-06-03 快照，与 v4.1 冲突时以 `overall-architecture.md` 为准。
@@ -73,7 +73,17 @@ submittedToPlanningAt → greenlitAt → writingStartedAt → workCompletedAt
 | **M2** | 210~217 | 创作室 + 编辑器 pure |
 | **M3** | 218~221 | 废弃旧 transition、`/shelf`→墓园、文档同步 |
 
-**发卡前**：勿发 TASK-200，直至迁移表 §3/§4 评审通过。
+## TASK-200 门禁 checklist（v4.1.1）
+
+| 项 | 状态 |
+|----|------|
+| v4.1.1 修订已 commit (`b579fb0`) | ✅ |
+| §2.2 Q1/Q2 + §2.3 SQL | ✅ |
+| §四企划课 / §五创作室 与 §0 一致 | ✅ |
+| C-01~C-22 全列（含 C-19~21） | ✅ |
+| C-20/C-21 UI | ⏳ M1-B 验收项（**不阻塞** TASK-200 发卡） |
+
+**发卡**：可先发 **M1-A TASK-200~204**（纯后端）；**M1-B 205~209** 含 C-20/C-21，M1 总验收前必须绿。
 
 ## 不讨论的已锁决策
 

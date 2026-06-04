@@ -960,7 +960,8 @@ L1 导航：🗑️ 墓园（图标：墓碑或骨灰盒）
 | 节点 #2 退回文案（→ planning in-progress） | §二 | 文案 |
 | Chapter 状态锁（仅 draft/writing/completed） | §0 | 设计 |
 | 已交付资产盘点 + 资产映射表 | v2-migration-map.md | **新文档** |
-| 18 个冲突点（C-01~C-18，含 C-14~C-18 新增） | code-conflict-analysis.md | **扩充** |
+| 21+1 冲突点（C-01~C-21 + C-22 墓园路由） | code-conflict-analysis.md | **v4.1.1** |
+| C-19~21 schema/UI 裂缝 + M1 两阶段发卡 | code-conflict-analysis.md | **v4.1.1** |
 | TASK 拆 M1/M2/M3 | §十 | 计划 |
 | AuthGuard 降级为非 Day 1 阻塞 | C-13 | 优先级 |
 | L2「灵感手记」与 VPS UI 同源 | §一/§3.3 | v4.1.1 |
