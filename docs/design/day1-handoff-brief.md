@@ -83,7 +83,7 @@ submittedToPlanningAt → greenlitAt → writingStartedAt → workCompletedAt
 | C-01~C-22 全列（含 C-19~21） | ✅ |
 | C-20/C-21 UI | ⏳ M1-B 验收项（**不阻塞** TASK-200 发卡） |
 
-**发卡**：可先发 **M1-A TASK-200~204**（纯后端）；**M1-B 205~209** 含 C-20/C-21，M1 总验收前必须绿。
+**发卡**：可先发 **M1-A TASK-200~204**（纯后端，正文见 `docs/tasks/TASK-200.md`~`TASK-204.md`）；**M1-B 205~209** 含 C-20/C-21，M1 总验收前必须绿。
 
 ## 不讨论的已锁决策
 
