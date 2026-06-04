@@ -1,8 +1,7 @@
-# Day 1 设计方案
+# Day 1 设计方案（2026-06-03 快照）
 
-> **定案日期**：2026-06-03  
-> **用途**：Day 1 企划课 + 创作室 + 状态机的权威设计源（替代复制粘贴）  
-> **配套**：`day1-handoff-brief.md`（入门）→ 本文件 → `code-conflict-analysis.md` → `day1-vps-code-index.md`  
+> **已 supersede**：2026-06-04 起请以 [`overall-architecture.md`](./overall-architecture.md) **v4.1** 为权威全文。  
+> **入门**：`day1-handoff-brief.md` → v4.1 全文 → `v2-migration-map.md` → `code-conflict-analysis.md`  
 > **注意**：§13 代码索引已过时，请以 `day1-vps-code-index.md` 为准。
 
 ---

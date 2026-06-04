@@ -28,11 +28,12 @@
 实现 TASK-200+ 前必读：
 
 1. `docs/design/day1-handoff-brief.md` — 5 分钟入门
-2. `docs/design/day1-design.md` — 权威设计全文
-3. `docs/design/code-conflict-analysis.md` — 冲突点与落地顺序
-4. `docs/design/day1-vps-code-index.md` — VPS 代码对照（修正过时路径）
+2. `docs/design/overall-architecture.md` — **v4.1 权威设计全文**
+3. `docs/design/v2-migration-map.md` — TASK-200 前资产映射
+4. `docs/design/code-conflict-analysis.md` — 冲突点与落地顺序
+5. `docs/design/day1-vps-code-index.md` — VPS 代码对照（修正过时路径）
 
-> 历史 `docs/design/overall-architecture.md` 为 v3，与 Day 1 冲突时以 `day1-design.md` 为准。
+> `day1-design.md` 为 06-03 快照；冲突时以 `overall-architecture.md` v4.1 为准。
 
 ---
 
