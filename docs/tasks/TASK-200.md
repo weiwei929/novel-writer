@@ -6,9 +6,52 @@
 
 ---
 
+## §0 契约（审阅必读）
+
+### 状态字面量计数
+
+| 模型 | 主体 | 兼容别名（仅存量读） | 合计 |
+|------|------|----------------------|------|
+| **Project.status** | 10：`imported` `planning` `planned` `writing` `written` `reviewing` `reviewed` `archived` `shelved` | 2：`draft` `completed` | **12** |
+| **Proposal.status** | 4：`creating` `created` `approved` `shelved` | 4：`draft` `submitted` `evaluated` `rejected` | **8** |
+
+新写入禁止 `draft`/`completed`（Project）及 Proposal 兼容别名。
+
+### `META_KEYS_DAY1`（与 201/202 共用）
+
+实现文件：`backend/src/constants/metadata-keys.ts`（本里程碑随文档提交契约，TASK-201/202 实现时 `import { META_KEYS_DAY1 } from '../constants/metadata-keys'`）。
+
+| 键常量 | JSON 路径 | 类型 |
+|--------|-----------|------|
+| `FROM_EVALUATE` | `_fromEvaluate` | boolean |
+| `SOURCE_FROM` | `_sourceFrom` | `'proposal' \| 'import' \| 'seed' \| ...` |
+| `PROPOSAL_ID_LEGACY` | `_proposalId` | string（迁移期） |
+| `PLANNING_PHASE` | `_planningPhase` | `'evaluating' \| 'setup' \| 'deferred'` |
+| `DISCUSSION_SUBMITTED` | `_discussionSubmitted` | boolean |
+| `SHELVED` | `_shelved` | `{ previousStatus, shelvedAt, source }` |
+| `REJECTED_AT` | `_rejectedAt` | ISO Date string |
+
+### Proposal ↔ Project 关系（VPS 现状 + Day 1 扩展）
+
+| 字段 | 模型 | 现状 | Day 1 |
+|------|------|------|-------|
+| `projectId` | Proposal | 可选 FK → `Project.id`；`project Project? @relation(fields: [projectId], references: [id])`（**无** relation 名） | **保留**；立项后「本提案创建的作品」 |
+| `proposals` | Project | `Proposal[]` 反向集合（一对多：一项目可被多提案引用，实际通常 1 条） | **保留** |
+| `proposalId` | Project | **无** | **新增** `@unique`；「主提案」FK → `Proposal.id` |
+| `primaryForProject` | Proposal | **无** | **新增** `@relation("ProposalPrimaryProject")` 反向 1:1 |
+
+**语义**：`accept-into-planning` 后应满足 `Proposal.projectId === Project.id` **且** `Project.proposalId === Proposal.id`（双向一致）。与 `proposals[]` 不冲突：主提案仍出现在 `proposals` 集合中。
+
+**Prisma 双 relation 命名**：
+
+- 既有：`Proposal.project` / `Project.proposals`（默认名）
+- 新增：`Proposal.primaryForProject` / `Project.proposal`（`"ProposalPrimaryProject"`）
+
+---
+
 ## 目标
 
-在 **不跑** `prisma migrate dev` 的前提下，提交可被 TASK-201 引用的 schema 定稿：Project 增加 7 个时间戳字段 + `writingStyle` + `deletedAt` + `proposalId`；Project/Proposal 的 `status` 字符串枚举扩至 v4.1.1 白名单（含只读兼容别名）。
+在 **不跑** `prisma migrate dev` 的前提下，提交可被 TASK-201 引用的 schema 定稿：Project 增加 7 个时间戳 + `writingStyle` + `deletedAt` + `proposalId`；status 注释对齐上表 12+8 字面量。
 
 ---
 
@@ -16,11 +59,10 @@
 
 | In-scope | Out-of-scope |
 |----------|----------------|
-| `backend/prisma/schema.prisma` 字段与注释 | 任何 `frontend/**` |
-| `Proposal` / `Project` 关系字段（`proposalId`） | SQL 数据迁移（→ TASK-201） |
-| 生成/提交 `migration.sql` **文本**（可选空迁移占位，由 201 填数据步） | HTTP 路由（→ TASK-202~204） |
-| 后端 Zod 常量**仅注释引用**（实现在 202） | `Chapter.notes` 列（→ M2 TASK-213） |
-| | `npx prisma migrate dev` **禁止执行** |
+| `backend/prisma/schema.prisma` | 任何 `frontend/**` |
+| `backend/src/constants/metadata-keys.ts`（契约） | SQL DML（→ TASK-201） |
+| `backend/src/constants/statuses.ts` | HTTP 路由（→ TASK-202~204） |
+| `migration.sql` DDL 骨架 | `Chapter.notes`；`migrate dev` |
 
 ---
 
@@ -28,9 +70,9 @@
 
 | 编号 | 说明 |
 |------|------|
-| [C-01](../design/code-conflict-analysis.md) | Project 缺 7 时间戳 + `writingStyle` + `deletedAt` + `proposalId` |
-| [C-02](../design/code-conflict-analysis.md) | Proposal **扩展**已有模型，非新建 |
-| [C-03](../design/code-conflict-analysis.md) | Project.status 7 值 → v4.1 目标集 |
+| [C-01](../design/code-conflict-analysis.md) | 7 时间戳 + `writingStyle` + `deletedAt` + `proposalId` |
+| [C-02](../design/code-conflict-analysis.md) | Proposal **扩展** |
+| [C-03](../design/code-conflict-analysis.md) | Project.status 扩表 |
 
 ---
 
@@ -38,103 +80,73 @@
 
 ### 1. `backend/prisma/schema.prisma` — `Project`（约 L26~61）
 
-在 `model Project` 内 `status` 行后追加：
-
 ```prisma
-  // --- Day 1 事件时间戳（只增不减，见 overall-architecture §0）---
   submittedToPlanningAt DateTime?
   greenlitAt              DateTime?
   writingStartedAt      DateTime?
   workCompletedAt       DateTime?
   submittedToReviewAt   DateTime?
   archivedAt            DateTime?
-  deletedAt             DateTime?  // 墓园软删除；非 status
+  deletedAt             DateTime?
 
   writingStyle String?
   proposalId   String?  @unique
-  proposal     Proposal? @relation("ProposalPrimaryProject", fields: [proposalId], references: [id])
+  proposal     Proposal? @relation("ProposalPrimaryProject", fields: [proposalId], references: [id], onDelete: SetNull)
 
-  // status 注释更新为 v4.1.1 白名单（13 字面量，含 2 个只读别名）:
+  // Project.status — 12 字面量（10 主体 + 2 兼容别名 draft|completed，新写入禁止别名）
   // imported | planning | planned | writing | written | reviewing | reviewed | archived | shelved
-  // draft | completed  -- 仅存量兼容，新写入禁止
 ```
 
-**默认 status**：新创建默认建议改为 `imported`（导入流）或保持 `planning`（由端点写入）；**本卡只改 schema 默认注释**，默认字面量在 TASK-202 端点统一。
+**默认 status**：TASK-200 **仅**改 schema `@default` 与注释；创建时 status 由 TASK-202 各端点**显式传入**（不依赖默认值）。
 
 ### 2. `model Proposal`（约 L222~242）
 
 ```prisma
-  deletedAt DateTime?  // 提案墓园；不改 status
+  deletedAt DateTime?
 
-  // status: creating | created | approved | shelved
-  // 兼容只读别名: draft | submitted | evaluated | rejected
-```
+  // Proposal.status — 8 字面量（4 主体 + 4 兼容别名，新写入禁止别名）
+  // creating | created | approved | shelved
 
-在 `Proposal` 上增加反向关系（与 `projectId` 并存）：
+  projectId   String?
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
-```prisma
   primaryForProject Project? @relation("ProposalPrimaryProject")
 ```
 
-### 3. 新建常量文件（供 202/203 引用）
+### 3. `backend/src/constants/statuses.ts`（~40 行）
 
-`backend/src/constants/statuses.ts`（新建，~40 行）：
+与 §0 表一致；Zod 在 TASK-202 引用。
 
-```typescript
-export const PROJECT_STATUSES_V4 = [
-  'imported','planning','planned','writing','written',
-  'reviewing','reviewed','archived','shelved',
-  'draft','completed', // @deprecated read-only aliases
-] as const
-
-export const PROPOSAL_STATUSES_V4 = [
-  'creating','created','approved','shelved',
-  'draft','submitted','evaluated','rejected', // @deprecated
-] as const
-```
-
-### 4. 迁移目录（仅骨架，数据步在 TASK-201）
-
-`backend/prisma/migrations/YYYYMMDD_day1_schema/migration.sql`：
-
-- `ALTER TABLE` 添加列（SQLite）
-- **不含** `UPDATE` 回填（→ TASK-201）
+### 4. `migration.sql`（仅 DDL）
 
 ---
 
 ## 依赖前置
 
-无（M1-A 首张卡）。
+无。
 
 ---
 
-## 验证清单（审阅用，执行者**不要**在本卡跑 migrate dev）
+## 验证清单
 
-1. `cd backend && npx prisma validate` 成功  
-2. `migration.sql` 仅 DDL，与 TASK-201 脚本文档交叉引用一致  
-3. `schema.prisma` 中 `proposalId` ↔ `Proposal.projectId` 双向关系无循环删除错误（`onDelete` 用 `SetNull`）
+1. `npx prisma validate`  
+2. DDL 与 TASK-201 交叉引用  
+3. `Project.proposal` 含 `onDelete: SetNull`；双 relation 名不冲突  
 
 ---
 
 ## 预估改动行数
 
-| 文件 | 约 |
-|------|-----|
-| `schema.prisma` | +35~45 |
-| `constants/statuses.ts` | +40（新） |
-| `migration.sql`（DDL） | +25 |
-| **合计** | **~100 行** |
+~110 行（含 `metadata-keys.ts`）。
 
 ---
 
 ## 不变量验证
 
-- **时间戳只增不减**：schema 字段 nullable；业务层禁止 `null` 覆盖已有时间戳（TASK-202 实现）。  
-- **墓园**：`deletedAt` 与 `status` 解耦（§0 / §8.2）。  
-- **立项总账**：`greenlitAt` 独立字段，非 status 派生（§4.6）。
+时间戳只增不减；墓园 `deletedAt` 与 status 解耦；`greenlitAt` 独立。
 
 ---
 
 ## 回滚方案
 
-`git revert <TASK-200-commit>`；若已 apply 迁移则由运维按备份还原 DB（本阶段不应 apply）。
+`git revert <TASK-200-commit>`

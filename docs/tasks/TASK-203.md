@@ -126,7 +126,7 @@ reply.header('Warning', '299 - "Use POST /confirm-greenlight, /start-writing, ..
 ## 验证清单
 
 1. `curl POST .../transition -d '{"to":"planning"}'` 当 `from=writing` → **400** + body 含 `CROSS_STAGE_FORBIDDEN`  
-2. `curl POST .../transition -d '{"to":"writing"}'` 当 `from=written` → **200**（同创作室桶内撤销型，若白名单允许）或引导 `undo-written`  
+2. `curl POST .../transition -d '{"to":"writing"}'` 当 `from=written` → **200**（同创作室桶内撤销型，若白名单允许）  
 3. 响应头 `Deprecation: true` 存在于 `transition` 成功与失败路径  
 
 ---
