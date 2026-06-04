@@ -23,6 +23,17 @@
 - `v2-dev` — 2.0 开发分支
 - 2.0 代码在 `v2-dev` 上开发，完成后合入 `master`
 
+### Day 1 设计文档（2026-06-03 定案）
+
+实现 TASK-200+ 前必读：
+
+1. `docs/design/day1-handoff-brief.md` — 5 分钟入门
+2. `docs/design/day1-design.md` — 权威设计全文
+3. `docs/design/code-conflict-analysis.md` — 冲突点与落地顺序
+4. `docs/design/day1-vps-code-index.md` — VPS 代码对照（修正过时路径）
+
+> 历史 `docs/design/overall-architecture.md` 为 v3，与 Day 1 冲突时以 `day1-design.md` 为准。
+
 ---
 
 ## 三、四级导航结构
