@@ -67,17 +67,17 @@ const PHASES: Phase[] = [
     id: 'review',
     label: '编审部',
     icon: IconReview,
-    to: '/review',
-    match: ['/review'],
-    sub: [{ path: '/review', label: '审阅工作台' }],
+    to: '/editorial',
+    match: ['/editorial'],
+    sub: [{ path: '/editorial', label: '审阅任务' }],
   },
   {
     id: 'library',
     label: '文集库',
     icon: IconLibrary,
     to: '/library',
-    match: ['/library', '/collections'],
-    sub: [{ path: '/collections', label: '文集' }],
+    match: ['/library'],
+    sub: [{ path: '/library', label: '全部作品' }],
   },
 ]
 

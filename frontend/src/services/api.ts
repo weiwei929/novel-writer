@@ -70,7 +70,9 @@ export const PROJECT_STATUS_LABEL: Record<string, string> = {
   draft: '草稿',
   planning: '企划中',
   writing: '创作中',
+  written: '已定稿',
   reviewing: '审阅中',
+  reviewed: '已审阅',
   completed: '已完成',
   archived: '已归档',
   shelved: '作品暂存',
@@ -128,6 +130,7 @@ export interface Project {
   chapterCount?: number 
   createdAt: string
   updatedAt: string
+  archivedAt?: string
   coverImage?: string
   metadata?: Record<string, any> // Now natively JSON object
   genre?: string[]
@@ -451,6 +454,14 @@ export const projectsApi = {
     return this.getAll(undefined, 'completed,archived')
   },
 
+  async getArchivedProjects(): Promise<Project[]> {
+    return this.getAll(undefined, 'archived')
+  },
+
+  async getEditorialProjects(): Promise<Project[]> {
+    return this.getAll(undefined, 'written,reviewing')
+  },
+
   async getById(id: string): Promise<Project> {
     const response = await api.get(`/projects/${id}`)
     const p = response.data
@@ -536,6 +547,11 @@ export const projectsApi = {
 
   async restore(id: string): Promise<Project> {
     const response = await api.post(`/projects/${id}/restore`)
+    return response.data
+  },
+
+  async softDelete(id: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/soft-delete`)
     return response.data
   },
 

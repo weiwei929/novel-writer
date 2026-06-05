@@ -9,6 +9,7 @@ import LoadingSpinner from './components/ui/LoadingComponents'
 
 const HomePage = lazy(() => import('./pages/HomePage'))
 const LibraryPage = lazy(() => import('./pages/LibraryPage'))
+const LibraryDetailPage = lazy(() => import('./pages/LibraryDetailPage'))
 const WritingEditorPage = lazy(() => import('./pages/WritingEditorPage'))
 const StatsPage = lazy(() => import('./pages/StatsPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
@@ -16,7 +17,8 @@ const CreativePage = lazy(() => import('./pages/CreativePage'))
 const ScrapNote = lazy(() => import('./components/creative/ScrapNote'))
 const ExternalRefs = lazy(() => import('./components/creative/ExternalRefs'))
 const FileManagerPage = lazy(() => import('./pages/FileManagerPage'))
-const ReviewPage = lazy(() => import('./pages/ReviewPage'))
+const EditorialPage = lazy(() => import('./pages/EditorialPage'))
+const ReviewDetailPage = lazy(() => import('./pages/ReviewDetailPage'))
 const WorkDetailPage = lazy(() => import('./pages/WorkDetailPage'))
 const ShelfPage = lazy(() => import('./pages/ShelfPage'))
 const AiSearchPage = lazy(() => import('./pages/creative/AiSearchPage'))
@@ -122,6 +124,16 @@ const router = createBrowserRouter([
       <Layout>
         <SuspenseWrapper>
           <LibraryPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/library/:projectId',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <LibraryDetailPage />
         </SuspenseWrapper>
       </Layout>
     ),
@@ -319,14 +331,28 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/review',
+    path: '/editorial',
     element: (
       <Layout>
         <SuspenseWrapper>
-          <ReviewPage />
+          <EditorialPage />
         </SuspenseWrapper>
       </Layout>
     ),
+  },
+  {
+    path: '/editorial/:projectId',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <ReviewDetailPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
+    path: '/review',
+    element: <Navigate to="/editorial" replace />,
   },
   {
     path: '/api-test',
