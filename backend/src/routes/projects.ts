@@ -487,11 +487,18 @@ export async function projectRoutes(app: FastifyInstance) {
     }
   })
 
-  // POST /projects/:id/move-to-draft — 已废弃（导入作品直接进入 draft）
-  app.post('/:id/move-to-draft', async (_req: FastifyRequest<GetByIdParams>, reply) => {
-    return reply.status(410).send(
-      ApiResponse.error('该接口已废弃，导入作品直接进入草稿状态', 410)
-    )
+  // POST /projects/:id/move-to-draft — 已废弃 → successor: move-to-planning
+  app.post('/:id/move-to-draft', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    const { id } = req.params
+    reply.header('Deprecation', 'true')
+    reply.header('Warning', '299 - "DEPRECATION: use POST /projects/:id/move-to-planning"')
+    reply.header('Link', `</api/v2/projects/${id}/move-to-planning>; rel="successor-version"`)
+    return reply.status(410).send({
+      success: false,
+      error: 'GONE',
+      message: '该接口已废弃，请使用 move-to-planning',
+      successor: `POST /api/v2/projects/${id}/move-to-planning`,
+    })
   })
 
   // POST /projects/:id/extract-metadata
@@ -678,6 +685,45 @@ export async function projectRoutes(app: FastifyInstance) {
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Transition failed'
       req.log.error(e)
+      return reply.status(500).send(ApiResponse.error(message, 500))
+    }
+  })
+
+  // #12 move-to-planning — imported（或 legacy draft+import 标记）→ planning
+  app.post('/:id/move-to-planning', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    try {
+      const project = await loadActiveProject(req.params.id)
+      const metadata = (project.metadata as Record<string, unknown>) || {}
+      const fromImport =
+        project.status === 'imported' ||
+        (project.status === 'draft' &&
+          (metadata[META_KEYS_DAY1.SOURCE_FROM] === 'import' || metadata._fromImport === true))
+
+      if (!fromImport) {
+        return reply.status(400).send(
+          ApiResponse.error('仅 imported 或带导入标记的 draft 可进入企划课', 400)
+        )
+      }
+      if (project.status === 'planning') {
+        return reply.status(400).send(ApiResponse.error('作品已在企划课', 400))
+      }
+
+      const updated = await prisma.project.update({
+        where: { id: req.params.id },
+        data: {
+          status: 'planning',
+          metadata: mergeMetadata(metadata, {
+            [META_KEYS_DAY1.PLANNING_PHASE]: 'setup',
+            [META_KEYS_DAY1.SOURCE_FROM]: metadata[META_KEYS_DAY1.SOURCE_FROM] ?? 'import',
+          }),
+        },
+      })
+      return ApiResponse.success(withMappedProjectStatus(updated), '已进入企划课')
+    } catch (e: unknown) {
+      if (e instanceof ProjectNotFoundError) {
+        return reply.status(404).send(ApiResponse.error(e.message, 404))
+      }
+      const message = e instanceof Error ? e.message : 'move-to-planning failed'
       return reply.status(500).send(ApiResponse.error(message, 500))
     }
   })

@@ -21,10 +21,10 @@
 | 9 | `/projects/:id/restore` | POST | 墓园恢复 | `deletedAt=null` | 专端点 | **202** |
 | 10 | `/projects/:id/soft-shelve` | POST | →`shelved` | `_shelved` | 专端点 | **202** |
 | 11 | `/projects/:id/unshelve` | POST | `shelved`→前状态 | 清 `_shelved` | 专端点 | **202** |
-| 12 | `/projects/:id/move-to-planning` | POST | `imported`→`planning` | `_planningPhase=setup` | 专端点 | **202 完整实现** |
+| 12 | `/projects/:id/move-to-planning` | POST | `imported`→`planning` | `_planningPhase=setup` | 专端点 | **204** |
 | 13 | `/proposals/:id/evaluate` | PUT | `approve` 内化 | Deprecation → #1 | 保留+警告 | **202** |
 
-**责任划分**：#12 **`move-to-planning` 在 202 完整实现**；TASK-204 **仅** graveyard GET + `/shelf` API 别名，**不**重复实现 #12。
+**责任划分**：#12 **`move-to-planning` 在 204 完整实现**；TASK-204 另含 graveyard GET + `/shelf` 308 别名。
 
 **默认 status**：TASK-200 只改 schema 注释；本卡所有 `create`/`update` **显式传** status，禁止依赖 `@default("draft")`。
 

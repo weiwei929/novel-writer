@@ -15,6 +15,8 @@ import { creativeFlowRoutes } from './routes/creativeFlows'
 import { proposalRoutes } from './routes/proposals'
 import { workRoutes } from './routes/work'
 import { fileReferenceRoutes } from './routes/fileReferences'
+import { graveyardRoutes } from './routes/graveyard'
+import { shelfRoutes } from './routes/shelf'
 import { authMiddleware } from './middleware/auth'
 
 const server = Fastify({
@@ -57,6 +59,8 @@ server.register(creativeFlowRoutes, { prefix: '/api/v2/creative-flows' })
 server.register(proposalRoutes, { prefix: '/api/v2/proposals' })
 server.register(workRoutes, { prefix: '/api/v2/work' })
 server.register(fileReferenceRoutes, { prefix: '/api/v2/external-refs' })
+server.register(graveyardRoutes, { prefix: '/api/v2/graveyard' })
+server.register(shelfRoutes, { prefix: '/api/v2/shelf' })
 
 // Run Server
 const start = async () => {
