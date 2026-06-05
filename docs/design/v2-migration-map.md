@@ -30,8 +30,8 @@
 
 | ID | 决策 | 落地要点 |
 |----|------|----------|
-| **D1** | 创意组 **适配优先** | 保留 4 Tab UI；L2 文案与 VPS 一致为「**灵感手记**」 |
-| **D2** | **墓园替换** `/shelf` | M3：`/shelf` → `/graveyard`；`shelved` 仅「主动暂存」 |
+| **D1** | 创意组 **适配优先** | 保留 5 Tab UI（外来参考/灵感手记/AI 搜索/创意讨论/企划建议书）；L2 文案与 VPS 一致为「**灵感手记**」；**VPS 缺 AI 搜索 tab，待补** |
+| **D2** | **文件暂存替换** `/shelf` | M3：`/shelf` → `/graveyard`（UI 文案"📂 文件暂存"）；`shelved` **Day 2 方案 C 取消** |
 | **D3** | **显式 SQL** | TASK-203 迁移脚本（status + 时间戳 + 字段上提 + §2.3 回填） |
 | **D4** | **双入口** | 创意组企划建议书只读 + 企划课 Tab② 评估；URL 互跳 |
 
@@ -92,7 +92,7 @@ WHERE proposalId IS NULL
 | 创意企划建议书 | `PlanningProposal.tsx` + `ProposalDetailPage` | **与企划课 Tab①② 分工**（D4） |
 | Proposal API | `proposals.ts` evaluate/approve | **替换**为 `accept-into-planning` / `confirm-greenlight` |
 | 阶段管理 | `StageTransitionModal` + `POST .../transition` | **M1 拆解**；禁跨阶段 |
-| 作品暂存 | `/shelf` + `status=shelved` | **M3** → 墓园 + `deletedAt` |
+| 作品暂存 | `/shelf` + `status=shelved` | **M3** → 文件暂存 + `deletedAt`（**Day 2 方案 C 取消 shelved**，详见 `file-staging-v2.md`） |
 | 详情页 | `WorkDetailPage.tsx` | **M2** 状态驱动操作栏 |
 | 编辑器 | `WritingEditorPage.tsx` | **M2** pure-ify |
 
@@ -107,7 +107,7 @@ WHERE proposalId IS NULL
 | `status: submitted` | `created` | 统一为 created |
 | `status: approved` | `approved` | 保留；`projectId` 指向 `Project.planning` |
 | `status: rejected` | `creating` | 退回编辑（默认） |
-| `status: shelved`（提案） | 仅主动暂存 | 删除用 `deletedAt` |
+| `status: shelved`（提案） | **legacy read-only** | 删除用 `deletedAt`（**Day 2 方案 C 取消 shelved 主动暂存**） |
 | `evaluate approve` → `Project(draft)` | `Project(planning)` + 时间戳 + **proposalId** | 见 §2.2~2.3 |
 
 **端点映射**：
@@ -130,7 +130,7 @@ WHERE proposalId IS NULL
 | `reviewing` | `reviewing` | |
 | `completed` | `reviewed` 或 `archived` | TASK-203 定稿 |
 | `archived` | `archived` | |
-| `shelved` | 见 D2 | 主动暂存；旧暂存 → 墓园策略 |
+| `shelved` | **legacy read-only**（D2）| **Day 2 方案 C 取消**主动暂存；旧 shelved Project → `deletedAt` 文件暂存 |
 
 读时映射（`status-migration.ts`）在 TASK-203 后逐步废弃。
 
@@ -164,8 +164,8 @@ WHERE proposalId IS NULL
 
 | 区域 | 改造 |
 |------|------|
-| `api.ts` `PROJECT_STATUSES` | 11 值 + `statusDict.ts` |
-| `Layout.tsx` | 企划课 Tab；墓园 L1；创意组 Tab 文案「灵感手记」 |
+| `api.ts` `PROJECT_STATUSES` | 9 值（**Day 2 方案 C 移除 shelved**）+ `statusDict.ts` |
+| `Layout.tsx` | 企划课 Tab；文件暂存 L1（"📂 文件暂存"）；创意组 Tab 文案「灵感手记」 |
 | `HomePage` / `dashboard.ts` | M2 TASK-217 |
 | `WorkDetailPage` | 状态驱动操作栏 |
 | `WritingEditorPage` | pure-ify |

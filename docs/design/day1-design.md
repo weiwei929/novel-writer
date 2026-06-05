@@ -12,7 +12,7 @@
 
 **当前状态（2026-06-03）**：
 
-- 创意组 4 Tab 已交付（TASK-011~102 共 12 卡，2026-06-02 完成）
+- 创意组 5 Tab 已交付（TASK-011~102 共 12 卡，2026-06-02 完成；含 AI 搜索 tab）
 - 纯讨论期；实现前须读 `day1-vps-code-index.md` 对齐已交付代码
 
 **Day 1 锁定**（2026-06-03 讨论定案）：
@@ -20,8 +20,8 @@
 - 企划课 4 Tab（企划建议书 / 立项评估 / 作品设定中 / 立项总账）
 - 创作室 L1 三栏（待创作 / 创作中 / 作品已完成）
 - 编辑器 pure-ified（移除作品级操作）
-- 跨阶段不退回 + 全局墓园 + 软删除
-- 7 个时间戳 + 11 个状态值
+- 跨阶段不退回 + 全局文件暂存（含软删）+ shelved 主动暂存
+- 7 个时间戳 + 9 个状态值（Day 2 移除 `imported` Project 字面量 + 移除 `shelved` 字面量，详见 `intake-flow-v2.md` + `file-staging-v2.md`）
 
 ---
 
@@ -40,7 +40,7 @@
 1. 三选一只发生在 4 个「本阶段最后环节」节点（不是每个状态切换）
 2. **跨阶段不退回**——部门 B 不能否决部门 A 的决定
 3. 「退回」永远是本阶段 in-progress 状态的反悔（如 written→writing）
-4. 任何状态都可「删除」到**全局墓园**（`deletedAt` 软删除）
+4. 任何状态都可「删除」到**全局文件暂存**（`deletedAt` 软删除，**Day 2 取消 shelved 主动暂存**）
 5. 老板 = 作者本人；部门经理都是作者的不同身份
 
 ---
@@ -68,18 +68,18 @@ project.writingStartedAt       // #3 开始写作
 project.workCompletedAt        // #4 作品已完成
 project.submittedToReviewAt    // #5 提交审阅
 project.archivedAt             // #6 文集入库
-project.deletedAt              // 任何阶段可设的墓园标记
+project.deletedAt              // 任何阶段可设的文件暂存软删标记
 ```
 
 `greenlitAt IS NOT NULL` 是企划课 Tab ④「立项总账」的筛选条件。
 
 ---
 
-## §3 状态机（11 个状态值）
+## §3 状态机（9 个状态值）
 
 | 状态 | 阶段 | 语义 | 进入条件 |
 |------|------|------|---------|
-| `imported` | 1.0 暂存 | 导入未处理 | 历史兼容（是否保留待 C-05 决议） |
+| ~~`imported`~~ | ~~1.0 暂存~~ | ~~导入未处理~~ | **Day 2 决议移除**：1.0 残留，迁移 `imported` → `planning`（详见 `intake-flow-v2.md`） |
 | `creating` | 创意组 | 提案编辑中 | Proposal 初始态 |
 | `created` | 创意组 | 提案完成 | Proposal.status='created' |
 | `planning` | 企划课 | 作品筹备中 | 企划课「通过评估」后 |
@@ -89,19 +89,23 @@ project.deletedAt              // 任何阶段可设的墓园标记
 | `reviewing` | 编审部 | 审阅中 | 创作室「提交审阅」 |
 | `reviewed` | 编审部 | 审阅完成 | 编审部「审阅通过」 |
 | `archived` | 文集库 | 已归档 | 编审部「文集入库」 |
-| `shelved` | 任何 | 三选一退场 | 删除/退回到墓园前的临时态 |
+| ~~`shelved`~~ | ~~任何~~ | ~~主动暂存~~ | **Day 2 决议移除**（与软删机制重复，详见 [`file-staging-v2.md`](./file-staging-v2.md) §2.2）|
 
 **流转图**：
 
 ```
-imported ─→ planning ─→ planned ─→ writing ─→ written ─→ reviewing ─→ reviewed ─→ archived
-              ↑            ↑           ↑          ↑             ↑            ↑
-              退回(本阶段) 退回(本阶段) 退回(本阶段) 退回(本阶段)  退回(本阶段) 退回(本阶段)
+planning ─→ planned ─→ writing ─→ written ─→ reviewing ─→ reviewed ─→ archived
+   ↑           ↑           ↑          ↑             ↑            ↑
+   退回(本阶段) 退回(本阶段) 退回(本阶段) 退回(本阶段)  退回(本阶段) 退回(本阶段)
 
 任何状态 ─────────────────────────────────────────────────────────→ deletedAt
                                           ↓
-                                       全局墓园
+                                       全局文件暂存
 ```
+
+> **Day 2 移除 `imported`**：1.0 残留。2.0+ 正确导入流程详见 [`intake-flow-v2.md`](./intake-flow-v2.md)。
+> 
+> **Day 2 移除 `shelved`**：与软删机制重复。2.0+ "文件暂存" = **只** 软删（`Project.deletedAt != null`），详见 [`file-staging-v2.md`](./file-staging-v2.md)。
 
 > **实现备注（2026-06-03）**：VPS 已交付创意组使用独立 Proposal 流，迁入 Day 1 前需《已交付资产映射表》。见 `DAY1-DESIGN-REVIEW-2026-06-03.md`。
 
@@ -169,7 +173,7 @@ L3 详情:   列表 → 点击进入详情/工作区（URL: ?from=planning）
 - 数据源：`Proposal.status='created'`
 - **通过** → 创建 `Project(status='planning', submittedToPlanningAt=now)`（Proposal 状态语义待映射表确认，设计原稿写 `shelved`，见审阅意见）
 - **退回** → Proposal 回创意组可编辑态
-- **删除** → `Proposal.deletedAt=now` → 墓园
+- **删除** → `Proposal.deletedAt=now` → 文件暂存
 
 ### 5.5 Tab ③ — 作品设定中（**三选一节点 #2**）
 
@@ -182,7 +186,7 @@ L3 详情:   列表 → 点击进入详情/工作区（URL: ?from=planning）
 
 - 数据源：`Project.greenlitAt IS NOT NULL`（**与 status 解耦**）
 - 只读 + 导航出口；三选一决策在作品详情页
-- 企划课看得到所有曾立项作品（含写作中/归档/墓园）；创作室待创作仅 `planned`
+- 企划课看得到所有曾立项作品（含写作中/归档/文件暂存）；创作室待创作仅 `planned`
 
 ---
 
@@ -227,11 +231,13 @@ L3 详情:   列表 → 点击进入详情/工作区（URL: ?from=planning）
 
 ## §7 全局规则
 
-### 7.1 全局墓园
+### 7.1 全局文件暂存（**Day 2 改名 + 取消 shelved 合并**）
 
-- L1 独立 🗑️ 入口；`Project.deletedAt`
-- 软删除；可恢复 / 永久删除（二次确认）
+- L1 独立 📂 入口（**只** 软删 = `Project.deletedAt`）
+- 软删除机制；可恢复 / 永久删除（二次确认）
 - **取代** v2 的「审查池」与 `/shelf` 作品暂存（迁移策略见审阅文档）
+- **Day 2 改名**："墓园" → "文件暂存"（中性化），详见 `file-staging-v2.md`
+- **Day 2 取消 shelved**：与软删机制重复，**移除** `Project.status='shelved'` 字面量，详见 `file-staging-v2.md` §2.2
 
 ### 7.2 软删除规则
 
@@ -343,10 +349,10 @@ model Proposal {
 | TASK-203 | 状态机迁移脚本 |
 | TASK-204 | 路由：Proposal CRUD |
 | TASK-205 | 路由：状态流转端点 |
-| TASK-206 | L1 导航：5 阶段 + 🗑️ 墓园 |
+| TASK-206 | L1 导航：5 阶段 + 📂 文件暂存 |
 | TASK-207~209 | 企划课 Tab ①~③ |
 | TASK-209a | 企划课 Tab ④ 立项总账 |
-| TASK-210~220 | 创作室 + 编辑器 pure + 墓园 + 主页 |
+| TASK-210~220 | 创作室 + 编辑器 pure + 文件暂存 + 主页 |
 | TASK-230~233 | AI（Day 3） |
 | TASK-240~242 | 编审部（Day 2） |
 
@@ -356,12 +362,15 @@ model Proposal {
 
 ### 12.1 已锁决策
 
-5 部门模型 / 4 三选一节点 / 跨阶段不退回 / 墓园+deletedAt / writingStyle 顶层 / 编辑器 pure / 笔记二选一 / 立项总账解耦 / -ing/-ed 命名
+5 部门模型 / 4 三选一节点 / 跨阶段不退回 / 文件暂存+deletedAt+shelved / writingStyle 顶层 / 编辑器 pure / 笔记二选一 / 立项总账解耦 / -ing/-ed 命名
 
 ### 12.2 待用户决策
 
-- C-05：`imported` 是否保留（推荐保留）
 - 创意组 TASK-101/102 与 Day 1 Proposal 语义映射（见审阅文档 D1~D4）
+
+### 12.1 增补：Day 2 已锁决策（2026-06-05 拍板）
+
+- C-05（**Day 2 决议**）：`imported` Project 字面量 **移除**（迁移 `imported` → `planning`，详见 [`intake-flow-v2.md`](./intake-flow-v2.md)）。1.0 残留 bug 修复，2.0+ 正确导入流程 = FileReference（创意组 外来参考）→ 创意组 讨论 → Proposal → 企划课 → Project
 
 ### 12.3 待 Day 2 / Day 3
 

@@ -12,27 +12,31 @@
 
 | 部门 | 状态范围 | 三选一节点 | 跨阶段退回？ |
 |------|---------|-----------|------------|
-| 创意组 | `creating` / `created` / `approved` / `shelved` | `created`（提案决策） | ❌ |
+| 创意组 | `creating` / `created` / `approved` | `created`（提案决策） | ❌ |
 | 企划课 | `planning` / `planned` | `planning`（立项决策） | ❌ |
 | 创作室 | `planned` / `writing` / `written` | `written`（提交审阅） | ❌ |
 | 编审部 | `reviewing` / `reviewed` | `reviewed`（文集入库） | ❌ |
 | 文集库 | `archived` | — | ❌ |
 
-**v4.1 修订 — `shelved` 语义锁定**（Cursor 评审）：
-- `shelved` = **主动暂存**（"我先放着，以后再写"）
+**v4.1 → Day 2 修订 — 取消 `shelved` 语义**（用户 2026-06-05 拍板 方案 C）：
+- Day 2 评估后发现 `shelved` 与软删机制重复，**移除** `shelved` 字面量
 - 提案通过企划课评估 = `approved`（**不**用 `shelved`）
-- 退场到墓园 = 软删除（**不**改 status）
+- 退场到文件暂存 = **只** 软删除（`deletedAt != null`）
+- 字面量：v4.1 = 10 primary；Day 2 = **9 primary**（移除 shelved）
 
-**v4.1 修订 — Chapter 状态锁**（Cursor 评审）：
-- Chapter 仅有 `draft` / `writing` / `completed` 三值
-- `written` 是 **Project 级别**状态（"全本所有 Chapter 都是 `completed`"）
-- `writing` 是 **Project 级别**状态（"已有 Chapter 是 `writing`/`completed`"）
+**v4.1 修订 — Chapter 状态锁**（Cursor 评审，Day 2 进一步校准）：
+- Chapter 仅有 `draft` / `written` 两值（**Day 2 校准**：原 v4.1 写 3 态 `draft/writing/completed` 是错的，已改为 2 态，详见 `editorial-dept-v2.md` §7.1 用户 2026-06-05 拍板 选项 B）
+- `draft` = 章节草稿/正在写
+- `written` = 章节写完
+- `written` 是 **Project 级别**状态（"全本所有 Chapter 都是 `written`"）
+- `writing` 是 **Project 级别**状态（"已有 Chapter 是 `written`"）— **不**是 Chapter 状态
+- 命名区分：Chapter 用 `written`（过去式"已写完"），Project 用 `writing`（进行式"正在写"）
 
 **关键不变量**：
 - 三选一只发生在 4 个"本阶段最后环节"节点
 - **跨阶段不退回**——部门 B 不能否决部门 A 的决定
 - **退回到本阶段 in-progress**（如 `written → writing`），**不是退回到上阶段**
-- 任何状态都可"删除"到**全局墓园**（`deletedAt` 软删除）
+- 任何状态都可"删除"到**全局文件暂存**（`deletedAt` 软删除，**Day 2 取消 shelved 主动暂存**）
 - 老板 = 作者本人；部门经理（创意组/企划课/创作室/编审部/文集库）都是作者的不同身份
 
 **v4.1 修订 — 端点命名去歧义**（Cursor 评审）：
@@ -49,7 +53,7 @@ project.writingStartedAt       // #3 开始写作
 project.workCompletedAt        // #4 作品已完成
 project.submittedToReviewAt    // #5 提交审阅
 project.archivedAt             // #6 文集入库
-project.deletedAt              // 任何阶段可设的墓园标记
+project.deletedAt              // 任何阶段可设的文件暂存软删标记
 ```
 
 `greenlitAt IS NOT NULL` 是企划课 Tab ④"立项总账"的筛选条件。
@@ -123,8 +127,8 @@ L4 章节级（仅创作室）
 **删除的归宿**（Day 1 修订）：
 - 任何状态下都可点"删除"
 - 删除 = 软删除（`Project.deletedAt = now`）
-- 落入**全局墓园**（不是某个阶段的回收站）
-- 全局墓园是 L1 导航独立入口 🗑️，可恢复、可永久删除、可"留作遗迹"
+- 落入**全局文件暂存**（不是某个阶段的回收站）
+- 全局文件暂存是 L1 导航独立入口 📂，可恢复、可永久删除、可"留作遗迹"
 
 **`planned` / `writing` 不是三选一节点**：
 - `planned`（创作室 L1 待创作）：只有"开始写作"和"删除"二选一
@@ -137,9 +141,9 @@ L4 章节级（仅创作室）
 |--------|-----------|
 | 每个阶段末尾都弹决策面板 | **只在 4 个节点**出现三选一 |
 | 退回可跨阶段 | **跨阶段不退回** |
-| 暂存审查池（全局搁置区） | **删除**用墓园替代，**无需审查池** |
+| 暂存审查池（全局搁置区） | **删除**用文件暂存替代，**无需审查池** |
 | 删除 = 物理删除 | **删除 = 软删除**（`deletedAt`） |
-| 恢复可"捞回任意阶段" | 墓园恢复保留原状态字段，**不预判后续流转** |
+| 恢复可"捞回任意阶段" | 文件暂存恢复保留原状态字段，**不预判后续流转** |
 
 ---
 
@@ -291,7 +295,7 @@ AI参与：无（纯手工整理）
 > 2. Tab ② = 创意组三选一节点 #1
 > 3. Tab ③ 工作区 = 企划课三选一节点 #2
 > 4. Tab ④ 改名为**立项总账**，与 `status` 完全解耦，按 `greenlitAt IS NOT NULL` 筛选
-> 5. 删除统一为软删除（`deletedAt`）+ 全局墓园
+> 5. 删除统一为软删除（`deletedAt`）+ 全局文件暂存
 > 6. 跨阶段不退回（退回永远回本阶段 in-progress）
 
 ### 4.1 子导航与结构
@@ -359,7 +363,7 @@ AI参与：AI 审校官（评估辅助，默认关闭）
 三种决策行为（Day 1 锁定，**v4.1 修订**）：
 - 通过    → Proposal.status='approved'，创建 Project(status='planning', submittedToPlanningAt=now)  // API: `POST .../accept-into-planning`
 - 退回    → Proposal.status='created'（**退回是反悔，不是删除；不退到上阶段**）
-- 删除    → Proposal.deletedAt=now → 全局墓园（**不改** Proposal.status）
+- 删除    → Proposal.deletedAt=now → 全局文件暂存（**不改** Proposal.status）
 
 规则：
 - 简化的三按钮，无复杂评估模板
@@ -444,8 +448,8 @@ AI参与：无
 │  ─── 历史作品 ───                                        │
 │  都市言情：咖啡店     📦 文集入库(文集库)  05-20 立项   │
 │    [查看设定] [查看归档版本]                              │
-│  古风短篇：相逢      🗑️ 墓园(已删)        05-10 立项   │
-│    [查看设定] [查看墓园记录] [恢复]                       │
+│  古风短篇：相逢      🗑️ 文件暂存(已软删)   05-10 立项   │
+│    [查看设定] [查看文件暂存记录] [恢复]                     │
 └──────────────────────────────────────────────────────────┘
 
 字段映射：
@@ -456,7 +460,7 @@ AI参与：无
 操作（**只读 + 导航出口**）：
 - 点击作品名 → 作品详情页（在该作品当前阶段的具体详情页）
 - [查看设定] → 元数据只读视图
-- [恢复]（仅墓园作品）→ 回到立项时状态
+- [恢复]（仅文件暂存作品）→ 回到立项时状态
 - **不在此列表做三选一决策**
 
 为什么与 status 解耦：
@@ -470,7 +474,7 @@ AI参与：无
 - 创作室 Tab ①"待创作"（planned 状态）是"开工任务清单"，只看自己的待办
 - 两边数据源都是 `greenlitAt IS NOT NULL`，但**视图不同**
 - 创作室看不到"已归档"和"已删除"的作品（与status 隐式绑定）
-- 企划课总账看得到**所有立项过的**作品（包括写作中、已完成、归档、墓园）
+- 企划课总账看得到**所有立项过的**作品（包括写作中、已完成、归档、文件暂存）
 ```
 
 ---
@@ -528,11 +532,11 @@ L4 章节:   编辑器（章节级 pure — 不出现作品级操作）
 操作（二选一 — Day 1 锁定）：
 - [开始写作]  → status: planned → writing
                   writingStartedAt = now
-- [删除]      → deletedAt = now（落入墓园）
+- [删除]      → deletedAt = now（落入文件暂存）
 ```
 
 **"退回企划课"不在此处**——跨阶段不退回，企划课的"准予立项"是不可撤销的决定。
-如果觉得"不该写"，只能删除（墓园软删除），或回企划课 Tab ③ 继续完善设定（仍归 planned 状态）。
+如果觉得"不该写"，只能删除（文件暂存软删除），或回企划课 Tab ③ 继续完善设定（仍归 planned 状态）。
 
 ### 5.4 创作中（writing）的二选一
 
@@ -568,7 +572,7 @@ L4 章节:   编辑器（章节级 pure — 不出现作品级操作）
 │                   submittedToReviewAt = now      │
 │    [↩️ 撤销完成]  → written → writing             │
 │                    workCompletedAt = null（可重新）│
-│    [🗑️ 删除]     → 墓园                          │
+│    [🗑️ 删除]     → 文件暂存                      │
 └──────────────────────────────────────────────────┘
 ```
 
@@ -766,7 +770,7 @@ AI 不参与。
 
 ## 八、全局规则
 
-> 本节于 2026-06-03 Day 1 重写。Day 1 关键变化：删除原"8.2 审查池"段，新增"8.2 全局墓园"。
+> 本节于 2026-06-03 Day 1 重写。Day 1 关键变化：删除原"8.2 审查池"段，新增"8.2 全局墓园"；**Day 2 关键变化**：墓园 → 文件暂存 + 取消 shelved 主动暂存（详见 `file-staging-v2.md`）。
 
 ### 8.1 阶段隔离（**强化 — Day 1 锁定**）
 
@@ -789,60 +793,72 @@ AI 不参与。
 - 编审部 `reviewed` 状态下的"撤销定稿" = `reviewed → reviewing`，**不回到创作室**
 - 如果觉得"上阶段做错了"，只能"上阶段重做"——回到上阶段的 in-progress 状态继续修，而不是把决定撤回
 
-### 8.2 全局墓园（**取代审查池 — Day 1 关键变化**）
+### 8.2 全局文件暂存（**Day 2 关键变化：取消 shelved，软删 only**）
 
-任何状态下都可点"删除"，落入**全局墓园**（`Project.deletedAt = now`）。
+任何状态下都可"删除"，落入**全局文件暂存**（**只** 软删除 = `Project.deletedAt = now`，**Day 2 取消 shelved 主动暂存**）。
 
 ```
-墓园规则（Day 1 锁定）：
-- 墓园挂全局（不分阶段），🗑️ 入口在 L1 导航独立位置
-- 软删除（deletedAt），非物理删除
-- 字段名语义："曾经弄过这么个玩意"，带情感色彩
-- 墓园中的作品可"恢复"（恢复后保留原 status，不预判后续）
-- 墓园中的作品可"永久删除"（二次确认）
-- 墓园可"留作遗迹"（看到就够了，不一定要恢复）
+文件暂存规则（Day 2 锁定，2026-06-05 方案 C）：
+- 📂 文件暂存挂全局（不分阶段），L1 导航独立位置（5+1 部门 = 6 L1）
+- 机制：**只** 软删（deletedAt 字段机制，**不**改 status）
+- 字段名语义："文件暂存"中性化，不带"遗弃/消亡"情感色彩（Day 2 改名）
+- 跨阶段不退回：软删机制**不**破坏（机制外）
+- 详见 `file-staging-v2.md` §2/§3/§5
 ```
 
-**为什么不用"审查池"**（Day 1 决定）：
+**Day 2 改名理由**（替代 v4.1 "墓园"）：
+- "墓园"情感色彩"遗弃/消亡"过重；混淆"暂存 vs 删除"
+- "文件暂存"中性，强调"暂存而非终态"
+- 用户原话（2026-06-05）："墓园改名为文件暂存"
+
+**Day 2 取消 shelved 理由**（替代 v4.1 主动暂存）：
+- shelved 与软删 restore 行为**完全一致**（都是回到原 status）
+- shelved 改 status（`planned → shelved`），跨阶段时需 M2 明确触发条件；软删用 deletedAt 字段**不**改 status
+- archived 终态保护：shelved 路径让 `archived → shelved` 跨阶段，破坏终态语义；软删**不**破坏
+- 实现简单：1 套机制 / 字面量 10 → 9 / 不需 M2 新增端点
+
+**为什么不用"审查池"**（Day 1 决定保留）：
 - "审查池"暗示"待定"——而删除的情感是"放弃"
 - 用户原话："带不喜欢的态度，能否救活看造化，更多体现曾经弄过这么个玩意"
-- 字段名 `deletedAt` 配合"墓园"隐喻更自然
+- 字段名 `deletedAt` 配合"文件暂存"隐喻更自然（"暂存"比"墓园"轻）
 - 审查池的"可重新捞回原阶段"已被跨阶段不退回原则覆盖
 
-**墓园 UI 草图**：
+**文件暂存 UI 草图**：
 
 ```
-L1 导航：🗑️ 墓园（图标：墓碑或骨灰盒）
+L1 导航：📂 文件暂存（图标：文件夹或归档盒）
 
 ┌──────────────────────────────────────────────────┐
-│  墓园                              清空 ▸        │
+│  📂 文件暂存                   清空 ▸            │
+│  筛选：[全部] [按原状态]                          │
 │                                                  │
-│  民国悬疑：报社记者（已写作至第 5 章）            │
-│    删除于 06-02  ·  最后状态：创作中              │
-│    [查看遗物] [♻️ 恢复] [🗑️ 永久删除]             │
-│                                                  │
-│  都市言情：咖啡店（仅设定阶段）                  │
-│    删除于 05-15  ·  最后状态：planning            │
-│    [查看遗物] [♻️ 恢复] [🗑️ 永久删除]             │
+│  软删列表                                        │
+│  ── 民国悬疑：报社记者（已写作至第 5 章）          │
+│       软删于 06-02  ·  原状态：writing            │
+│       [查看] [♻️ 恢复] [🗑️ 永久删除]              │
+│  ── 都市言情：咖啡店（仅设定阶段）                │
+│       软删于 05-15  ·  原状态：planning           │
+│       [查看] [♻️ 恢复] [🗑️ 永久删除]              │
+│  ── 古风短篇：相逢                                │
+│       软删于 06-01  ·  原状态：archived           │
+│       [查看] [♻️ 恢复] [🗑️ 永久删除]              │
 └──────────────────────────────────────────────────┘
 ```
 
-### 8.3 删除 = 软删除（`deletedAt`）
+### 8.3 删除 = 软删除（`deletedAt` 唯一机制）
 
-所有"删除"操作均为软删除，落入墓园。
-
-```
-软删除规则：
-- Project.deletedAt = Date.now()
+**软删除规则**（**Day 2 唯一文件暂存机制**）：
+- 触发：`POST /projects/:id/soft-delete` → `Project.deletedAt = Date.now()`
 - 默认过滤：`WHERE deletedAt IS NULL`
-- 恢复：`deletedAt = null`（保留其他字段不变）
+- 恢复：`POST /projects/:id/restore` → `deletedAt = null`（**status 保持**）
 - 永久删除：物理 DELETE，二次确认
-```
 
 **注意**：
 - 删除是**三选一节点中的选项**（4 个节点都有删除按钮）
 - 也可以是**状态内操作**（如"创作中"觉得不写了）
-- 都是同一个墓园入口
+- 触发按钮文案："📂 放入文件暂存"（**不**用"删除"）
+- 二次确认弹窗："放入文件暂存？此作品将进入文件暂存，可随时恢复。"
+- **不**再有 shelved 主动暂存机制（Day 2 方案 C 移除，详见 `file-staging-v2.md` §2.2）
 
 ### 8.4 灵感手记图库
 
@@ -899,7 +915,7 @@ L1 导航：🗑️ 墓园（图标：墓碑或骨灰盒）
 
 | 模块 | 说明 |
 |------|------|
-| 创意组 4 Tab | 灵感手记/外来参考/创意讨论/企划建议书（TASK-011~102，**Day 1.1 适配**） |
+| 创意组 5 Tab | 灵感手记/外来参考/AI 搜索/创意讨论/企划建议书（TASK-011~102，**Day 1.1 适配**，**VPS 缺 AI 搜索 tab 待补**） |
 | 文集库 | Collection CRUD + Markdown 导出 |
 | 管线闭环 | StageTransitionModal（**Day 1.1 拆解**，移除跨阶段） |
 | 编辑器核心 | WritingEditorPage 4 模式（**Day 1.1 pure-ify**） |
@@ -909,14 +925,14 @@ L1 导航：🗑️ 墓园（图标：墓碑或骨灰盒）
 
 - TASK-200：Schema 扩展（7 时间戳 + writingStyle + deletedAt + proposalId）
 - TASK-201：Proposal 字段扩展（**不重建**，加 status 枚举）
-- TASK-202：Project.status 11 值迁移脚本（含不变量验证）
+- TASK-202：Project.status 9 值迁移脚本（含不变量验证，**Day 2 方案 C 移除 shelved**）
 - TASK-203：writingStyle / notes 字段上提（数据迁移）
 - TASK-204：StageTransitionModal 拆解为 13 个端点
 - TASK-205：跨阶段路径在服务端硬拒（中间件）
 - TASK-206：企划课 Tab ② 提案评估（accept-into-planning + reject）
 - TASK-207：企划课 Tab ③ 作品设定中 + confirm-greenlight
 - TASK-208：企划课 Tab ④ 立项总账（greenlitAt 解耦 status）
-- TASK-209：墓园页面 + soft-delete/restore 端点
+- TASK-209：文件暂存页面 + soft-delete/restore 端点
 
 ### M2 — 创作室 + 编辑器 pure（8~10 张）⏸️ 等 M1 验收
 
@@ -926,13 +942,13 @@ L1 导航：🗑️ 墓园（图标：墓碑或骨灰盒）
 - TASK-213：Chapter.notes 字段上提
 - TASK-214：快速笔记 UI
 - TASK-215：笔记处理弹窗
-- TASK-216：shelved 主动暂存（创作室"先放一放"）
+- ~~TASK-216：shelved 主动暂存（创作室"先放一放"）~~ **Day 2 方案 C 取消**（详见 `file-staging-v2.md` §2.2）
 - TASK-217：HomePage / dashboard 双轨改造
 
 ### M3 — 收尾（4 张）⏸️ 等 M2 验收
 
 - TASK-218：废弃旧 transition 端点 + 移除 StageTransitionModal 跨阶段
-- TASK-219：废弃 /shelf 路由 → /graveyard
+- TASK-219：废弃 /shelf 路由 → /graveyard（前端 UI 文案改"📂 文件暂存"）
 - TASK-220：旧 import 流程改造（imported → 用户确认 → planning）
 - TASK-221：所有 API 文档同步更新
 
@@ -955,12 +971,12 @@ L1 导航：🗑️ 墓园（图标：墓碑或骨灰盒）
 
 | 修订点 | 位置 | 性质 |
 |--------|------|------|
-| `shelved` 语义锁定（仅"主动暂存"） | §0 | 设计 |
+| ~~`shelved` 语义锁定（仅"主动暂存"）~~ | ~~§0~~ | ~~设计~~ | **Day 2 方案 C 取消**（详见 `file-staging-v2.md` §2.2）|
 | `greenlit` 端点去歧义（accept-into-planning / confirm-greenlight） | §0 | API |
 | 节点 #2 退回文案（→ planning in-progress） | §二 | 文案 |
 | Chapter 状态锁（仅 draft/writing/completed） | §0 | 设计 |
 | 已交付资产盘点 + 资产映射表 | v2-migration-map.md | **新文档** |
-| 21+1 冲突点（C-01~C-21 + C-22 墓园路由） | code-conflict-analysis.md | **v4.1.1** |
+| 21+1 冲突点（C-01~C-21 + C-22 文件暂存路由）| code-conflict-analysis.md | **v4.1.1**（Day 2 方案 C 移除 shelved 后 = 20+1）|
 | C-19~21 schema/UI 裂缝 + M1 两阶段发卡 | code-conflict-analysis.md | **v4.1.1** |
 | TASK 拆 M1/M2/M3 | §十 | 计划 |
 | AuthGuard 降级为非 Day 1 阻塞 | C-13 | 优先级 |

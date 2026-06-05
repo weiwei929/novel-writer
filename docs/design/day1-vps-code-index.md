@@ -27,7 +27,7 @@
 | `frontend/src/pages/WritingEditorPage.tsx` | **编辑器**（非 EnhancedEditorPage）；四模式 pure/ai/reference/review |
 | `frontend/src/components/projects/StageTransitionModal.tsx` | 含跨阶段「回退」 |
 | `frontend/src/pages/ShelfPage.tsx` | `/shelf` 作品暂存（Day 1 拟由墓园替代） |
-| `frontend/src/components/creative/*` | 创意组 4 Tab（TASK-101/102） |
+| `frontend/src/components/creative/*` | 创意组 4 Tab（TASK-101/102；**设计 5 Tab 含 AI 搜索，VPS 未补**） |
 | `frontend/src/components/auth/AuthGuard.tsx` | 路由内复检 + 401 事件（热修后） |
 
 ## 设计文档 vs 代码：已知差异
