@@ -71,7 +71,7 @@ export function assertAllowedTransition(from: string, to: string): void {
 | `planning` | `planning`（仅 metadata）、`planned` 由 **confirm-greenlight** 专端点 |
 | `planned` | `writing`（start-writing） |
 | `writing` | `written`、`writing` |
-| `written` | `writing`（undo-written）、`reviewing`（submit-review 专端点） |
+| `written` | —（transition 禁止）；`undo-written` / `submit-review` 专端点（P2-11） |
 | `reviewing` | `reviewed`、`reviewing` |
 | `reviewed` | `reviewing`（撤销定稿） |
 
@@ -126,7 +126,7 @@ reply.header('Warning', '299 - "Use POST /confirm-greenlight, /start-writing, ..
 ## 验证清单
 
 1. `curl POST .../transition -d '{"to":"planning"}'` 当 `from=writing` → **400** + body 含 `CROSS_STAGE_FORBIDDEN`  
-2. `curl POST .../transition -d '{"to":"writing"}'` 当 `from=written` → **200**（同创作室桶内撤销型，若白名单允许）  
+2. `curl POST .../transition -d '{"to":"writing"}'` 当 `from=written` → **400**；桶内撤销改走 `POST /projects/:id/undo-written`（P2-11：`written→writing` 不在 transition 白名单）  
 3. 响应头 `Deprecation: true` 存在于 `transition` 成功与失败路径  
 
 ---

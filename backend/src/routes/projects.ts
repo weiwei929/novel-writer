@@ -22,6 +22,10 @@ import {
   StatusNotAllowedError,
   unshelveToPlanning,
 } from '../services/project-transitions'
+import {
+  assertAllowedTransition,
+  StageTransitionError,
+} from '../middleware/stage-guard'
 
 const PROJECT_STATUSES = ['draft', 'planning', 'writing', 'reviewing', 'completed', 'archived', 'shelved'] as const
 
@@ -260,14 +264,7 @@ const TransitionRequestSchema = z.object({
   note: z.string().optional(),
 })
 
-const ALLOWED_TRANSITIONS: Record<string, readonly z.infer<typeof TransitionTargetSchema>[]> = {
-  draft: ['planning', 'shelved'],
-  planning: ['writing', 'draft', 'shelved'],
-  writing: ['reviewing', 'planning', 'shelved'],
-  reviewing: ['completed', 'writing', 'shelved'],
-  completed: ['reviewing', 'shelved'],
-  shelved: [],
-}
+// 跨桶项已删除 — 桶内白名单见 middleware/stage-guard.ts IN_BUCKET_TRANSITIONS
 
 function appendLastTransition(
   metadata: Record<string, unknown>,
@@ -620,13 +617,19 @@ export async function projectRoutes(app: FastifyInstance) {
     }
   })
 
-  // POST /projects/:id/transition — 相邻阶段流转（推进/回退/暂存）
+  // POST /projects/:id/transition — 兼容层（Deprecation）；桶内窄白名单，跨桶硬拒
   app.post('/:id/transition', async (req: FastifyRequest<GetByIdParams>, reply) => {
     const { id } = req.params
     const parsed = TransitionRequestSchema.safeParse(req.body ?? {})
     if (!parsed.success) {
       return reply.status(400).send({ success: false, error: parsed.error.format() })
     }
+
+    reply.header('Deprecation', 'true')
+    reply.header(
+      'Warning',
+      '299 - "DEPRECATION: use semantic endpoints (#5~#13), see TASK-202.md §0"'
+    )
 
     try {
       const project = await prisma.project.findUnique({ where: { id } })
@@ -641,11 +644,19 @@ export async function projectRoutes(app: FastifyInstance) {
         return reply.status(422).send(ApiResponse.error('暂存中的作品请使用还原接口', 422))
       }
 
-      const allowed = ALLOWED_TRANSITIONS[from] ?? []
-      if (!allowed.includes(to)) {
-        return reply.status(422).send(
-          ApiResponse.error(`不允许从「${from}」流转到「${to}」`, 422)
-        )
+      try {
+        assertAllowedTransition(from, to)
+      } catch (e: unknown) {
+        if (e instanceof StageTransitionError) {
+          return reply.status(400).send({
+            error: e.code,
+            from: e.from,
+            to: e.to,
+            fromBucket: e.fromBucket,
+            toBucket: e.toBucket,
+          })
+        }
+        throw e
       }
 
       const baseMetadata = (project.metadata as Record<string, unknown>) || {}
