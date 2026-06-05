@@ -29,8 +29,20 @@ model Project {
   description  String?
   author       String?
   coverImage   String?
-  status       String   @default("draft") // draft | planning | writing | reviewing | completed | archived | shelved
-  
+  // Project.status — 12 字面量（10 主体 + 2 兼容别名 draft|completed，新写入禁止别名）
+  // imported | planning | planned | writing | written | reviewing | reviewed | archived | shelved | draft | completed
+  status       String   @default("draft")
+
+  submittedToPlanningAt DateTime?
+  greenlitAt            DateTime?
+  writingStartedAt      DateTime?
+  workCompletedAt       DateTime?
+  submittedToReviewAt   DateTime?
+  archivedAt            DateTime?
+  deletedAt             DateTime?
+
+  writingStyle String?
+
   // Stats
   wordCount    Int      @default(0)
   
@@ -54,8 +66,10 @@ model Project {
   scraps       Scrap[]
   timelineEntries TimelineEntry[]
   creativeFlows   CreativeFlow[]
-  proposals    Proposal[]
-  
+  proposals       Proposal[]
+  proposalId      String?   @unique
+  proposal        Proposal? @relation("ProposalPrimaryProject", fields: [proposalId], references: [id], onDelete: SetNull)
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -225,13 +239,18 @@ model Proposal {
   synopsis    String?  // 故事梗概
   innovation  String?  // 创新点
   coreSetting String?  // 核心设定（高层自由描述）
-  status      String   @default("draft") // draft | submitted | evaluated | approved | rejected | shelved
+  // Proposal.status — 8 字面量（4 主体 + 4 兼容别名，新写入禁止别名）
+  // creating | created | approved | shelved | draft | submitted | evaluated | rejected
+  status      String   @default("draft")
+  deletedAt   DateTime?
+
   references  Json?    // 引用材料列表 [{ type, id, title, processingType? }]
   sourceNotes String?  // 来源讨论记录
   metadata    Json?    // _evaluation, _tags, _discussionSubmitted, _sourceRef 等
 
   projectId   String?  // 立项后关联项目
-  project     Project? @relation(fields: [projectId], references: [id])
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  primaryForProject Project? @relation("ProposalPrimaryProject")
 
   characters      Character[]
   timelineEntries TimelineEntry[]
