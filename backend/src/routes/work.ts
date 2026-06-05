@@ -10,8 +10,8 @@ export async function workRoutes(app: FastifyInstance) {
   app.get('/:id', async (req: FastifyRequest<GetByIdParams>, reply) => {
     const { id } = req.params
 
-    const project = await prisma.project.findUnique({
-      where: { id },
+    const project = await prisma.project.findFirst({
+      where: { id, deletedAt: null },
       include: {
         _count: { select: { chapters: true } },
       },

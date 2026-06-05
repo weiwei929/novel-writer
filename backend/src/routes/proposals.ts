@@ -1,8 +1,10 @@
 import { Prisma } from '@prisma/client'
-import { FastifyInstance, FastifyRequest } from 'fastify'
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../utils/db'
 import { ApiResponse } from '../utils/response'
+import { META_KEYS_DAY1 } from '../constants/metadata-keys'
+import { mapProposalStatus } from '../services/status-migration'
 
 const PROPOSAL_STATUSES = ['draft', 'submitted', 'evaluated', 'approved', 'rejected', 'shelved'] as const
 
@@ -18,11 +20,7 @@ const CreateProposalSchema = z.object({
 })
 
 const UpdateProposalSchema = CreateProposalSchema.partial()
-
-const UpdateStatusSchema = z.object({
-  status: z.enum(PROPOSAL_STATUSES),
-})
-
+const UpdateStatusSchema = z.object({ status: z.enum(PROPOSAL_STATUSES) })
 const EvaluateSchema = z.object({
   action: z.enum(['approve', 'reject', 'shelve']),
   note: z.string().optional(),
@@ -48,83 +46,123 @@ function paragraphTitle(paragraph: string, index: number): string {
   return `第 ${index + 1} 节`
 }
 
-async function approveProposal(proposal: {
+type ProposalForPlanning = {
   id: string
   title: string
   synopsis: string | null
   references: unknown
   metadata: unknown
-}) {
+}
+
+/** #1 / #3 / #4 approve — 唯一 Project 写入点 */
+export async function acceptIntoPlanningCore(
+  tx: Prisma.TransactionClient,
+  proposal: ProposalForPlanning
+) {
   const metadata = (proposal.metadata as Record<string, unknown>) || {}
   const refs = Array.isArray(proposal.references) ? proposal.references : []
+  const now = new Date()
 
-  const project = await prisma.$transaction(async tx => {
-    const created = await tx.project.create({
-      data: {
-        title: proposal.title,
-        description: proposal.synopsis ?? undefined,
-        status: 'draft',
-        metadata: {
-          _sourceFrom: 'proposal',
-          _proposalId: proposal.id,
-          _evaluation: metadata._evaluation,
-        } as Prisma.InputJsonValue,
-      },
-    })
+  const projectMetadata = {
+    [META_KEYS_DAY1.SOURCE_FROM]: 'proposal',
+    [META_KEYS_DAY1.PROPOSAL_ID_LEGACY]: proposal.id,
+    [META_KEYS_DAY1.FROM_EVALUATE]: true,
+    [META_KEYS_DAY1.PLANNING_PHASE]: 'evaluating',
+    ...(metadata._evaluation !== undefined ? { _evaluation: metadata._evaluation } : {}),
+  }
 
-    await tx.character.updateMany({
-      where: { proposalId: proposal.id },
-      data: { projectId: created.id, proposalId: null },
-    })
-    await tx.timelineEntry.updateMany({
-      where: { proposalId: proposal.id },
-      data: { projectId: created.id, proposalId: null },
-    })
-    await tx.creativeFlow.updateMany({
-      where: { proposalId: proposal.id },
-      data: { projectId: created.id, proposalId: null },
-    })
-
-    const sourceRef = refs.find(
-      (r: { type?: string; processingType?: string }) =>
-        r.type === 'file_ref' && r.processingType === 'complete'
-    ) as { id?: string } | undefined
-
-    const metaSource = metadata._sourceRef as { type?: string; id?: string } | undefined
-    const fileRefId =
-      sourceRef?.id ?? (metaSource?.type === 'file_ref' ? metaSource.id : undefined)
-
-    if (fileRefId) {
-      const fileRef = await tx.fileReference.findUnique({ where: { id: fileRefId } })
-      if (fileRef?.fileContent) {
-        const meta = (fileRef.metadata as { paragraphs?: string[] }) || {}
-        const paragraphs =
-          meta.paragraphs?.length ? meta.paragraphs : splitParagraphs(fileRef.fileContent)
-
-        if (paragraphs.length > 0) {
-          await tx.chapter.createMany({
-            data: paragraphs.map((p, i) => ({
-              projectId: created.id,
-              title: paragraphTitle(p, i),
-              content: p,
-              order: i + 1,
-              status: 'draft',
-              wordCount: p.replace(/\s/g, '').length,
-            })),
-          })
-        }
-      }
-    }
-
-    await tx.proposal.update({
-      where: { id: proposal.id },
-      data: { projectId: created.id, status: 'approved' },
-    })
-
-    return created
+  const created = await tx.project.create({
+    data: {
+      title: proposal.title,
+      description: proposal.synopsis ?? undefined,
+      status: 'planning',
+      proposalId: proposal.id,
+      submittedToPlanningAt: now,
+      metadata: projectMetadata as Prisma.InputJsonValue,
+    },
   })
 
-  return project
+  await tx.character.updateMany({
+    where: { proposalId: proposal.id },
+    data: { projectId: created.id, proposalId: null },
+  })
+  await tx.timelineEntry.updateMany({
+    where: { proposalId: proposal.id },
+    data: { projectId: created.id, proposalId: null },
+  })
+  await tx.creativeFlow.updateMany({
+    where: { proposalId: proposal.id },
+    data: { projectId: created.id, proposalId: null },
+  })
+
+  const sourceRef = refs.find(
+    (r: { type?: string; processingType?: string }) =>
+      r.type === 'file_ref' && r.processingType === 'complete'
+  ) as { id?: string } | undefined
+
+  const metaSource = metadata._sourceRef as { type?: string; id?: string } | undefined
+  const fileRefId =
+    sourceRef?.id ?? (metaSource?.type === 'file_ref' ? metaSource.id : undefined)
+
+  if (fileRefId) {
+    const fileRef = await tx.fileReference.findUnique({ where: { id: fileRefId } })
+    if (fileRef?.fileContent) {
+      const meta = (fileRef.metadata as { paragraphs?: string[] }) || {}
+      const paragraphs =
+        meta.paragraphs?.length ? meta.paragraphs : splitParagraphs(fileRef.fileContent)
+
+      if (paragraphs.length > 0) {
+        await tx.chapter.createMany({
+          data: paragraphs.map((p, i) => ({
+            projectId: created.id,
+            title: paragraphTitle(p, i),
+            content: p,
+            order: i + 1,
+            status: 'draft',
+            wordCount: p.replace(/\s/g, '').length,
+          })),
+        })
+      }
+    }
+  }
+
+  const updatedProposal = await tx.proposal.update({
+    where: { id: proposal.id },
+    data: { projectId: created.id, status: 'approved' },
+  })
+
+  return { project: created, proposal: updatedProposal }
+}
+
+async function acceptIntoPlanning(proposal: ProposalForPlanning) {
+  return prisma.$transaction(tx => acceptIntoPlanningCore(tx, proposal))
+}
+
+function canAcceptIntoPlanning(status: string): boolean {
+  const mapped = mapProposalStatus(status)
+  return mapped === 'created' || status === 'created' || status === 'submitted' || status === 'evaluated'
+}
+
+async function rejectProposal(id: string, note?: string) {
+  const proposal = await prisma.proposal.findUnique({ where: { id } })
+  if (!proposal) return null
+  const existingMeta = (proposal.metadata as Record<string, unknown>) || {}
+  return prisma.proposal.update({
+    where: { id },
+    data: {
+      status: 'creating',
+      metadata: {
+        ...existingMeta,
+        [META_KEYS_DAY1.REJECTED_AT]: new Date().toISOString(),
+        ...(note ? { _rejectNote: note } : {}),
+      } as Prisma.InputJsonValue,
+    },
+  })
+}
+
+function setEvaluateDeprecation(reply: FastifyReply, proposalId: string, rel: string) {
+  reply.header('Deprecation', 'true')
+  reply.header('Link', `</api/v2/proposals/${proposalId}/${rel}>; rel="successor-version"`)
 }
 
 export async function proposalRoutes(app: FastifyInstance) {
@@ -135,6 +173,7 @@ export async function proposalRoutes(app: FastifyInstance) {
         : undefined
 
     const proposals = await prisma.proposal.findMany({
+      where: { deletedAt: null },
       orderBy: { updatedAt: 'desc' },
     })
 
@@ -152,8 +191,8 @@ export async function proposalRoutes(app: FastifyInstance) {
   })
 
   app.get('/:id', async (req: FastifyRequest<GetByIdParams>, reply) => {
-    const proposal = await prisma.proposal.findUnique({
-      where: { id: req.params.id },
+    const proposal = await prisma.proposal.findFirst({
+      where: { id: req.params.id, deletedAt: null },
     })
     if (!proposal) {
       return reply.status(404).send({ success: false, error: 'Proposal not found' })
@@ -215,13 +254,60 @@ export async function proposalRoutes(app: FastifyInstance) {
     }
   })
 
+  // #1 accept-into-planning
+  app.post('/:id/accept-into-planning', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    const proposal = await prisma.proposal.findFirst({
+      where: { id: req.params.id, deletedAt: null },
+    })
+    if (!proposal) {
+      return reply.status(404).send(ApiResponse.error('Proposal not found', 404))
+    }
+    if (proposal.projectId || proposal.status === 'approved') {
+      return reply.status(400).send(ApiResponse.error('该提案已立项', 400))
+    }
+    if (!canAcceptIntoPlanning(proposal.status)) {
+      return reply.status(400).send(ApiResponse.error('提案状态不允许进入企划课', 400))
+    }
+
+    try {
+      const { project, proposal: updatedProposal } = await acceptIntoPlanning(proposal)
+      return ApiResponse.success({ projectId: project.id, project, proposal: updatedProposal })
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'accept-into-planning failed'
+      return reply.status(500).send(ApiResponse.error(message, 500))
+    }
+  })
+
+  // #2 reject
+  app.post('/:id/reject', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    const proposal = await prisma.proposal.findFirst({
+      where: { id: req.params.id, deletedAt: null },
+    })
+    if (!proposal) {
+      return reply.status(404).send(ApiResponse.error('Proposal not found', 404))
+    }
+    if (!canAcceptIntoPlanning(proposal.status) && proposal.status !== 'creating') {
+      return reply.status(400).send(ApiResponse.error('提案状态不允许退回', 400))
+    }
+
+    const note = (req.body as { note?: string } | undefined)?.note
+    const updated = await rejectProposal(req.params.id, note)
+    if (!updated) {
+      return reply.status(404).send(ApiResponse.error('Proposal not found', 404))
+    }
+    return ApiResponse.success(updated, '已退回创意讨论')
+  })
+
+  // #4 evaluate (PUT)
   app.put('/:id/evaluate', async (req: FastifyRequest<EvaluateParams>, reply) => {
     const result = EvaluateSchema.safeParse(req.body)
     if (!result.success) {
       return reply.status(400).send({ success: false, error: result.error.format() })
     }
 
-    const proposal = await prisma.proposal.findUnique({ where: { id: req.params.id } })
+    const proposal = await prisma.proposal.findFirst({
+      where: { id: req.params.id, deletedAt: null },
+    })
     if (!proposal) {
       return reply.status(404).send(ApiResponse.error('Proposal not found', 404))
     }
@@ -234,24 +320,23 @@ export async function proposalRoutes(app: FastifyInstance) {
         if (proposal.projectId || proposal.status === 'approved') {
           return reply.status(400).send(ApiResponse.error('该提案已立项', 400))
         }
-        const project = await approveProposal(proposal)
+        if (!canAcceptIntoPlanning(proposal.status)) {
+          return reply.status(400).send(ApiResponse.error('提案状态不允许立项', 400))
+        }
+        setEvaluateDeprecation(reply, req.params.id, 'accept-into-planning')
+        const { project, proposal: updatedProposal } = await acceptIntoPlanning(proposal)
         return ApiResponse.success(
-          { projectId: project.id, project },
+          { projectId: project.id, project, proposal: updatedProposal },
           note ? `已同意立项：${note}` : '已同意立项'
         )
       }
 
       if (action === 'reject') {
-        const updated = await prisma.proposal.update({
-          where: { id: req.params.id },
-          data: {
-            status: 'rejected',
-            metadata: {
-              ...existingMeta,
-              ...(note ? { _rejectNote: note } : {}),
-            } as Prisma.InputJsonValue,
-          },
-        })
+        setEvaluateDeprecation(reply, req.params.id, 'reject')
+        const updated = await rejectProposal(req.params.id, note)
+        if (!updated) {
+          return reply.status(404).send(ApiResponse.error('Proposal not found', 404))
+        }
         return ApiResponse.success(updated, '已退回创意讨论')
       }
 
@@ -272,17 +357,23 @@ export async function proposalRoutes(app: FastifyInstance) {
     }
   })
 
+  // #3 approve (PUT legacy — thin wrapper → same core as #1)
   app.put('/:id/approve', async (req: FastifyRequest<GetByIdParams>, reply) => {
-    const proposal = await prisma.proposal.findUnique({ where: { id: req.params.id } })
+    const proposal = await prisma.proposal.findFirst({
+      where: { id: req.params.id, deletedAt: null },
+    })
     if (!proposal) {
       return reply.status(404).send({ success: false, error: 'Proposal not found' })
     }
     if (proposal.projectId || proposal.status === 'approved') {
       return reply.status(400).send({ success: false, error: '该提案已立项' })
     }
+    if (!canAcceptIntoPlanning(proposal.status)) {
+      return reply.status(400).send({ success: false, error: '提案状态不允许立项' })
+    }
     try {
-      const project = await approveProposal(proposal)
-      return { success: true, data: { projectId: project.id, project } }
+      const { project, proposal: updatedProposal } = await acceptIntoPlanning(proposal)
+      return { success: true, data: { projectId: project.id, project, proposal: updatedProposal } }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Approve failed'
       return reply.status(500).send({ success: false, error: message })

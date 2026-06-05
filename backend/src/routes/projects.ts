@@ -9,6 +9,19 @@ import type { FastifyBaseLogger } from 'fastify'
 import { ApiResponse } from '../utils/response'
 import type { ProjectMetadata } from '../types/metadata'
 import { mapProjectStatus, withMappedProjectStatus } from '../services/status-migration'
+import { META_KEYS_DAY1 } from '../constants/metadata-keys'
+import {
+  assertProjectExists,
+  assertNotDeleted,
+  assertStatusFor,
+  buildShelvedMetadata,
+  loadActiveProject,
+  mergeMetadata,
+  ProjectInGraveyardError,
+  ProjectNotFoundError,
+  StatusNotAllowedError,
+  unshelveToPlanning,
+} from '../services/project-transitions'
 
 const PROJECT_STATUSES = ['draft', 'planning', 'writing', 'reviewing', 'completed', 'archived', 'shelved'] as const
 
@@ -532,6 +545,7 @@ export async function projectRoutes(app: FastifyInstance) {
         : undefined
 
     const projects = await prisma.project.findMany({
+      where: { deletedAt: null },
       orderBy: { updatedAt: 'desc' },
       include: {
         _count: {
@@ -657,46 +671,248 @@ export async function projectRoutes(app: FastifyInstance) {
     }
   })
 
-  // POST /projects/:id/restore — 从作品暂存还原
-  app.post('/:id/restore', async (req: FastifyRequest<GetByIdParams>, reply) => {
-    const { id } = req.params
-
+  // #5 confirm-greenlight
+  app.post('/:id/confirm-greenlight', async (req: FastifyRequest<GetByIdParams>, reply) => {
     try {
-      const project = await prisma.project.findUnique({ where: { id } })
-      if (!project) {
-        return reply.status(404).send(ApiResponse.error('Project not found', 404))
-      }
-
+      const project = await loadActiveProject(req.params.id)
+      assertStatusFor(project.status, ['planning'])
       const metadata = (project.metadata as Record<string, unknown>) || {}
-      const shelvedMeta = metadata._shelved as
-        | { previousStatus?: string; shelvedAt?: string; source?: string }
-        | undefined
-      const previousStatus = shelvedMeta?.previousStatus
-        ? mapProjectStatus(shelvedMeta.previousStatus)
-        : 'draft'
-
-      const { _shelved: _removed, ...rest } = metadata
-
       const updated = await prisma.project.update({
-        where: { id },
+        where: { id: req.params.id },
         data: {
-          status: previousStatus,
-          metadata: rest as Prisma.InputJsonValue,
+          status: 'planned',
+          greenlitAt: project.greenlitAt ?? new Date(),
+          metadata: mergeMetadata(metadata, {
+            [META_KEYS_DAY1.PLANNING_PHASE]: 'setup',
+          }),
         },
       })
-
-      return ApiResponse.success(withMappedProjectStatus(updated), '作品已还原')
+      return ApiResponse.success(withMappedProjectStatus(updated), '已正式立项')
     } catch (e: unknown) {
+      if (e instanceof ProjectNotFoundError) {
+        return reply.status(404).send(ApiResponse.error(e.message, 404))
+      }
+      if (e instanceof StatusNotAllowedError) {
+        return reply.status(400).send(ApiResponse.error(e.message, 400))
+      }
+      const message = e instanceof Error ? e.message : 'confirm-greenlight failed'
+      return reply.status(500).send(ApiResponse.error(message, 500))
+    }
+  })
+
+  // #6 start-writing
+  app.post('/:id/start-writing', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    try {
+      const project = await loadActiveProject(req.params.id)
+      assertStatusFor(project.status, ['planned'])
+      const updated = await prisma.project.update({
+        where: { id: req.params.id },
+        data: {
+          status: 'writing',
+          writingStartedAt: project.writingStartedAt ?? new Date(),
+        },
+      })
+      return ApiResponse.success(withMappedProjectStatus(updated), '已开始写作')
+    } catch (e: unknown) {
+      if (e instanceof ProjectNotFoundError) {
+        return reply.status(404).send(ApiResponse.error(e.message, 404))
+      }
+      if (e instanceof StatusNotAllowedError) {
+        return reply.status(400).send(ApiResponse.error(e.message, 400))
+      }
+      const message = e instanceof Error ? e.message : 'start-writing failed'
+      return reply.status(500).send(ApiResponse.error(message, 500))
+    }
+  })
+
+  // #7 mark-written
+  app.post('/:id/mark-written', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    try {
+      const project = await loadActiveProject(req.params.id)
+      assertStatusFor(project.status, ['writing'])
+      const updated = await prisma.$transaction(async tx => {
+        await tx.chapter.updateMany({
+          where: { projectId: req.params.id, status: { not: 'completed' } },
+          data: { status: 'completed' },
+        })
+        return tx.project.update({
+          where: { id: req.params.id },
+          data: {
+            status: 'written',
+            workCompletedAt: project.workCompletedAt ?? new Date(),
+          },
+        })
+      })
+      return ApiResponse.success(withMappedProjectStatus(updated), '作品已完成')
+    } catch (e: unknown) {
+      if (e instanceof ProjectNotFoundError) {
+        return reply.status(404).send(ApiResponse.error(e.message, 404))
+      }
+      if (e instanceof StatusNotAllowedError) {
+        return reply.status(400).send(ApiResponse.error(e.message, 400))
+      }
+      const message = e instanceof Error ? e.message : 'mark-written failed'
+      return reply.status(500).send(ApiResponse.error(message, 500))
+    }
+  })
+
+  // #8 submit-review
+  app.post('/:id/submit-review', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    try {
+      const project = await loadActiveProject(req.params.id)
+      assertStatusFor(project.status, ['written'])
+      const updated = await prisma.project.update({
+        where: { id: req.params.id },
+        data: {
+          status: 'reviewing',
+          submittedToReviewAt: project.submittedToReviewAt ?? new Date(),
+        },
+      })
+      return ApiResponse.success(withMappedProjectStatus(updated), '已提交审阅')
+    } catch (e: unknown) {
+      if (e instanceof ProjectNotFoundError) {
+        return reply.status(404).send(ApiResponse.error(e.message, 404))
+      }
+      if (e instanceof StatusNotAllowedError) {
+        return reply.status(400).send(ApiResponse.error(e.message, 400))
+      }
+      const message = e instanceof Error ? e.message : 'submit-review failed'
+      return reply.status(500).send(ApiResponse.error(message, 500))
+    }
+  })
+
+  // #9 undo-written
+  app.post('/:id/undo-written', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    try {
+      const project = await loadActiveProject(req.params.id)
+      assertStatusFor(project.status, ['written'])
+      const updated = await prisma.project.update({
+        where: { id: req.params.id },
+        data: { status: 'writing', workCompletedAt: null },
+      })
+      return ApiResponse.success(withMappedProjectStatus(updated), '已撤销完成')
+    } catch (e: unknown) {
+      if (e instanceof ProjectNotFoundError) {
+        return reply.status(404).send(ApiResponse.error(e.message, 404))
+      }
+      if (e instanceof StatusNotAllowedError) {
+        return reply.status(400).send(ApiResponse.error(e.message, 400))
+      }
+      const message = e instanceof Error ? e.message : 'undo-written failed'
+      return reply.status(500).send(ApiResponse.error(message, 500))
+    }
+  })
+
+  // #10 soft-delete
+  app.post('/:id/soft-delete', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    try {
+      const project = await assertProjectExists(req.params.id)
+      if (project.deletedAt) {
+        return reply.status(400).send(ApiResponse.error('作品已在墓园', 400))
+      }
+      const updated = await prisma.project.update({
+        where: { id: req.params.id },
+        data: { deletedAt: new Date() },
+      })
+      return ApiResponse.success(withMappedProjectStatus(updated), '已移入墓园')
+    } catch (e: unknown) {
+      if (e instanceof ProjectNotFoundError) {
+        return reply.status(404).send(ApiResponse.error(e.message, 404))
+      }
+      const message = e instanceof Error ? e.message : 'soft-delete failed'
+      return reply.status(500).send(ApiResponse.error(message, 500))
+    }
+  })
+
+  // #11 restore — 墓园恢复 | shelved 委托 #13 unshelve
+  app.post('/:id/restore', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    const { id } = req.params
+    try {
+      const project = await assertProjectExists(id)
+
+      // 墓园支路：仅清 deletedAt，不改 status
+      if (project.deletedAt) {
+        const updated = await prisma.project.update({
+          where: { id },
+          data: { deletedAt: null },
+        })
+        return ApiResponse.success(withMappedProjectStatus(updated), '已从墓园恢复')
+      }
+
+      // shelved 支路：委托 #13 unshelve（固定 → planning）
+      if (project.status === 'shelved') {
+        const updated = await unshelveToPlanning(id)
+        return ApiResponse.success(withMappedProjectStatus(updated), '已从暂存还原')
+      }
+
+      return reply.status(400).send(ApiResponse.error('当前状态不支持 restore', 400))
+    } catch (e: unknown) {
+      if (e instanceof ProjectNotFoundError) {
+        return reply.status(404).send(ApiResponse.error(e.message, 404))
+      }
+      if (e instanceof StatusNotAllowedError) {
+        return reply.status(400).send(ApiResponse.error(e.message, 400))
+      }
       const message = e instanceof Error ? e.message : 'Restore failed'
       req.log.error(e)
       return reply.status(500).send(ApiResponse.error(message, 500))
     }
   })
 
+  // #12 soft-shelve
+  app.post('/:id/soft-shelve', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    const parsed = ShelveProjectSchema.safeParse(req.body ?? {})
+    if (!parsed.success) {
+      return reply.status(400).send({ success: false, error: parsed.error.format() })
+    }
+    try {
+      const project = await loadActiveProject(req.params.id)
+      if (project.status === 'shelved') {
+        return reply.status(400).send(ApiResponse.error('作品已在暂存中', 400))
+      }
+      const metadata = (project.metadata as Record<string, unknown>) || {}
+      const updated = await prisma.project.update({
+        where: { id: req.params.id },
+        data: {
+          status: 'shelved',
+          metadata: buildShelvedMetadata(
+            metadata,
+            project.status,
+            parsed.data.source ?? 'api'
+          ),
+        },
+      })
+      return ApiResponse.success(withMappedProjectStatus(updated), '已移入作品暂存')
+    } catch (e: unknown) {
+      if (e instanceof ProjectNotFoundError) {
+        return reply.status(404).send(ApiResponse.error(e.message, 404))
+      }
+      const message = e instanceof Error ? e.message : 'soft-shelve failed'
+      return reply.status(500).send(ApiResponse.error(message, 500))
+    }
+  })
+
+  // #13 unshelve
+  app.post('/:id/unshelve', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    try {
+      const updated = await unshelveToPlanning(req.params.id)
+      return ApiResponse.success(withMappedProjectStatus(updated), '已从暂存还原到企划')
+    } catch (e: unknown) {
+      if (e instanceof ProjectNotFoundError) {
+        return reply.status(404).send(ApiResponse.error(e.message, 404))
+      }
+      if (e instanceof StatusNotAllowedError || e instanceof ProjectInGraveyardError) {
+        return reply.status(400).send(ApiResponse.error(e.message, 400))
+      }
+      const message = e instanceof Error ? e.message : 'unshelve failed'
+      return reply.status(500).send(ApiResponse.error(message, 500))
+    }
+  })
+
   // GET /projects/:id
   app.get('/:id', async (req: FastifyRequest<GetByIdParams>, reply) => {
-    const project = await prisma.project.findUnique({
-      where: { id: req.params.id },
+    const project = await prisma.project.findFirst({
+      where: { id: req.params.id, deletedAt: null },
       include: {
         _count: { select: { chapters: true } }
       }
