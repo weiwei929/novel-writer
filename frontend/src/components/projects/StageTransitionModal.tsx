@@ -15,9 +15,11 @@ const STAGE_LABEL: Record<ProjectStatus, string> = {
   draft: '创意组',
   planning: '企划课',
   writing: '创作室',
+  written: '已定稿',
   reviewing: '编审部',
-  completed: '已完成',
+  reviewed: '已审阅',
   archived: '已归档',
+  completed: '已完成',
   shelved: '作品暂存',
 }
 

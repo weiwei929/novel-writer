@@ -8,9 +8,7 @@ const STATUS_CLS: Record<string, string> = {
   written: 'bg-amber-50 text-amber-700 border-amber-200',
   reviewing: 'bg-amber-50 text-amber-600 border-amber-200',
   reviewed: 'bg-green-50 text-green-600 border-green-200',
-  completed: 'bg-green-50 text-green-600 border-green-200',
   archived: 'bg-gray-100 text-gray-500 border-gray-200',
-  shelved: 'bg-red-50 text-red-600 border-red-200',
 }
 
 export default function ProjectStatusBadge({ status }: { status: Project['status'] }) {

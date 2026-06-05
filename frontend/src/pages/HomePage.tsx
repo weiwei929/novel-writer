@@ -52,10 +52,9 @@ const STAGE_META: {
     id: 'review',
     label: '编审部',
     icon: IconReview,
-    to: '/review',
-    countSuffix: '即将推出',
-    disabled: true,
-    accent: 'text-gray-400 bg-gray-100',
+    to: '/editorial',
+    countSuffix: '待审',
+    accent: 'text-amber-600 bg-amber-50',
   },
   {
     id: 'library',

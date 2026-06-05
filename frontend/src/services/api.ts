@@ -47,13 +47,15 @@ export const PROJECT_STATUSES = [
   'draft',
   'planning',
   'writing',
+  'written',
   'reviewing',
-  'completed',
+  'reviewed',
   'archived',
-  'shelved',
 ] as const
 
-export type ProjectStatus = (typeof PROJECT_STATUSES)[number]
+/** Legacy API read values — mapped on ingest, not in primary enum */
+export type ProjectLegacyStatus = 'completed' | 'shelved'
+export type ProjectStatus = (typeof PROJECT_STATUSES)[number] | ProjectLegacyStatus
 
 export const PROPOSAL_STATUSES = [
   'draft',

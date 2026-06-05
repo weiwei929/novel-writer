@@ -351,10 +351,6 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/review',
-    element: <Navigate to="/editorial" replace />,
-  },
-  {
     path: '/api-test',
     element: <Navigate to="/" replace />,
   },
