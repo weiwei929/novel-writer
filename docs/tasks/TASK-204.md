@@ -1,14 +1,14 @@
-# TASK-204（M1-A）：墓园列表 API + `/shelf` 后端别名（无前端、无 move-to-planning）
+# TASK-204（M1-A）：#12 move-to-planning + 墓园 API + `/shelf` 308
 
 > **里程碑**：M1-A  
 > **执行顺序**：200 → 201 → 202 → 203 → **204**  
-> **§0**：`move-to-planning` 归属 **TASK-202 #12 完整**；本卡 **不**实现该端点。
+> **§0**：`move-to-planning`（#12）归属 **TASK-204 完整实现**；与 TASK-202.md §0 一致。
 
 ---
 
 ## 目标
 
-`GET /api/v2/graveyard`；`/shelf` 后端 Deprecation/308；**不**改前端；**不**重复 `move-to-planning`。
+`POST /projects/:id/move-to-planning`（#12）；`GET /api/v2/graveyard`；`/shelf` 308 迁墓园；`move-to-draft` 410 + successor；**不改前端**。
 
 ---
 
@@ -16,10 +16,11 @@
 
 | In-scope | Out-of-scope |
 |----------|----------------|
-| `backend/src/routes/graveyard.ts`（新建） | `POST .../move-to-planning`（→ **TASK-202 #12**） |
-| `index.ts` 注册 `prefix: '/api/v2/graveyard'` | `App.tsx` `/shelf` 跳转（M3 C-22） |
-| `GET /graveyard`、`GET /graveyard/shelf` 别名 | Layout 墓园 L1（M1-B） |
-| `move-to-draft` 注释 successor（L480~485） | C-20/C-21 |
+| `projects.ts` #12 `move-to-planning`（`imported`→`planning` + `_planningPhase=setup`） | `App.tsx` `/shelf` 跳转（M3 C-22） |
+| `backend/src/routes/graveyard.ts`（新建） | Layout 墓园 L1（M1-B） |
+| `backend/src/routes/shelf.ts`（308 + Deprecation） | C-20/C-21 UI |
+| `index.ts` 注册 `prefix: '/api/v2/graveyard'`、`/api/v2/shelf` | `prisma migrate` apply |
+| `move-to-draft` 410 + Link successor（L490~495） | |
 
 ---
 
@@ -31,42 +32,45 @@
 
 ## 具体改动
 
-### 1. ~~move-to-planning~~ — **不在本卡**
+### 1. `move-to-planning`（#12 — **本卡完整实现**）
 
-验收 #12 见 TASK-202：`curl POST .../move-to-planning`。
+- 主路径：`imported` → `planning` + `metadata._planningPhase=setup`
+- Legacy：`draft` + import 标记（`_sourceFrom=import` / `_fromImport`）读兼容
+- INSERT 于 `confirm-greenlight` 之前；不走 stage-guard / transition
 
-### 2. `graveyard.ts`（~70 行）
+### 2. `graveyard.ts`（~60 行）
 
-`deletedAt IS NOT NULL` 的 Project + Proposal；返回 `greenlitAt` 供后续总账只读。
+`deletedAt IS NOT NULL` 的 Project + Proposal；`GET ?type=project|proposal|all`；`status=shelved` 且无 `deletedAt` **不**入列表。
 
-### 3. `GET /shelf` → 308 `/api/v2/graveyard` + `Deprecation`
+### 3. `GET /shelf` → 308 `/api/v2/graveyard` + `Deprecation` + `Warning: 299`
 
 ### 4. 与 TASK-202 #8/#9 联调
 
-graveyard 列表与 `restore` 一致；`status=shelved` 且无 `deletedAt` **不**入列表（默认）。
+graveyard 列表与 `restore` / `soft-delete` 一致。
 
 ---
 
 ## 依赖前置
 
 - **TASK-200**（`deletedAt`）  
-- **TASK-202**（`soft-delete`/`restore`、**#12**）— 验收需 202 已含 #12  
-
-**不依赖** TASK-203。
+- **TASK-202**（`soft-delete`/`restore` 等语义端点）  
+- **TASK-203**（transition 硬拒，无强依赖）
 
 ---
 
 ## 验证清单
 
-1. **TASK-202** 已验 #12 `move-to-planning`  
+1. `curl POST .../move-to-planning` → `planning` + `_planningPhase=setup`  
 2. `GET /api/v2/graveyard` 仅 `deletedAt != null`  
-3. `GET /api/v2/graveyard/shelf` → `Deprecation` + 同 payload 或 308  
+3. `GET /api/v2/shelf` → 308 + `Location` + Deprecation  
+4. `POST .../move-to-draft` → 410 + Link successor  
+5. `confirm-greenlight` 回归 200  
 
 ---
 
 ## 预估改动行数
 
-~75 行（无 `projects.ts` move-to-planning 增量）
+~160 行（含 `projects.ts` move-to-planning + graveyard + shelf + docs）
 
 ---
 
