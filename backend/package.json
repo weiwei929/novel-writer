@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
-    "prisma:push": "prisma db push"
+    "prisma:push": "prisma db push",
+    "migrate:day1": "NODE_PATH=./node_modules ts-node --transpile-only ../scripts/migrate-day1.ts"
   },
   "keywords": [],
   "author": "",
@@ -23,6 +24,7 @@
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.19.0",
     "axios": "^1.16.1",
+    "better-sqlite3": "^11.10.0",
     "dotenv": "^17.2.3",
     "fastify": "^5.6.2",
     "prisma": "^6.19.0",
@@ -30,6 +32,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^24.10.2",
     "@types/ws": "^8.18.1",
     "nodemon": "^3.1.11",
