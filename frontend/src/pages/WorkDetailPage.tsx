@@ -126,7 +126,12 @@ export default function WorkDetailPage() {
   const [searchParams] = useSearchParams()
   const from = searchParams.get('from')
   const isPlanningContext = from === 'planning'
-  const badgePhase: PhaseContext = isPlanningContext ? 'planning' : 'studio'
+  const isWritingContext = from === 'writing'
+  const badgePhase: PhaseContext = isPlanningContext
+    ? 'planning'
+    : isWritingContext
+      ? 'studio'
+      : 'studio'
 
   const handleBack = useCallback(() => {
     if (isPlanningContext) {
@@ -296,7 +301,7 @@ export default function WorkDetailPage() {
     }
   }
 
-  const stageManageButton = !isPlanningContext ? (
+  const stageManageButton = !isPlanningContext && !isWritingContext ? (
     <button
       type="button"
       onClick={() => setShowTransition(true)}
@@ -407,7 +412,23 @@ export default function WorkDetailPage() {
             </>
           )
         }
-        return stageManageButton
+        if (isWritingContext) {
+          return (
+            <button
+              type="button"
+              disabled={transitionLoading}
+              onClick={() =>
+                void handleStageAction('开始创作', () =>
+                  projectsApi.startWriting(project.id)
+                )
+              }
+              className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              开始创作
+            </button>
+          )
+        }
+        return null
       case 'writing':
         return (
           <>
