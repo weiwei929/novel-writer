@@ -148,7 +148,7 @@ export default function ProposalEvalPage() {
               onClick={() => navigate(`/work/${proposal.projectId}?from=planning`)}
               className="ml-2 text-blue-600 hover:underline"
             >
-              查看作品
+              查看企划进度
             </button>
           </div>
         ) : (

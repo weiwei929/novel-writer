@@ -320,7 +320,7 @@ const WritingEditorPage: React.FC = () => {
             onClick={() => navigate(`/work/${projectId}?from=writing`)}
             className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
-            返回作品详情
+            返回创作室
           </button>
         </div>
       </div>
@@ -335,7 +335,7 @@ const WritingEditorPage: React.FC = () => {
             type="button"
             onClick={handleGoBack}
             className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700 shrink-0"
-            title="返回作品详情"
+            title="返回创作室"
           >
             <IconArrowLeft size={18} />
             <span className="text-xs hidden sm:inline">返回</span>
