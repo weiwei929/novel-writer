@@ -51,13 +51,21 @@ function mapProposalItem(p: Proposal): DashboardListItem {
   }
 }
 
-function mapProjectItem(p: Project): DashboardListItem {
+function mapProjectItem(p: Project, stageId: DashboardStageId): DashboardListItem {
+  const href =
+    stageId === 'planning'
+      ? '/planning/in-progress'
+      : stageId === 'writing'
+        ? '/writing/projects'
+        : stageId === 'review'
+          ? '/editorial'
+          : '/library'
   return {
     id: p.id,
     title: p.title,
     status: p.status,
     updatedAt: p.updatedAt,
-    href: `/work/${p.id}`,
+    href,
   }
 }
 
@@ -85,22 +93,22 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
   const planningItems = projects
     .filter(p => p.status === 'draft' || p.status === 'planning')
     .slice(0, 5)
-    .map(mapProjectItem)
+    .map(p => mapProjectItem(p, 'planning'))
 
   const writingItems = projects
     .filter(p => p.status === 'writing')
     .slice(0, 5)
-    .map(mapProjectItem)
+    .map(p => mapProjectItem(p, 'writing'))
 
   const reviewItems = projects
     .filter(p => p.status === 'reviewing')
     .slice(0, 5)
-    .map(mapProjectItem)
+    .map(p => mapProjectItem(p, 'review'))
 
   const libraryItems = projects
     .filter(p => p.status === 'completed' || p.status === 'archived')
     .slice(0, 5)
-    .map(mapProjectItem)
+    .map(p => mapProjectItem(p, 'library'))
 
   const activity: DashboardOverview['activity'] = []
 
@@ -109,13 +117,13 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
       activity.push({
         time: p.updatedAt,
         text: `创意组「${p.title}」已通过 → 进入企划课`,
-        href: `/work/${p.projectId}`,
+        href: '/planning/in-progress',
       })
     } else if (p.status === 'submitted') {
       activity.push({
         time: p.updatedAt,
         text: `创意组「${p.title}」已提交企划建议书`,
-        href: `/creative/proposals/${p.id}`,
+        href: '/planning/proposals',
       })
     }
   }
@@ -125,14 +133,14 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
       activity.push({
         time: p.updatedAt,
         text: `创作室「${p.title}」有更新`,
-        href: `/work/${p.id}`,
+        href: '/writing/projects',
       })
     }
     if (p.status === 'completed') {
       activity.push({
         time: p.updatedAt,
         text: `文集库「${p.title}」已完成`,
-        href: `/work/${p.id}`,
+        href: '/library',
       })
     }
   }
