@@ -571,6 +571,11 @@ export const projectsApi = {
     return response.data
   },
 
+  async startWriting(id: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/start-writing`)
+    return response.data
+  },
+
   async getShelved(): Promise<Project[]> {
     return this.getAll(undefined, 'shelved')
   },
