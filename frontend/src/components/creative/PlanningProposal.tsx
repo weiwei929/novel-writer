@@ -94,10 +94,10 @@ export default function PlanningProposal() {
                 </div>
                 {p.projectId ? (
                   <Link
-                    to={`/work/${p.projectId}?from=planning`}
+                    to="/planning/in-progress"
                     className="text-xs text-blue-600 shrink-0"
                   >
-                    查看作品
+                    查看企划进度
                   </Link>
                 ) : (
                   <Link

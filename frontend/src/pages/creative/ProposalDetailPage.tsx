@@ -130,10 +130,10 @@ export default function ProposalDetailPage() {
           <ProposalStatusBadge status={proposal.status} />
           {proposal.projectId && (
             <Link
-              to={`/work/${proposal.projectId}`}
+              to="/planning/in-progress"
               className="text-sm text-blue-600 hover:underline"
             >
-              查看作品
+              查看企划进度
             </Link>
           )}
         </div>
