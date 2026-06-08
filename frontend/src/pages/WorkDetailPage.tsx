@@ -398,18 +398,20 @@ export default function WorkDetailPage() {
             >
               编辑元数据
             </button>
-            <button
-              type="button"
-              disabled={transitionLoading}
-              onClick={() =>
-                void handleStageAction('确认企划完成', () =>
-                  projectsApi.confirmGreenlight(project.id)
-                )
-              }
-              className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
-            >
-              确认企划完成
-            </button>
+            {isPlanningContext && (
+              <button
+                type="button"
+                disabled={transitionLoading}
+                onClick={() =>
+                  void handleStageAction('确认企划完成', () =>
+                    projectsApi.confirmGreenlight(project.id)
+                  )
+                }
+                className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
+              >
+                确认企划完成
+              </button>
+            )}
             {stageManageButton}
           </>
         )
@@ -813,7 +815,7 @@ export default function WorkDetailPage() {
                           正文
                         </button>
                       )}
-                      {!isPlanningContext && (
+                      {!isPlanningContext && !isEditorialContext && !isLibraryContext && (
                         <button
                           onClick={() => navigate(`/writing/${project.id}/${c.id}`)}
                           className="inline-flex items-center gap-1 px-2.5 py-1 border border-blue-200 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 text-xs font-medium"
@@ -902,7 +904,7 @@ export default function WorkDetailPage() {
         />
       )}
 
-      {!isPlanningContext && !isEditorialContext && !isLibraryContext && (
+      {!isPlanningContext && !isWritingContext && !isEditorialContext && !isLibraryContext && (
         <StageTransitionModal
           open={showTransition}
           project={project}
