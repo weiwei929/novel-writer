@@ -8,14 +8,15 @@
 |------|------|--------|
 | P1 企划课 | ✅ | f768af6 |
 | P2 创作室 | ✅ | c1ee91a, 8ba7c16, b72f130 |
-| P3-A 编审部列表 | ✅ | 5022026 |
-| P3-A+ WorkDetail 编审上下文 | 🎯 | — |
-| P3-B ReviewDetail 整理 | 🎯 | — |
+| P3 编审部 | ✅ | 5022026, 9b784dd, 377d470, 6d9669b |
+| P4-A 文集库列表 | 🎯 | — |
+| P4-A+ WorkDetail library 上下文 | 🎯 | — |
+| P4-B LibraryDetail 整理 | 🎯 | — |
 
 ## 本目录文档
 
 | 文件 | 说明 |
 |------|------|
 | `0608-editorial-workspace.md` | 编审部实施蓝图 |
-| `TASK-P3-A+.md` | P3-A+ 任务卡 |
-| `TASK-P3-B.md` | P3-B 任务卡 |
+| `TASK-P3-A+.md` / `TASK-P3-B.md` | P3 任务卡 |
+| `TASK-P4-A.md` / `TASK-P4-A+.md` / `TASK-P4-B.md` | P4 任务卡 |
