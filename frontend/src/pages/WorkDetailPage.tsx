@@ -128,13 +128,16 @@ export default function WorkDetailPage() {
   const isPlanningContext = from === 'planning'
   const isWritingContext = from === 'writing'
   const isEditorialContext = from === 'editorial'
+  const isLibraryContext = from === 'library'
   const badgePhase: PhaseContext = isPlanningContext
     ? 'planning'
     : isWritingContext
       ? 'studio'
       : isEditorialContext
         ? 'editorial'
-        : 'studio'
+        : isLibraryContext
+          ? 'library'
+          : 'studio'
 
   const handleBack = useCallback(() => {
     if (isPlanningContext) {
@@ -155,8 +158,12 @@ export default function WorkDetailPage() {
       navigate('/editorial')
       return
     }
+    if (isLibraryContext) {
+      navigate('/library')
+      return
+    }
     navigate(-1)
-  }, [isPlanningContext, isEditorialContext, from, project?.status, navigate])
+  }, [isPlanningContext, isEditorialContext, isLibraryContext, from, project?.status, navigate])
 
   const canEditSetting = project?.status === 'draft' || project?.status === 'planning'
   const canEditMetadata =
@@ -308,7 +315,7 @@ export default function WorkDetailPage() {
     }
   }
 
-  const stageManageButton = !isPlanningContext && !isWritingContext && !isEditorialContext ? (
+  const stageManageButton = !isPlanningContext && !isWritingContext && !isEditorialContext && !isLibraryContext ? (
     <button
       type="button"
       onClick={() => setShowTransition(true)}
@@ -528,6 +535,33 @@ export default function WorkDetailPage() {
                 className="px-3 py-1.5 text-sm border border-amber-200 text-amber-800 rounded-lg hover:bg-amber-50"
               >
                 进入审阅
+              </button>
+            </>
+          )
+        }
+        return stageManageButton
+      case 'reviewed':
+        if (isLibraryContext) {
+          return (
+            <>
+              <button
+                type="button"
+                onClick={openLibraryPicker}
+                className="px-3 py-1.5 text-sm border border-emerald-200 text-emerald-800 rounded-lg hover:bg-emerald-50"
+              >
+                归入文集
+              </button>
+              <button
+                type="button"
+                disabled={transitionLoading}
+                onClick={() =>
+                  void handleStageAction('归档', () =>
+                    projectsApi.archiveProject(project.id)
+                  )
+                }
+                className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
+              >
+                归档
               </button>
             </>
           )
@@ -868,7 +902,7 @@ export default function WorkDetailPage() {
         />
       )}
 
-      {!isPlanningContext && !isEditorialContext && (
+      {!isPlanningContext && !isEditorialContext && !isLibraryContext && (
         <StageTransitionModal
           open={showTransition}
           project={project}

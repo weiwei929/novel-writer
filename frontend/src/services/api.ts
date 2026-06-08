@@ -591,6 +591,11 @@ export const projectsApi = {
     return response.data
   },
 
+  async archiveProject(id: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/archive`)
+    return response.data
+  },
+
   async getShelved(): Promise<Project[]> {
     return this.getAll(undefined, 'shelved')
   },
