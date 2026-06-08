@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react'
+import React, { ReactNode, useCallback } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { IconCreative, IconFeather, IconLibrary, IconPlanning, IconReview, IconSettings, IconShelf, IconStats, IconWriting, IconComponent } from './ui/icons'
 import { useSettingsStore } from '../stores/settingsStore'
@@ -38,7 +38,7 @@ const PHASES: Phase[] = [
       { path: '/creative/scraps', label: '灵感手记' },
       { path: '/creative/external-refs', label: '外来参考' },
       { path: '/creative/chat', label: '创意讨论' },
-      { path: '/creative/proposals', label: '企划建议书' },
+      { path: '/creative/proposals', label: '创意提案' },
       { path: '/creative/ai-search', label: 'AI 搜索' },
     ],
   },
@@ -47,12 +47,11 @@ const PHASES: Phase[] = [
     label: '企划课',
     icon: IconPlanning,
     to: '/planning/proposals',
-    match: ['/planning', '/projects', '/work'],
+    match: ['/planning', '/projects'],
     sub: [
-      { path: '/planning/proposals', label: '企划建议书评估' },
-      { path: '/planning/metadata', label: '作品内容元数据' },
-      { path: '/planning/evaluation', label: '立项评估' },
-      { path: '/planning/projects', label: '立项作品' },
+      { path: '/planning/proposals', label: '待处理评估' },
+      { path: '/planning/in-progress', label: '企划进行中' },
+      { path: '/planning/projects', label: '企划已完成 / 待放行' },
     ],
   },
   {
@@ -90,21 +89,36 @@ const GLOBAL_ACTIONS: GlobalAction[] = [
 const matchesPath = (pathname: string, target: string): boolean =>
   pathname === target || pathname.startsWith(target + '/')
 
-const getActivePhase = (pathname: string): Phase | undefined =>
-  PHASES.find(phase => phase.match.some(m => matchesPath(pathname, m)))
-
 const isWritingEditorPath = (pathname: string): boolean =>
   /^\/writing\/[^/]+\/[^/]+$/.test(pathname)
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation()
   const pathname = location.pathname
+
+  const getActivePhase = useCallback(
+    (path: string): Phase | undefined => {
+      if (path.startsWith('/work/')) {
+        const params = new URLSearchParams(location.search)
+        const from = params.get('from')
+        if (from === 'writing') return PHASES.find(p => p.id === 'writing')
+        if (from === 'planning') return PHASES.find(p => p.id === 'planning')
+        return undefined
+      }
+      return PHASES.find(phase => phase.match.some(m => matchesPath(path, m)))
+    },
+    [location.search]
+  )
+
   const activePhase = getActivePhase(pathname)
   const isEditor = pathname.startsWith('/editor') || isWritingEditorPath(pathname)
   const aiPartner = useSettingsStore(s => s.ai.partner)
 
   const visibleSubNav =
     activePhase?.sub.filter(item => {
+      if (pathname.startsWith('/work/') && activePhase?.id === 'writing') {
+        return false
+      }
       if (!aiPartner && (item.path === '/creative/ai-search' || item.path === '/creative/chat')) {
         return false
       }

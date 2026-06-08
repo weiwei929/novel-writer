@@ -1,6 +1,6 @@
 import { IconArrowDown, IconArrowLeft, IconArrowRight, IconArrowUp, IconClose, IconDelete, IconDownload, IconFile, IconList, IconRefresh } from '../components/ui/icons'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   chaptersApi,
   collectionsApi,
@@ -16,6 +16,7 @@ import CreateCollectionModal from '../components/library/CreateCollectionModal'
 import { useWorldStore } from '../stores/worldStore'
 import { useNotifications } from '../hooks/useNotifications'
 import ProjectStatusBadge from '../components/projects/ProjectStatusBadge'
+import type { PhaseContext } from '../services/statusLabels'
 import StageTransitionModal, {
   nextStatusForTransition,
   prevStatusForTransition,
@@ -121,12 +122,55 @@ export default function WorkDetailPage() {
     [data?.chapters]
   )
 
-  const canEditSetting = project?.status === 'draft'
+
+  const [searchParams] = useSearchParams()
+  const from = searchParams.get('from')
+  const isPlanningContext = from === 'planning'
+  const badgePhase: PhaseContext = isPlanningContext ? 'planning' : 'studio'
+
+  const handleBack = useCallback(() => {
+    if (isPlanningContext) {
+      if (project?.status === 'planning') {
+        navigate('/planning/in-progress')
+      } else if (project?.status === 'planned') {
+        navigate('/planning/projects')
+      } else {
+        navigate('/planning/proposals')
+      }
+      return
+    }
+    if (from === 'writing') {
+      navigate('/writing/projects')
+      return
+    }
+    navigate(-1)
+  }, [isPlanningContext, from, project?.status, navigate])
+
+  const canEditSetting = project?.status === 'draft' || project?.status === 'planning'
   const canEditMetadata =
     project?.status === 'draft' || project?.status === 'planning'
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('zh-CN')
+
+
+  const handleStageAction = async (
+    label: string,
+    action: () => Promise<unknown>,
+    successMsg?: string
+  ) => {
+    if (!window.confirm(`确定要${label}吗？`)) return
+    try {
+      setTransitionLoading(true)
+      await action()
+      notifySuccess(successMsg ?? `已${label}`)
+      await load()
+    } catch {
+      notifyError('操作失败', `无法${label}`)
+    } finally {
+      setTransitionLoading(false)
+    }
+  }
 
   const handleEnterWriting = () => {
     if (!project) return
@@ -252,7 +296,7 @@ export default function WorkDetailPage() {
     }
   }
 
-  const stageManageButton = (
+  const stageManageButton = !isPlanningContext ? (
     <button
       type="button"
       onClick={() => setShowTransition(true)}
@@ -261,7 +305,7 @@ export default function WorkDetailPage() {
     >
       阶段管理
     </button>
-  )
+  ) : null
 
   const startEditTitle = (chapter: Chapter) => {
     setEditingTitleId(chapter.id)
@@ -335,9 +379,35 @@ export default function WorkDetailPage() {
             >
               编辑元数据
             </button>
+            <button
+              type="button"
+              disabled={transitionLoading}
+              onClick={() =>
+                void handleStageAction('确认企划完成', () =>
+                  projectsApi.confirmGreenlight(project.id)
+                )
+              }
+              className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
+            >
+              确认企划完成
+            </button>
             {stageManageButton}
           </>
         )
+      case 'planned':
+        if (isPlanningContext) {
+          return (
+            <>
+              <button
+                onClick={() => setShowPlanning(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 text-sm"
+              >
+                管理章节规划
+              </button>
+            </>
+          )
+        }
+        return stageManageButton
       case 'writing':
         return (
           <>
@@ -439,14 +509,14 @@ export default function WorkDetailPage() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => void handleBack()}
             className="flex items-center gap-1.5 text-gray-500 hover:text-gray-900 shrink-0"
             title="返回"
           >
             <IconArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-xl font-bold text-gray-900 truncate">{project.title}</h1>
-          <ProjectStatusBadge status={project.status} />
+          <ProjectStatusBadge status={project.status} phase={badgePhase} />
           {data?.proposal && (
             <span className="text-xs text-gray-400 shrink-0">来自企划建议书</span>
           )}
@@ -606,13 +676,15 @@ export default function WorkDetailPage() {
                           正文
                         </button>
                       )}
-                      <button
-                        onClick={() => navigate(`/writing/${project.id}/${c.id}`)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 border border-blue-200 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 text-xs font-medium"
-                      >
-                        <IconArrowRight size={12} />
-                        写作
-                      </button>
+                      {!isPlanningContext && (
+                        <button
+                          onClick={() => navigate(`/writing/${project.id}/${c.id}`)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 border border-blue-200 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 text-xs font-medium"
+                        >
+                          <IconArrowRight size={12} />
+                          写作
+                        </button>
+                      )}
                     </div>
                   </div>
                 )
@@ -693,12 +765,14 @@ export default function WorkDetailPage() {
         />
       )}
 
-      <StageTransitionModal
-        open={showTransition}
-        project={project}
-        onConfirm={(action, note) => void handleTransition(action, note)}
-        onCancel={() => setShowTransition(false)}
-      />
+      {!isPlanningContext && (
+        <StageTransitionModal
+          open={showTransition}
+          project={project}
+          onConfirm={(action, note) => void handleTransition(action, note)}
+          onCancel={() => setShowTransition(false)}
+        />
+      )}
 
       <CollectionPickerModal
         open={showLibraryPicker}

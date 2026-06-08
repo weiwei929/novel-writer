@@ -1,5 +1,6 @@
 import { IconFolder } from '../ui/icons'
 import type { Project } from '../../services/api'
+import type { PhaseContext } from '../../services/statusLabels'
 import ProjectStatusBadge from './ProjectStatusBadge'
 
 interface ProjectPickerViewProps {
@@ -10,6 +11,7 @@ interface ProjectPickerViewProps {
   error?: string | null
   emptyText: string
   onOpen: (id: string) => void
+  phase?: PhaseContext
 }
 
 export default function ProjectPickerView({
@@ -20,6 +22,7 @@ export default function ProjectPickerView({
   error,
   emptyText,
   onOpen,
+  phase,
 }: ProjectPickerViewProps) {
   return (
     <div className="space-y-6 animate-fade-in">
@@ -59,7 +62,7 @@ export default function ProjectPickerView({
             >
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-semibold text-gray-900 truncate">{p.title}</h3>
-                <ProjectStatusBadge status={p.status} />
+                <ProjectStatusBadge status={p.status} phase={phase} />
               </div>
               {p.description && (
                 <p className="text-sm text-gray-500 mt-2 line-clamp-2">{p.description}</p>

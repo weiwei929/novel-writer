@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { proposalsApi, type Proposal } from '../../services/api'
+import { isProposalPendingReview } from '../../services/filters'
 import ProposalListView from '../../components/proposals/ProposalListView'
 
 export default function ProposalReviewPage() {
@@ -25,8 +26,10 @@ export default function ProposalReviewPage() {
     void load()
   }, [load])
 
-  // 企划课只看已提交（非草稿）的提案
-  const submitted = useMemo(() => proposals.filter(p => p.status !== 'draft'), [proposals])
+  const submitted = useMemo(
+    () => proposals.filter(isProposalPendingReview),
+    [proposals]
+  )
 
   return (
     <ProposalListView

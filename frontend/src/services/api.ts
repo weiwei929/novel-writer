@@ -46,6 +46,7 @@ api.interceptors.response.use(
 export const PROJECT_STATUSES = [
   'draft',
   'planning',
+  'planned',
   'writing',
   'written',
   'reviewing',
@@ -71,6 +72,7 @@ export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number]
 export const PROJECT_STATUS_LABEL: Record<string, string> = {
   draft: '草稿',
   planning: '企划中',
+  planned: '企划已完成',
   writing: '创作中',
   written: '已定稿',
   reviewing: '审阅中',
@@ -82,9 +84,11 @@ export const PROJECT_STATUS_LABEL: Record<string, string> = {
 
 export const PROPOSAL_STATUS_LABEL: Record<string, string> = {
   draft: '草稿',
+  creating: '待提交',
+  created: '已提交',
   submitted: '已提交',
   evaluated: '已评估',
-  approved: '已立项',
+  approved: '已通过评估',
   rejected: '已驳回',
   shelved: '作品暂存',
 }
@@ -559,6 +563,11 @@ export const projectsApi = {
 
   async transition(id: string, to: string, note?: string): Promise<Project> {
     const response = await api.post(`/projects/${id}/transition`, { to, note })
+    return response.data
+  },
+
+  async confirmGreenlight(id: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/confirm-greenlight`)
     return response.data
   },
 

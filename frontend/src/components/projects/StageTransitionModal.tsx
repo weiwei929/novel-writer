@@ -14,6 +14,7 @@ interface StageTransitionModalProps {
 const STAGE_LABEL: Record<ProjectStatus, string> = {
   draft: '创意组',
   planning: '企划课',
+  planned: '企划已完成',
   writing: '创作室',
   written: '已定稿',
   reviewing: '编审部',

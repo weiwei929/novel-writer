@@ -10,16 +10,17 @@ import { useNotifications } from '../../hooks/useNotifications'
 import ThreeColumnLayout from './ThreeColumnLayout'
 import TagInput, { TagFilterBar } from './TagInput'
 import ReferencePicker from './ReferencePicker'
+import { isProposalPendingReview, isProposalSubmittable } from '../../services/filters'
 
 function isPendingDiscussion(p: Proposal): boolean {
-  if (p.status !== 'draft' && p.status !== 'rejected') return false
+  if (!isProposalSubmittable(p)) return false
   const meta = getProposalMetadata(p)
   return meta._discussionSubmitted !== true
 }
 
 function isFormedProposal(p: Proposal): boolean {
   const meta = getProposalMetadata(p)
-  return meta._discussionSubmitted === true || p.status === 'submitted'
+  return meta._discussionSubmitted === true || isProposalPendingReview(p)
 }
 
 export default function CreativeDiscussion() {
@@ -157,7 +158,7 @@ export default function CreativeDiscussion() {
           _discussionSubmitted: true,
           ...(type1Ref ? { _sourceRef: { type: 'file_ref', id: type1Ref.id, title: type1Ref.title } } : {}),
         },
-        status: 'draft',
+        status: 'submitted',
       })
       success('创意提案已提交')
       await load()

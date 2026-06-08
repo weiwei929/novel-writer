@@ -31,14 +31,14 @@ const MetadataListPage = lazy(() => import('./pages/planning/MetadataListPage'))
 const MetadataProjectPage = lazy(() => import('./pages/planning/MetadataProjectPage'))
 const EvaluationPage = lazy(() => import('./pages/planning/EvaluationPage'))
 const PlanningProjectsPage = lazy(() => import('./pages/planning/PlanningProjectsPage'))
+const PlanningInProgressPage = lazy(() => import('./pages/planning/PlanningInProgressPage'))
 const WritingProjectsPage = lazy(() => import('./pages/writing/WritingProjectsPage'))
-const WritingProjectPage = lazy(() => import('./pages/writing/WritingProjectPage'))
 
 import { PageWrapper as UI_PageWrapper } from './components/layout/PageWrapper'
 
 const ProjectWorkRedirect: React.FC = () => {
   const { id } = useParams()
-  return <Navigate to={id ? `/work/${id}` : '/'} replace />
+  return <Navigate to={id ? `/work/${id}?from=planning` : '/'} replace />
 }
 
 const EditorWritingRedirect: React.FC = () => {
@@ -47,9 +47,14 @@ const EditorWritingRedirect: React.FC = () => {
     return <Navigate to={`/writing/${projectId}/${chapterId}`} replace />
   }
   if (projectId) {
-    return <Navigate to={`/work/${projectId}`} replace />
+    return <Navigate to={`/work/${projectId}?from=writing`} replace />
   }
   return <Navigate to="/writing/projects" replace />
+}
+
+const WritingProjectRedirect: React.FC = () => {
+  const { projectId } = useParams()
+  return <Navigate to={projectId ? `/work/${projectId}?from=writing` : '/writing/projects'} replace />
 }
 
 const SuspenseWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -193,6 +198,16 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: '/planning/in-progress',
+    element: (
+      <Layout>
+        <SuspenseWrapper>
+          <PlanningInProgressPage />
+        </SuspenseWrapper>
+      </Layout>
+    ),
+  },
+  {
     path: '/planning/projects',
     element: (
       <Layout>
@@ -224,13 +239,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/writing/:projectId',
-    element: (
-      <Layout>
-        <SuspenseWrapper>
-          <WritingProjectPage />
-        </SuspenseWrapper>
-      </Layout>
-    ),
+    element: <WritingProjectRedirect />,
   },
   {
     path: '/projects',

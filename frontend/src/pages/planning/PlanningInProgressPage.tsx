@@ -4,7 +4,7 @@ import { projectsApi, type Project } from '../../services/api'
 import { useUIStore } from '../../stores/uiStore'
 import ProjectPickerView from '../../components/projects/ProjectPickerView'
 
-export default function PlanningProjectsPage() {
+export default function PlanningInProgressPage() {
   const navigate = useNavigate()
   const { addNotification } = useUIStore()
   const [projects, setProjects] = useState<Project[]>([])
@@ -29,19 +29,19 @@ export default function PlanningProjectsPage() {
     void load()
   }, [load])
 
-  const plannedProjects = useMemo(
-    () => projects.filter(p => p.status === 'planned'),
+  const planningProjects = useMemo(
+    () => projects.filter(p => p.status === 'planning'),
     [projects]
   )
 
   return (
     <ProjectPickerView
-      title="企划已完成 / 待放行"
-      subtitle={`${plannedProjects.length} 部企划已完成、等待放行的作品`}
-      projects={plannedProjects}
+      title="企划进行中"
+      subtitle={`${planningProjects.length} 部企划进行中作品`}
+      projects={planningProjects}
       loading={loading}
       error={error}
-      emptyText="暂无企划已完成作品。确认企划完成后将出现在此。"
+      emptyText="暂无企划进行中作品。接收入企划课后将出现在此。"
       phase="planning"
       onOpen={id => navigate(`/work/${id}?from=planning`)}
     />
