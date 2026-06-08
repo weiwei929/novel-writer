@@ -127,11 +127,14 @@ export default function WorkDetailPage() {
   const from = searchParams.get('from')
   const isPlanningContext = from === 'planning'
   const isWritingContext = from === 'writing'
+  const isEditorialContext = from === 'editorial'
   const badgePhase: PhaseContext = isPlanningContext
     ? 'planning'
     : isWritingContext
       ? 'studio'
-      : 'studio'
+      : isEditorialContext
+        ? 'editorial'
+        : 'studio'
 
   const handleBack = useCallback(() => {
     if (isPlanningContext) {
@@ -148,8 +151,12 @@ export default function WorkDetailPage() {
       navigate('/writing/projects')
       return
     }
+    if (isEditorialContext) {
+      navigate('/editorial')
+      return
+    }
     navigate(-1)
-  }, [isPlanningContext, from, project?.status, navigate])
+  }, [isPlanningContext, isEditorialContext, from, project?.status, navigate])
 
   const canEditSetting = project?.status === 'draft' || project?.status === 'planning'
   const canEditMetadata =
@@ -301,7 +308,7 @@ export default function WorkDetailPage() {
     }
   }
 
-  const stageManageButton = !isPlanningContext && !isWritingContext ? (
+  const stageManageButton = !isPlanningContext && !isWritingContext && !isEditorialContext ? (
     <button
       type="button"
       onClick={() => setShowTransition(true)}
@@ -429,7 +436,57 @@ export default function WorkDetailPage() {
           )
         }
         return null
+      case 'written':
+        if (isEditorialContext) {
+          return (
+            <button
+              type="button"
+              disabled={transitionLoading}
+              onClick={() =>
+                void handleStageAction('开始审阅', () =>
+                  projectsApi.submitReview(project.id)
+                )
+              }
+              className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              开始审阅
+            </button>
+          )
+        }
+        return stageManageButton
       case 'writing':
+        if (isWritingContext) {
+          return (
+            <>
+              <button
+                onClick={handleEnterWriting}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+              >
+                <IconArrowRight size={14} />
+                进入创作室
+              </button>
+              <button
+                onClick={() => setShowPlanning(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 text-sm"
+              >
+                <IconList size={14} />
+                管理章节规划
+              </button>
+              <button
+                type="button"
+                disabled={transitionLoading}
+                onClick={() =>
+                  void handleStageAction('确认创作完成', () =>
+                    projectsApi.markWritten(project.id)
+                  )
+                }
+                className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
+              >
+                确认创作完成
+              </button>
+            </>
+          )
+        }
         return (
           <>
             <button
@@ -450,6 +507,31 @@ export default function WorkDetailPage() {
           </>
         )
       case 'reviewing':
+        if (isEditorialContext) {
+          return (
+            <>
+              <button
+                type="button"
+                disabled={transitionLoading}
+                onClick={() =>
+                  void handleStageAction('确认审阅完成', () =>
+                    projectsApi.markReviewed(project.id)
+                  )
+                }
+                className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
+              >
+                确认审阅完成
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate(`/editorial/${project.id}`)}
+                className="px-3 py-1.5 text-sm border border-amber-200 text-amber-800 rounded-lg hover:bg-amber-50"
+              >
+                进入审阅
+              </button>
+            </>
+          )
+        }
         return stageManageButton
       case 'completed':
         return (
@@ -786,7 +868,7 @@ export default function WorkDetailPage() {
         />
       )}
 
-      {!isPlanningContext && (
+      {!isPlanningContext && !isEditorialContext && (
         <StageTransitionModal
           open={showTransition}
           project={project}
