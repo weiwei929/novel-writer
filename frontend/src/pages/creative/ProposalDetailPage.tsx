@@ -11,6 +11,7 @@ import { useNotifications } from '../../hooks/useNotifications'
 import ProposalStatusBadge from '../../components/proposals/ProposalStatusBadge'
 import TagInput from '../../components/creative/TagInput'
 import TypeLabel from '../../components/creative/TypeLabel'
+import { mapProposalStatus } from '../../services/status-migration'
 
 export default function ProposalDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -84,23 +85,12 @@ export default function ProposalDetailPage() {
         metadata: { ...meta, _tags: tags },
       })
       await proposalsApi.updateStatus(id, 'submitted')
-      success('已进入企划建议书')
+      success('创意提案已提交')
       navigate('/creative/proposals')
     } catch {
       notifyError('操作失败')
     } finally {
       setSaving(false)
-    }
-  }
-
-  const handleShelve = async () => {
-    if (!id) return
-    try {
-      await proposalsApi.evaluate(id, 'shelve')
-      success('已移入作品暂存')
-      await load()
-    } catch {
-      notifyError('暂存失败')
     }
   }
 
@@ -229,23 +219,14 @@ export default function ProposalDetailPage() {
         >
           保存
         </button>
-        {proposal.status === 'draft' && (
+        {mapProposalStatus(proposal.status) === 'creating' && (
           <button
             type="button"
             disabled={saving}
             onClick={() => void handleEnterPlanning()}
             className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm hover:bg-amber-700"
           >
-            进入企划建议书 →
-          </button>
-        )}
-        {proposal.status !== 'shelved' && proposal.status !== 'approved' && (
-          <button
-            type="button"
-            onClick={() => void handleShelve()}
-            className="px-4 py-2 text-sm text-gray-500 hover:text-amber-700"
-          >
-            暂存
+            提交创意提案 →
           </button>
         )}
       </div>

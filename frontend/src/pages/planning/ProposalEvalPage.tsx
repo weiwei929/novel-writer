@@ -46,7 +46,7 @@ export default function ProposalEvalPage() {
     if (!id) return
     setActing(true)
     try {
-      const { projectId } = await proposalsApi.approve(id)
+      const { projectId } = await proposalsApi.acceptIntoPlanning(id)
       addNotification({
         type: 'success',
         title: '已接收入企划课',

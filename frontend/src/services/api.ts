@@ -852,6 +852,11 @@ export const proposalsApi = {
     return response.data
   },
 
+  async acceptIntoPlanning(id: string): Promise<{ projectId: string; project?: Project }> {
+    const response = await api.post(`/proposals/${id}/accept-into-planning`)
+    return response.data
+  },
+
   async approve(id: string): Promise<{ projectId: string; project?: Project }> {
     const response = await api.put(`/proposals/${id}/approve`)
     return response.data
