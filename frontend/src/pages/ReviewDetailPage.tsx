@@ -76,11 +76,23 @@ export default function ReviewDetailPage() {
       project.status as (typeof EDITORIAL_QUEUE_STATUSES)[number]
     )
 
-  const handleMarkReviewed = () => {
-    notifyInfo('标记已审', '审阅状态流转将在后续版本接入。')
+  const handleMarkReviewed = async () => {
+    if (!project) return
+    if (!window.confirm('确定标记为已审阅吗？')) return
+    try {
+      await projectsApi.markReviewed(project.id)
+      notifySuccess('审阅完成', '作品已标记为已审阅')
+      await load()
+    } catch (e: unknown) {
+      notifyError(
+        '操作失败',
+        e instanceof Error ? e.message : '无法标记审阅完成'
+      )
+    }
   }
 
   const handleGenerateReport = () => {
+    // Day 3 AI 接入
     notifyInfo('生成报告', 'AI 审查（Day 3 接入）')
   }
 
@@ -130,7 +142,7 @@ export default function ReviewDetailPage() {
     return (
       <div className="text-center py-20 space-y-4">
         <p className="text-sm text-gray-600">该作品不在编审队列。</p>
-        <ProjectStatusBadge status={project.status} />
+        <ProjectStatusBadge status={project.status} phase="editorial" />
         <button
           type="button"
           onClick={() => navigate('/editorial')}
@@ -239,7 +251,7 @@ export default function ReviewDetailPage() {
             返回审阅任务
           </button>
           <h1 className="text-xl font-bold text-gray-900 truncate">{project.title}</h1>
-          <ProjectStatusBadge status={project.status} />
+          <ProjectStatusBadge status={project.status} phase="editorial" />
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <p className="text-sm text-gray-500">{project.author?.trim() || '—'}</p>
@@ -258,7 +270,7 @@ export default function ReviewDetailPage() {
           onClick={handleMarkReviewed}
           className="px-3 py-1.5 text-sm border border-amber-200 text-amber-800 rounded-lg hover:bg-amber-50"
         >
-          标记已审
+          确认审阅完成
         </button>
         <button
           type="button"
