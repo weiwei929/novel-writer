@@ -129,6 +129,8 @@ export default function WorkDetailPage() {
   const isWritingContext = from === 'writing'
   const isEditorialContext = from === 'editorial'
   const isLibraryContext = from === 'library'
+  const hasValidContext =
+    isPlanningContext || isWritingContext || isEditorialContext || isLibraryContext
   const badgePhase: PhaseContext = isPlanningContext
     ? 'planning'
     : isWritingContext
@@ -315,7 +317,7 @@ export default function WorkDetailPage() {
     }
   }
 
-  const stageManageButton = !isPlanningContext && !isWritingContext && !isEditorialContext && !isLibraryContext ? (
+  const stageManageButton = isWritingContext ? (
     <button
       type="button"
       onClick={() => setShowTransition(true)}
@@ -464,6 +466,7 @@ export default function WorkDetailPage() {
         }
         return stageManageButton
       case 'writing':
+        if (!hasValidContext) return null
         if (isWritingContext) {
           return (
             <>
@@ -572,13 +575,15 @@ export default function WorkDetailPage() {
       case 'completed':
         return (
           <>
-            <button
-              type="button"
-              onClick={openLibraryPicker}
-              className="px-3 py-1.5 text-sm border border-emerald-200 text-emerald-800 rounded-lg hover:bg-emerald-50"
-            >
-              归入文集
-            </button>
+            {hasValidContext && (
+              <button
+                type="button"
+                onClick={openLibraryPicker}
+                className="px-3 py-1.5 text-sm border border-emerald-200 text-emerald-800 rounded-lg hover:bg-emerald-50"
+              >
+                归入文集
+              </button>
+            )}
             <button
               onClick={() => void handleExport()}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-green-200 text-green-700 rounded-lg hover:bg-green-50 text-sm"
@@ -815,7 +820,7 @@ export default function WorkDetailPage() {
                           正文
                         </button>
                       )}
-                      {!isPlanningContext && !isEditorialContext && !isLibraryContext && (
+                      {isWritingContext && (
                         <button
                           onClick={() => navigate(`/writing/${project.id}/${c.id}`)}
                           className="inline-flex items-center gap-1 px-2.5 py-1 border border-blue-200 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 text-xs font-medium"

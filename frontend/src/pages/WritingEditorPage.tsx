@@ -292,7 +292,7 @@ const WritingEditorPage: React.FC = () => {
           <div className="space-x-2">
             <button
               type="button"
-              onClick={() => navigate(`/work/${projectId}`)}
+              onClick={() => navigate(`/work/${projectId}?from=writing`)}
               className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
             >
               返回
@@ -317,7 +317,7 @@ const WritingEditorPage: React.FC = () => {
           <p>请选择要编辑的章节</p>
           <button
             type="button"
-            onClick={() => navigate(`/work/${projectId}`)}
+            onClick={() => navigate(`/work/${projectId}?from=writing`)}
             className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
             返回作品详情
