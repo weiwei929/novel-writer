@@ -68,15 +68,15 @@
 4. 导致 HEAD 干净树不可构建（`TS2307: Cannot find module`）
 
 **处理**：
-1. 全管线审计（`TASK-pipeline-audit.md`）在 ⚠️ 项中发现 WT 污染
-2. 提交审计（`TASK-commit-audit.md`）逐条定位到 7176666
+1. 全管线审计发现 WT 污染
+2. 提交审计逐条定位到 7176666
 3. 司令部决议：不追认，执行 revert
 4. `d794bde` — revert 7176666
 5. `ab7e346` — 重做 P4-B 最小补丁（仅 2 行 phase="library"，零夹带）
 
 **原因分析**：Cursor 在执行 P4-B 时，WT 中已有未提交的 Reader 组件探索成果，selective stage 时未严格区分任务范围，将 WT 中的 Reader 实验代码一并 stage 进入 commit。
 
-**防线**：见 §6 流程复盘。
+**防线**：见 §5 流程复盘。
 
 ---
 
@@ -114,7 +114,7 @@
 | # | 原则 | 状态 |
 |---|------|------|
 | 1 | 五部门三工作区 | ✅ 前端骨架 + 路由 + 上下文全部就位 |
-| 2 | 确认完成 ≠ 放行下一部门 | ⚠️ 语义动作已分离，放行协议（release-to-*）未实现 |
+| 2 | 确认完成 ≠ 放行下一部门 | ⚠️ 语义动作已分离，放行协议未实现 |
 | 3 | 不允许跨部门退回 | ✅ stage-guard 硬拦截 |
 | 4 | 允许部门内退回 | ✅ IN_BUCKET_TRANSITIONS 白名单 |
 | 5 | 文件暂存 ≠ 状态机 | ✅ deletedAt 元标记，restore 不改 status |
@@ -130,24 +130,22 @@
 
 ### P0 — 阻断项：无
 
-HEAD `ab7e346` 构建通过，五部门主流程完整，无阻断性功能或安全缺陷。
+HEAD `ab7e346` 构建通过，五部门主流程完整。
 
 ### P1 — 必须修复：无
 
 ### P2 — 低优 hygiene：无
 
-审计发现的 3 处上下文守卫问题已由 `d4fc68a`（P2 hygiene）修复。
-
 ### 后续设计项（📋 级）
 
 | 项 | 阶段 | 说明 |
 |----|------|------|
-| 创意组合规审计 | P4 低优 | 0608-creative-workspace.md §3 合规检查表；一枪可完 |
-| 放行协议 | Commit 1+ | `release-to-studio/editorial/library` 端点 + 前端放行动作 |
-| AI 审阅报告 | P3-C/Day 3 | ReviewDetailPage AI 占位已就绪，需 AI provider |
+| 创意组合规审计 | P4 低优 | 0608-creative-workspace.md §3 合规检查表 |
+| 放行协议 | Commit 1+ | release-to-* 端点 + 前端放行动作 |
+| AI 审阅报告 | P3-C/Day 3 | ReviewDetailPage AI 占位已就绪 |
 | AI 书评 | Day 3 | LibraryDetailPage 书评占位已就绪 |
-| 创意组三工作区视图 | 可选 | 企划建议书 Tab 内三区子视图，非 P0 |
-| WT 污染清理 | 运维 | schema/ChapterPlanningEditor/reader 等，每次新枪前视情况处理 |
+| 创意组三工作区视图 | 可选 | 企划建议书 Tab 内三区子视图 |
+| WT 污染清理 | 运维 | schema/ChapterPlanningEditor/reader 等 |
 
 ---
 
@@ -156,22 +154,16 @@ HEAD `ab7e346` 构建通过，五部门主流程完整，无阻断性功能或�
 ### 事故：未确认 commit 被推远端
 
 **经过**：
-1. Cursor 在 VPS 执行任务卡后，按指令链（回报→commit→push）将 P2-A+ / P2-B / P3 / P4 的 commit 推到了 `origin/v2-dev`
-2. 前线指挥部（Claude）在未经验证的情况下，将 Cursor 自报的 commit 标记为"已完成"
-3. 司令部发现已确认的落地记录（f768af6 + c1ee91a）与仓库 HEAD 不一致
-4. 触发事实核验 → 提交审计 → 发现 7176666 夹带问题
+1. Cursor 按指令链将 P2-A+ / P2-B / P3 / P4 的 commit 推到了 `origin/v2-dev`
+2. Claude 在未经验证的情况下，将 Cursor 自报的 commit 标记为"已完成"
+3. 司令部发现已确认记录与 HEAD 不一致
+4. 触发事实核验 → 提交审计 → 发现 7176666 夹带
 
-**发现方式**：司令部凭记忆发现已确认 commit 与仓库 HEAD 不匹配，要求只读事实核验。
+**发现方式**：司令部凭记忆发现已确认 commit 与仓库 HEAD 不匹配。
 
-**审计方式**：`TASK-commit-audit.md` — 对 `c1ee91a..d4fc68a` 范围所有 commit 做逐条审计，包括：
-- 逐条 `git show --stat`
-- 风险扫描（schema/Review/Reader/AI/StageTransitionModal/状态流）
-- 构建验证（stash → checkout → build → 恢复）
-- 按阶段分组 + 建议追认/revert
+**审计方式**：对 `c1ee91a..d4fc68a` 范围所有 commit 做逐条审计。
 
-**修正方式**：
-- 11/12 commit 追认（符合 0608，零风险）
-- 1/12 commit（7176666）revert + 重做最小补丁
+**修正方式**：11/12 commit 追认，1/12（7176666）revert + 重做最小补丁。
 
 ### 后续防线
 
@@ -184,11 +176,11 @@ Cursor 执行 → Claude 前线核验 → 司令部检查点确认 → 宣告完
 
 **关键改进**：
 1. **未 stage / 未 commit 的 VPS working tree 内容只能作为侦察素材。** 不能被标记为已完成，不能作为基线。所有阶段成果必须以 commit hash + build/审计证据为准。
-2. Cursor **可执行并 push**，但 commit 标记为"已报未确认"
-3. Claude 必须做 **静态核验**（对照设计文档 + 不变量）后才算"前线确认"
-4. **司令部检查点** 是唯一宣告"完成"的角色
+2. Cursor 可执行并 push，但 commit 标记为"已报未确认"
+3. Claude 必须做静态核验后才算"前线确认"
+4. 司令部检查点是唯一宣告"完成"的角色
 5. commit 在司令部确认前，不写入任何"已交付"记录
-6. 7176666 教训：selective stage 时必须 **严格区分任务范围**，WT 中的探索性代码不得混入任务 commit
+6. 7176666 教训：selective stage 必须严格区分任务范围，WT 探索性代码不得混入任务 commit
 
 ---
 
