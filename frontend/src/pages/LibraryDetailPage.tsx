@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   chaptersApi,
@@ -13,7 +13,6 @@ import ProjectStatusBadge from '../components/projects/ProjectStatusBadge'
 import FileStagingConfirmModal from '../components/projects/FileStagingConfirmModal'
 import CollectionPickerModal from '../components/library/CollectionPickerModal'
 import CreateCollectionModal from '../components/library/CreateCollectionModal'
-import WorkReaderPanel, { scrollToChapter } from '../components/reader/WorkReaderPanel'
 import { IconArrowLeft, IconLibrary } from '../components/ui/icons'
 
 const BOOK_REVIEW_TYPES = [
@@ -39,7 +38,7 @@ export default function LibraryDetailPage() {
   const [project, setProject] = useState<Project | null>(null)
   const [chapters, setChapters] = useState<Chapter[]>([])
   const [collections, setCollections] = useState<Collection[]>([])
-  const [activeChapterId, setActiveChapterId] = useState<string | null>(null)
+  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [showFileStaging, setShowFileStaging] = useState(false)
@@ -59,7 +58,7 @@ export default function LibraryDetailPage() {
       setProject(p)
       const sorted = [...ch].sort((a, b) => a.order - b.order)
       setChapters(sorted)
-      setActiveChapterId(prev => {
+      setSelectedChapterId(prev => {
         if (prev && sorted.some(c => c.id === prev)) return prev
         return sorted[0]?.id ?? null
       })
@@ -88,6 +87,11 @@ export default function LibraryDetailPage() {
   useEffect(() => {
     void loadCollections()
   }, [loadCollections])
+
+  const selectedChapter = useMemo(
+    () => chapters.find(c => c.id === selectedChapterId) ?? null,
+    [chapters, selectedChapterId]
+  )
 
   const isArchived = project?.status === 'archived'
 
@@ -178,7 +182,7 @@ export default function LibraryDetailPage() {
     return (
       <div className="text-center py-20 space-y-4">
         <p className="text-sm text-gray-600">该作品未归档，无法在文集库查看。</p>
-        <ProjectStatusBadge status={project.status} phase="library" />
+        <ProjectStatusBadge status={project.status} />
         <button
           type="button"
           onClick={() => navigate('/library')}
@@ -209,7 +213,7 @@ export default function LibraryDetailPage() {
             返回文集库
           </button>
           <h1 className="text-xl font-bold text-gray-900 truncate">{project.title}</h1>
-          <ProjectStatusBadge status={project.status} phase="library" />
+          <ProjectStatusBadge status={project.status} />
         </div>
         <div className="flex flex-wrap gap-2 items-center">
           <button
@@ -301,21 +305,18 @@ export default function LibraryDetailPage() {
         <div className="px-4 py-3 border-b bg-gray-50">
           <h2 className="text-sm font-semibold text-gray-900">章节（只读）</h2>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] min-h-[320px] max-h-[70vh]">
-          <div className="border-b lg:border-b-0 lg:border-r p-2 space-y-1 overflow-y-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] min-h-[280px]">
+          <div className="border-b lg:border-b-0 lg:border-r p-2 space-y-1 max-h-80 lg:max-h-none overflow-y-auto">
             {chapters.length === 0 ? (
               <p className="text-xs text-gray-400 px-2 py-4">暂无章节</p>
             ) : (
               chapters.map(c => {
-                const active = c.id === activeChapterId
+                const active = c.id === selectedChapterId
                 return (
                   <button
                     key={c.id}
                     type="button"
-                    onClick={() => {
-                      setActiveChapterId(c.id)
-                      scrollToChapter(c.order)
-                    }}
+                    onClick={() => setSelectedChapterId(c.id)}
                     className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                       active
                         ? 'bg-emerald-50 text-emerald-900 font-medium'
@@ -328,13 +329,30 @@ export default function LibraryDetailPage() {
               })
             )}
           </div>
-          <div className="flex flex-col min-h-[280px] min-w-0">
-            <WorkReaderPanel
-              chapters={chapters}
-              className="min-h-0"
-              headingClassName="text-emerald-900"
-              dividerClassName="border-emerald-100"
-            />
+          <div className="flex flex-col min-h-[200px]">
+            {selectedChapter ? (
+              <>
+                <div className="px-4 py-3 border-b shrink-0">
+                  <h3 className="font-medium text-gray-900">{selectedChapter.title}</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {selectedChapter.wordCount.toLocaleString()} 字
+                  </p>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4">
+                  {selectedChapter.content?.trim() ? (
+                    <div className="prose prose-sm max-w-none text-gray-800 whitespace-pre-wrap">
+                      {selectedChapter.content}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400">本章暂无正文。</p>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-sm text-gray-400 p-6">
+                {chapters.length === 0 ? '暂无章节' : '请选择章节'}
+              </div>
+            )}
           </div>
         </div>
       </section>
