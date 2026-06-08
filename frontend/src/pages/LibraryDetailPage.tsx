@@ -182,7 +182,7 @@ export default function LibraryDetailPage() {
     return (
       <div className="text-center py-20 space-y-4">
         <p className="text-sm text-gray-600">该作品未归档，无法在文集库查看。</p>
-        <ProjectStatusBadge status={project.status} />
+        <ProjectStatusBadge status={project.status} phase="library" />
         <button
           type="button"
           onClick={() => navigate('/library')}
@@ -213,7 +213,7 @@ export default function LibraryDetailPage() {
             返回文集库
           </button>
           <h1 className="text-xl font-bold text-gray-900 truncate">{project.title}</h1>
-          <ProjectStatusBadge status={project.status} />
+          <ProjectStatusBadge status={project.status} phase="library" />
         </div>
         <div className="flex flex-wrap gap-2 items-center">
           <button
