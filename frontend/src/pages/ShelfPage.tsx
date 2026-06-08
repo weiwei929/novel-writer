@@ -25,6 +25,22 @@ const SOURCE_LABELS: Record<string, string> = {
   stage_transition: '阶段管理',
 }
 
+/** 从 shelved.source 派生 WDP from 参数。无法安全映射时返回 null，标题不可点 */
+function deriveWdpFrom(source?: string): string | null {
+  switch (source) {
+    case 'planning':
+      return 'planning'
+    case 'writing':
+      return 'writing'
+    case 'review':
+      return 'editorial'
+    case 'library':
+      return 'library'
+    default:
+      return null
+  }
+}
+
 function formatRelativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const days = Math.floor(diff / 86400000)
@@ -48,6 +64,7 @@ function ShelvedProjectCard({
   onPermanentDelete: (id: string, title: string) => void
 }) {
   const shelved = getShelvedMeta(project)
+  const from = deriveWdpFrom(shelved.source)
   const prevLabel = shelved.previousStatus
     ? PROJECT_STATUS_LABEL[shelved.previousStatus] || shelved.previousStatus
     : '未知'
@@ -63,12 +80,18 @@ function ShelvedProjectCard({
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <Link
-              to={`/work/${project.id}`}
-              className="text-lg font-semibold text-gray-900 hover:text-blue-600 truncate"
-            >
-              {project.title}
-            </Link>
+            {from ? (
+              <Link
+                to={`/work/${project.id}?from=${from}`}
+                className="text-lg font-semibold text-gray-900 hover:text-blue-600 truncate"
+              >
+                {project.title}
+              </Link>
+            ) : (
+              <span className="text-lg font-semibold text-gray-400 truncate">
+                {project.title}
+              </span>
+            )}
             <ProjectStatusBadge status={project.status} />
           </div>
           <p className="text-sm text-gray-600 mt-2">
