@@ -576,6 +576,21 @@ export const projectsApi = {
     return response.data
   },
 
+  async markWritten(id: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/mark-written`)
+    return response.data
+  },
+
+  async submitReview(id: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/submit-review`)
+    return response.data
+  },
+
+  async markReviewed(id: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/mark-reviewed`)
+    return response.data
+  },
+
   async getShelved(): Promise<Project[]> {
     return this.getAll(undefined, 'shelved')
   },

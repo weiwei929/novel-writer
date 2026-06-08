@@ -33,7 +33,7 @@ export function getProjectStatusLabel(status: string, phase: PhaseContext): stri
   }
   if (phase === 'editorial') {
     switch (s) {
-      case 'writing':
+      case 'written':
         return '待审阅作品'
       case 'reviewing':
         return '审阅中作品'
