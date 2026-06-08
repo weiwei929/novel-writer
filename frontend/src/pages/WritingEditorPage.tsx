@@ -34,7 +34,8 @@ function ModeButton({
   )
 }
 
-function ReviewPlaceholder({ onClose }: { onClose: () => void }) {
+/** Reserved for P4 editorial review mode — do not remove. */
+export function ReviewPlaceholder({ onClose }: { onClose: () => void }) {
   return (
     <div className="w-[360px] shrink-0 h-full bg-white border-l border-gray-200 flex flex-col">
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
@@ -247,7 +248,7 @@ const WritingEditorPage: React.FC = () => {
         // handleSave 已设置 error
       }
     }
-    navigate(`/work/${projectId}`)
+    navigate(`/work/${projectId}?from=writing`)
   }
 
   const handleApplyAIContent = (contentToInsert: string) => {
@@ -376,11 +377,6 @@ const WritingEditorPage: React.FC = () => {
                 onClick={() => setMode(editorMode === 'ai' ? 'pure' : 'ai')}
               />
             )}
-            <ModeButton
-              active={editorMode === 'review'}
-              label="审阅"
-              onClick={() => setMode(editorMode === 'review' ? 'pure' : 'review')}
-            />
           </div>
 
           <div className="h-5 w-px bg-gray-200 mx-1" />
@@ -443,9 +439,6 @@ const WritingEditorPage: React.FC = () => {
                 projectId={project?.id}
                 chapterId={chapter?.id}
               />
-            )}
-            {editorMode === 'review' && (
-              <ReviewPlaceholder onClose={() => setMode('pure')} />
             )}
           </>
         )}
