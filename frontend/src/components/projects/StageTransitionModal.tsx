@@ -20,22 +20,24 @@ const STAGE_LABEL: Record<ProjectStatus, string> = {
   reviewing: '编审部',
   reviewed: '已审阅',
   archived: '已归档',
-  completed: '已完成',
-  shelved: '作品暂存',
+  completed: '已完成',  // ⚠️ 0608 F-006 冻结 — 不应再作为可用状态
+  shelved: '作品暂存',  // ⚠️ 0608 F-003 冻结 — 改用 deletedAt 墓园模型
 }
 
 const NEXT_STATUS: Partial<Record<ProjectStatus, ProjectStatus>> = {
   draft: 'planning',
   planning: 'writing',
   writing: 'reviewing',
-  reviewing: 'completed',
+  reviewing: 'reviewed',  // 0608 F-012: 不是 completed
 }
 
+// 0608 F-001: 只允许部门内退回，不含跨部门路径
 const PREV_STATUS: Partial<Record<ProjectStatus, ProjectStatus>> = {
-  planning: 'draft',
-  writing: 'planning',
-  reviewing: 'writing',
-  completed: 'reviewing',
+  // planning: 'draft',    ← ❌ 企划课→创意组 跨部门退回（F-001）
+  // writing: 'planning',  ← ❌ 创作室→企划课 跨部门退回（F-001）
+  planned: 'planning',     // ✅ 企划课内部退回
+  written: 'writing',      // ✅ 创作室内部退回
+  reviewed: 'reviewing',   // ✅ 编审部内部退回
 }
 
 type OptionId = StageTransitionAction | 'cancel'

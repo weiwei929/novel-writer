@@ -137,6 +137,7 @@ export interface Project {
   createdAt: string
   updatedAt: string
   archivedAt?: string
+  deletedAt?: string | null
   coverImage?: string
   metadata?: Record<string, any> // Now natively JSON object
   genre?: string[]
@@ -161,7 +162,7 @@ export interface Chapter {
   content: string
   order: number
   wordCount: number
-  status: 'draft' | 'writing' | 'completed'
+  status: 'draft' | 'written'
   createdAt: string
   updatedAt: string
   summary?: string
@@ -574,6 +575,42 @@ export const projectsApi = {
   async startWriting(id: string): Promise<Project> {
     const response = await api.post(`/projects/${id}/start-writing`)
     return response.data
+  },
+
+  // ===== 0608 创作室操作 =====
+
+  async markWritten(id: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/mark-written`)
+    return response.data
+  },
+
+  async submitReview(id: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/submit-review`)
+    return response.data
+  },
+
+  async undoWritten(id: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/undo-written`)
+    return response.data
+  },
+
+  // ===== 0608 暂存机制 (deletedAt) =====
+
+  async softShelve(id: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/soft-shelve`)
+    return response.data
+  },
+
+  async unshelve(id: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/unshelve`)
+    return response.data
+  },
+
+  // ===== 墓园 =====
+
+  async getGraveyard(): Promise<Project[]> {
+    const response = await api.get('/graveyard')
+    return response.data?.projects ?? []
   },
 
   async getShelved(): Promise<Project[]> {

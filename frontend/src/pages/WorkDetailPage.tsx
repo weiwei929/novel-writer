@@ -1,4 +1,4 @@
-import { IconArrowDown, IconArrowLeft, IconArrowRight, IconArrowUp, IconClose, IconDelete, IconDownload, IconFile, IconList, IconRefresh } from '../components/ui/icons'
+import { IconArrowDown, IconArrowLeft, IconArrowRight, IconArrowUp, IconClose, IconFile, IconList } from '../components/ui/icons'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
@@ -17,11 +17,12 @@ import { useWorldStore } from '../stores/worldStore'
 import { useNotifications } from '../hooks/useNotifications'
 import ProjectStatusBadge from '../components/projects/ProjectStatusBadge'
 import type { PhaseContext } from '../services/statusLabels'
-import StageTransitionModal, {
-  nextStatusForTransition,
-  prevStatusForTransition,
-  type StageTransitionAction,
-} from '../components/projects/StageTransitionModal'
+import { resolveDepartment, type Department } from '../services/departments'
+import PlanningActions from '../components/work/PlanningActions'
+import StudioActions from '../components/work/StudioActions'
+import EditorialActions from '../components/work/EditorialActions'
+import LibraryActions from '../components/work/LibraryActions'
+import GraveyardActions from '../components/work/GraveyardActions'
 import WorldBuildingPage from './creative/WorldBuildingPage'
 import ContentMetadataCard from '../components/metadata/ContentMetadataCard'
 import ChapterContentModal from '../components/editor/ChapterContentModal'
@@ -39,18 +40,9 @@ const TABS: { id: WorkTab; label: string }[] = [
 function getChapterStatusLabel(status: Chapter['status']) {
   const map: Record<Chapter['status'], string> = {
     draft: '草稿',
-    writing: '写作中',
-    completed: '已完成',
+    written: '已写完',
   }
   return map[status] ?? status
-}
-
-function pickWritingChapter(chapters: Chapter[]): Chapter | null {
-  if (chapters.length === 0) return null
-  const sorted = [...chapters].sort(
-    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-  )
-  return sorted[0]
 }
 
 export default function WorkDetailPage() {
@@ -66,8 +58,6 @@ export default function WorkDetailPage() {
 
   const [showPlanning, setShowPlanning] = useState(false)
   const [showMetadataEditor, setShowMetadataEditor] = useState(false)
-  const [showTransition, setShowTransition] = useState(false)
-  const [transitionLoading, setTransitionLoading] = useState(false)
   const [showLibraryPicker, setShowLibraryPicker] = useState(false)
   const [showCreateCollection, setShowCreateCollection] = useState(false)
   const [collections, setCollections] = useState<Collection[]>([])
@@ -154,75 +144,6 @@ export default function WorkDetailPage() {
     new Date(dateString).toLocaleDateString('zh-CN')
 
 
-  const handleStageAction = async (
-    label: string,
-    action: () => Promise<unknown>,
-    successMsg?: string
-  ) => {
-    if (!window.confirm(`确定要${label}吗？`)) return
-    try {
-      setTransitionLoading(true)
-      await action()
-      notifySuccess(successMsg ?? `已${label}`)
-      await load()
-    } catch {
-      notifyError('操作失败', `无法${label}`)
-    } finally {
-      setTransitionLoading(false)
-    }
-  }
-
-  const handleEnterWriting = () => {
-    if (!project) return
-    const target = pickWritingChapter(chapters)
-    if (target) {
-      navigate(`/writing/${project.id}/${target.id}`)
-    } else {
-      notifyError('无法进入创作室', '请先创建章节')
-    }
-  }
-
-  const handleExport = async () => {
-    if (!project) return
-    try {
-      const blob = await projectsApi.exportProject(project.id)
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${project.title}.md`
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
-      notifySuccess('导出成功', '作品已下载')
-    } catch {
-      notifyError('导出失败', '无法导出作品')
-    }
-  }
-
-  const handleRestore = async () => {
-    if (!project) return
-    try {
-      await projectsApi.restore(project.id)
-      notifySuccess('已还原', '作品已从暂存移出')
-      await load()
-    } catch {
-      notifyError('还原失败', '无法还原作品')
-    }
-  }
-
-  const handleDelete = async () => {
-    if (!project) return
-    if (!window.confirm(`确定要彻底删除「${project.title}」吗？此操作不可撤销。`)) return
-    try {
-      await projectsApi.delete(project.id)
-      notifySuccess('已删除', '作品已彻底删除')
-      navigate('/shelf')
-    } catch {
-      notifyError('删除失败', '无法删除作品')
-    }
-  }
-
   const loadCollections = useCallback(async () => {
     try {
       const cols = await collectionsApi.getAll()
@@ -269,43 +190,76 @@ export default function WorkDetailPage() {
     }
   }
 
-  const handleTransition = async (action: StageTransitionAction, note?: string) => {
-    if (!project) return
-    const toMap: Record<StageTransitionAction, string | undefined> = {
-      advance: nextStatusForTransition[project.status],
-      retreat: prevStatusForTransition[project.status],
-      shelve: 'shelved',
-    }
-    const to = toMap[action]
-    if (!to) {
-      notifyError('无法流转', '当前状态不支持该操作')
-      return
-    }
-    try {
-      setTransitionLoading(true)
-      await projectsApi.transition(project.id, to, note)
-      const msg =
-        action === 'advance' ? '推进' : action === 'retreat' ? '回退' : '移入暂存'
-      notifySuccess(`作品已${msg}`)
-      setShowTransition(false)
-      await load()
-    } catch {
-      notifyError('流转失败', '无法更新作品状态')
-    } finally {
-      setTransitionLoading(false)
+  // from → 部门上下文映射（0608：同状态在不同部门有不同语义）
+  const fromToDept = (f: string | null): Department | null => {
+    switch (f) {
+      case 'planning': return 'planning'
+      case 'writing':  return 'studio'
+      case 'editorial': return 'editorial'
+      case 'library':  return 'library'
+      default:         return null
     }
   }
 
-  const stageManageButton = !isPlanningContext ? (
-    <button
-      type="button"
-      onClick={() => setShowTransition(true)}
-      disabled={transitionLoading}
-      className="px-3 py-1.5 text-sm border border-amber-200 text-amber-800 rounded-lg hover:bg-amber-50 disabled:opacity-50"
-    >
-      阶段管理
-    </button>
-  ) : null
+  const deptCtx = useMemo(
+    () => (project ? resolveDepartment(project.status, project.deletedAt, fromToDept(from)) : null),
+    [project, from]
+  )
+
+  const renderActions = () => {
+    if (!project || !deptCtx) return null
+
+    const { department, workArea } = deptCtx
+
+    switch (department) {
+      case 'planning':
+        return (
+          <PlanningActions
+            project={project}
+            workArea={workArea as 'active' | 'completed'}
+            onRefresh={load}
+            onShowPlanning={() => setShowPlanning(true)}
+            onShowMetadataEditor={() => setShowMetadataEditor(true)}
+          />
+        )
+      case 'studio':
+        return (
+          <StudioActions
+            project={project}
+            workArea={workArea}
+            chapters={chapters}
+            onRefresh={load}
+            onShowPlanning={() => setShowPlanning(true)}
+          />
+        )
+      case 'editorial':
+        return (
+          <EditorialActions
+            project={project}
+            workArea={workArea as 'pending' | 'active' | 'completed'}
+            onRefresh={load}
+          />
+        )
+      case 'library':
+        return (
+          <LibraryActions
+            project={project}
+            workArea={workArea as 'pending' | 'completed'}
+            onRefresh={load}
+            onOpenLibraryPicker={openLibraryPicker}
+          />
+        )
+      case 'graveyard':
+        return (
+          <GraveyardActions
+            project={project}
+            onRefresh={load}
+          />
+        )
+      default:
+        return null
+    }
+  }
 
   const startEditTitle = (chapter: Chapter) => {
     setEditingTitleId(chapter.id)
@@ -344,135 +298,6 @@ export default function WorkDetailPage() {
       notifyError('排序失败', '无法调整章节顺序')
     } finally {
       setReordering(false)
-    }
-  }
-
-  const renderActions = () => {
-    if (!project) return null
-
-    switch (project.status) {
-      case 'draft':
-        return (
-          <>
-            <button
-              onClick={() => setActiveTab('setting')}
-              className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
-            >
-              编辑作品设定
-            </button>
-            {stageManageButton}
-          </>
-        )
-      case 'planning':
-        return (
-          <>
-            <button
-              onClick={() => setShowPlanning(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 text-sm"
-            >
-              <IconList size={14} />
-              管理章节规划
-            </button>
-            <button
-              onClick={() => setShowMetadataEditor(true)}
-              className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
-            >
-              编辑元数据
-            </button>
-            <button
-              type="button"
-              disabled={transitionLoading}
-              onClick={() =>
-                void handleStageAction('确认企划完成', () =>
-                  projectsApi.confirmGreenlight(project.id)
-                )
-              }
-              className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
-            >
-              确认企划完成
-            </button>
-            {stageManageButton}
-          </>
-        )
-      case 'planned':
-        if (isPlanningContext) {
-          return (
-            <>
-              <button
-                onClick={() => setShowPlanning(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 text-sm"
-              >
-                管理章节规划
-              </button>
-            </>
-          )
-        }
-        return stageManageButton
-      case 'writing':
-        return (
-          <>
-            <button
-              onClick={handleEnterWriting}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
-            >
-              <IconArrowRight size={14} />
-              进入创作室
-            </button>
-            <button
-              onClick={() => setShowPlanning(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 text-sm"
-            >
-              <IconList size={14} />
-              管理章节规划
-            </button>
-            {stageManageButton}
-          </>
-        )
-      case 'reviewing':
-        return stageManageButton
-      case 'completed':
-        return (
-          <>
-            <button
-              type="button"
-              onClick={openLibraryPicker}
-              className="px-3 py-1.5 text-sm border border-emerald-200 text-emerald-800 rounded-lg hover:bg-emerald-50"
-            >
-              归入文集
-            </button>
-            <button
-              onClick={() => void handleExport()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-green-200 text-green-700 rounded-lg hover:bg-green-50 text-sm"
-            >
-              <IconDownload size={14} />
-              导出
-            </button>
-            {stageManageButton}
-          </>
-        )
-      case 'archived':
-        return null
-      case 'shelved':
-        return (
-          <>
-            <button
-              onClick={() => void handleRestore()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-blue-200 text-blue-700 rounded-lg hover:bg-blue-50 text-sm"
-            >
-              <IconRefresh size={14} />
-              还原
-            </button>
-            <button
-              onClick={() => void handleDelete()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 text-sm"
-            >
-              <IconDelete size={14} />
-              彻底删除
-            </button>
-          </>
-        )
-      default:
-        return null
     }
   }
 
@@ -762,15 +587,6 @@ export default function WorkDetailPage() {
           }}
           initialField="synopsis"
           initialMode="view_all"
-        />
-      )}
-
-      {!isPlanningContext && (
-        <StageTransitionModal
-          open={showTransition}
-          project={project}
-          onConfirm={(action, note) => void handleTransition(action, note)}
-          onCancel={() => setShowTransition(false)}
         />
       )}
 

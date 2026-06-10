@@ -198,8 +198,7 @@ export const EditChapterModal: React.FC<EditChapterModalProps> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="draft">草稿</option>
-              <option value="writing">写作中</option>
-              <option value="completed">已完成</option>
+              <option value="written">已写完</option>
               <option value="published">已发布</option>
             </select>
           </div>

@@ -108,8 +108,8 @@ export default function ShelfPage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const shelved = await projectsApi.getShelved()
-      setProjects(shelved)
+      const graveyard = await projectsApi.getGraveyard()
+      setProjects(graveyard)
     } catch {
       notifyError('加载失败', '无法获取暂存作品列表')
     } finally {
@@ -124,7 +124,7 @@ export default function ShelfPage() {
   const handleRestore = async (id: string) => {
     setActing(true)
     try {
-      await projectsApi.restore(id)
+      await projectsApi.unshelve(id)
       notifySuccess('已还原', '作品已从暂存移出')
       await load()
     } catch {

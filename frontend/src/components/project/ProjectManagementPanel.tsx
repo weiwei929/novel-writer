@@ -37,9 +37,9 @@ const ProjectManagementPanel: React.FC<ProjectManagementPanelProps> = ({
   // 计算统计数据
   const statistics = React.useMemo(() => {
     const totalWords = chapters.reduce((sum, chapter) => sum + (chapter.wordCount || 0), 0)
-    const completedChapters = chapters.filter(c => c.status === 'completed').length
+    const completedChapters = chapters.filter(c => c.status === 'written').length
     const draftChapters = chapters.filter(c => c.status === 'draft').length
-    const writingChapters = chapters.filter(c => c.status === 'writing').length
+    const writingChapters = 0  // 0608: Chapter 只有 draft/written，writing 是 project 级状态
     const avgWordsPerChapter = chapters.length > 0 ? Math.round(totalWords / chapters.length) : 0
     const progress = writingGoal > 0 ? Math.round((totalWords / writingGoal) * 100) : 0
     const estimatedReadingTime = Math.ceil(totalWords / 250) // 按每分钟250字计算
