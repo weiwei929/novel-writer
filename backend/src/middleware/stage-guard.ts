@@ -32,7 +32,7 @@ export const IN_BUCKET_TRANSITIONS: Record<string, readonly string[]> = {
   reviewed: ['reviewing'],
   completed: ['reviewing'],
   imported: [],
-  planned: [],
+  planned: ['planning'],   // 0608 原则#4：允许部门内退回 planned→planning
   archived: [],
 }
 
