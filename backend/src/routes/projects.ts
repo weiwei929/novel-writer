@@ -10,6 +10,7 @@ import { ApiResponse } from '../utils/response'
 import type { ProjectMetadata } from '../types/metadata'
 import { mapProjectStatus, withMappedProjectStatus } from '../services/status-migration'
 import { META_KEYS_DAY1 } from '../constants/metadata-keys'
+import { PROJECT_STATUS_ALL } from '../constants/statuses'
 import {
   assertProjectExists,
   assertNotDeleted,
@@ -250,14 +251,9 @@ const ShelveProjectSchema = z.object({
   source: z.string().optional(),
 })
 
-const TransitionTargetSchema = z.enum([
-  'draft',
-  'planning',
-  'writing',
-  'reviewing',
-  'completed',
-  'shelved',
-])
+const TransitionTargetSchema = z.enum(
+  PROJECT_STATUS_ALL as unknown as [string, ...string[]]
+)
 
 const TransitionRequestSchema = z.object({
   to: TransitionTargetSchema,
