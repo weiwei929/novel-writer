@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { projectsApi, proposalsApi, type Project, type Proposal } from '../../services/api'
+import { hasReleasedToStudio } from '../../services/releaseHandoff'
 import { useUIStore } from '../../stores/uiStore'
 import ProjectPickerView, { type PlanningAction } from '../../components/projects/ProjectPickerView'
 import { IconPlanning } from '../../components/ui/icons'
@@ -30,7 +31,10 @@ export default function PlanningPage() {
   )
 
   const planning = useMemo(() => projects.filter(p => p.status === 'planning'), [projects])
-  const planned = useMemo(() => projects.filter(p => p.status === 'planned'), [projects])
+  const planned = useMemo(
+    () => projects.filter(p => p.status === 'planned' && !hasReleasedToStudio(p)),
+    [projects],
+  )
 
   const handleAction = useCallback(async (id: string, action: PlanningAction) => {
     try {

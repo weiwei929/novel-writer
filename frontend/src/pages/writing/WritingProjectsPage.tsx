@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { projectsApi, type Project } from '../../services/api'
+import { hasReleasedToEditorial, hasReleasedToStudio } from '../../services/releaseHandoff'
 import { useUIStore } from '../../stores/uiStore'
 import ProjectStatusBadge from '../../components/projects/ProjectStatusBadge'
 import { IconWriting } from '../../components/ui/icons'
@@ -61,9 +62,15 @@ export default function WritingProjectsPage() {
   }, [])
   useEffect(() => { void load() }, [load])
 
-  const planned = useMemo(() => projects.filter(p => p.status === 'planned'), [projects])
+  const planned = useMemo(
+    () => projects.filter(p => p.status === 'planned' && hasReleasedToStudio(p)),
+    [projects],
+  )
   const writing = useMemo(() => projects.filter(p => p.status === 'writing'), [projects])
-  const written = useMemo(() => projects.filter(p => p.status === 'written'), [projects])
+  const written = useMemo(
+    () => projects.filter(p => p.status === 'written' && !hasReleasedToEditorial(p)),
+    [projects],
+  )
 
   const handleAction = useCallback(async (id: string, a: StudioAction) => {
     try {

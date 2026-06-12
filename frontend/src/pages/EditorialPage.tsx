@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { projectsApi, type Project } from '../services/api'
+import { hasReleasedToEditorial, hasReleasedToLibrary } from '../services/releaseHandoff'
 import { useUIStore } from '../stores/uiStore'
 import ProjectStatusBadge from '../components/projects/ProjectStatusBadge'
 import { IconReview } from '../components/ui/icons'
@@ -103,9 +104,15 @@ export default function EditorialPage() {
     void load()
   }, [load])
 
-  const pending = useMemo(() => projects.filter(p => p.status === 'written'), [projects])
+  const pending = useMemo(
+    () => projects.filter(p => p.status === 'written' && hasReleasedToEditorial(p)),
+    [projects],
+  )
   const active = useMemo(() => projects.filter(p => p.status === 'reviewing'), [projects])
-  const completed = useMemo(() => projects.filter(p => p.status === 'reviewed'), [projects])
+  const completed = useMemo(
+    () => projects.filter(p => p.status === 'reviewed' && !hasReleasedToLibrary(p)),
+    [projects],
+  )
 
   const handleAction = useCallback(
     async (id: string, a: EditorialAction) => {

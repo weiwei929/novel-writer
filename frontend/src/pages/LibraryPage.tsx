@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { collectionsApi, projectsApi, type Collection, type Project } from '../services/api'
+import { hasReleasedToLibrary } from '../services/releaseHandoff'
 import { useNotifications } from '../hooks/useNotifications'
 import ProjectStatusBadge from '../components/projects/ProjectStatusBadge'
 import CreateCollectionModal from '../components/library/CreateCollectionModal'
@@ -153,7 +154,10 @@ export default function LibraryPage() {
 
   useEffect(() => { void load() }, [load])
 
-  const pending = useMemo(() => projects.filter(p => p.status === 'reviewed'), [projects])
+  const pending = useMemo(
+    () => projects.filter(p => p.status === 'reviewed' && hasReleasedToLibrary(p)),
+    [projects],
+  )
   const archived = useMemo(() => projects.filter(p => p.status === 'archived'), [projects])
 
   const countInCollection = useCallback(
