@@ -87,13 +87,13 @@ export default function PlanningPage() {
             <div className="space-y-3">
               {planningProposals.map(p => (
                 <div key={p.id} className="bg-white border rounded-xl p-4 hover:border-blue-200 transition-all">
-                  <button onClick={() => navigate(`/creative/proposals/${p.id}`)} className="text-left w-full">
+                  <button onClick={() => navigate(`/planning/proposals/${p.id}`)} className="text-left w-full">
                     <h3 className="font-medium text-sm truncate">{p.title}</h3>
                     <p className="text-xs text-gray-400 mt-1">{p.synopsis?.slice(0, 80) || '—'}</p>
                   </button>
                   <div className="flex gap-1.5 mt-3 pt-3 border-t border-gray-100">
-                    <button onClick={() => navigate(`/planning/evaluation`)}
-                      className="text-xs px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700">评估</button>
+                    <button onClick={() => navigate(`/planning/proposals/${p.id}`)}
+                      className="text-xs px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700">查看并接收</button>
                   </div>
                 </div>
               ))}
