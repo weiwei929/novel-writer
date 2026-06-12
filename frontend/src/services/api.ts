@@ -606,6 +606,23 @@ export const projectsApi = {
     return response.data
   },
 
+  // ===== 0608 release handoff（仅 metadata 交接时间戳，不改 status）=====
+
+  async releaseToStudio(id: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/release-to-studio`)
+    return response.data
+  },
+
+  async releaseToEditorial(id: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/release-to-editorial`)
+    return response.data
+  },
+
+  async releaseToLibrary(id: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/release-to-library`)
+    return response.data
+  },
+
   // ===== 0608 暂存机制 (deletedAt) =====
 
   async softShelve(id: string): Promise<Project> {

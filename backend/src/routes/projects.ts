@@ -298,6 +298,21 @@ function appendShelvedMetadata(
   }
 }
 
+/** 0608 release handoff: write timestamp once; do not overwrite existing key */
+function applyHandoffTimestamp(
+  metadata: Record<string, unknown>,
+  key: string
+): { next: Prisma.InputJsonValue; alreadySet: boolean } {
+  const existing = metadata[key]
+  if (existing != null && existing !== '') {
+    return { next: metadata as Prisma.InputJsonValue, alreadySet: true }
+  }
+  return {
+    next: mergeMetadata(metadata, { [key]: new Date().toISOString() }),
+    alreadySet: false,
+  }
+}
+
 // Chapter Planning Schemas
 const ChapterPlanItemSchema = z.object({
   id: z.string(),
@@ -881,6 +896,84 @@ export async function projectRoutes(app: FastifyInstance) {
         return reply.status(400).send(ApiResponse.error(e.message, 400))
       }
       const message = e instanceof Error ? e.message : 'archive failed'
+      return reply.status(500).send(ApiResponse.error(message, 500))
+    }
+  })
+
+  // #11 release-to-studio — planned 交接至创作室（仅 metadata._releasedToStudioAt，不改 status）
+  app.post('/:id/release-to-studio', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    try {
+      const project = await loadActiveProject(req.params.id)
+      assertStatusFor(project.status, ['planned'])
+      const metadata = (project.metadata as Record<string, unknown>) || {}
+      const { next, alreadySet } = applyHandoffTimestamp(metadata, '_releasedToStudioAt')
+      const result = alreadySet
+        ? project
+        : await prisma.project.update({
+            where: { id: req.params.id },
+            data: { metadata: next },
+          })
+      return ApiResponse.success(withMappedProjectStatus(result), '已放行至创作室')
+    } catch (e: unknown) {
+      if (e instanceof ProjectNotFoundError) {
+        return reply.status(404).send(ApiResponse.error(e.message, 404))
+      }
+      if (e instanceof StatusNotAllowedError) {
+        return reply.status(400).send(ApiResponse.error(e.message, 400))
+      }
+      const message = e instanceof Error ? e.message : 'release-to-studio failed'
+      return reply.status(500).send(ApiResponse.error(message, 500))
+    }
+  })
+
+  // #12 release-to-editorial — written 交接至编审部（仅 metadata._releasedToEditorialAt）
+  app.post('/:id/release-to-editorial', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    try {
+      const project = await loadActiveProject(req.params.id)
+      assertStatusFor(project.status, ['written'])
+      const metadata = (project.metadata as Record<string, unknown>) || {}
+      const { next, alreadySet } = applyHandoffTimestamp(metadata, '_releasedToEditorialAt')
+      const result = alreadySet
+        ? project
+        : await prisma.project.update({
+            where: { id: req.params.id },
+            data: { metadata: next },
+          })
+      return ApiResponse.success(withMappedProjectStatus(result), '已放行至编审部')
+    } catch (e: unknown) {
+      if (e instanceof ProjectNotFoundError) {
+        return reply.status(404).send(ApiResponse.error(e.message, 404))
+      }
+      if (e instanceof StatusNotAllowedError) {
+        return reply.status(400).send(ApiResponse.error(e.message, 400))
+      }
+      const message = e instanceof Error ? e.message : 'release-to-editorial failed'
+      return reply.status(500).send(ApiResponse.error(message, 500))
+    }
+  })
+
+  // #13 release-to-library — reviewed 交接至文集库（仅 metadata._releasedToLibraryAt）
+  app.post('/:id/release-to-library', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    try {
+      const project = await loadActiveProject(req.params.id)
+      assertStatusFor(project.status, ['reviewed'])
+      const metadata = (project.metadata as Record<string, unknown>) || {}
+      const { next, alreadySet } = applyHandoffTimestamp(metadata, '_releasedToLibraryAt')
+      const result = alreadySet
+        ? project
+        : await prisma.project.update({
+            where: { id: req.params.id },
+            data: { metadata: next },
+          })
+      return ApiResponse.success(withMappedProjectStatus(result), '已放行至文集库')
+    } catch (e: unknown) {
+      if (e instanceof ProjectNotFoundError) {
+        return reply.status(404).send(ApiResponse.error(e.message, 404))
+      }
+      if (e instanceof StatusNotAllowedError) {
+        return reply.status(400).send(ApiResponse.error(e.message, 400))
+      }
+      const message = e instanceof Error ? e.message : 'release-to-library failed'
       return reply.status(500).send(ApiResponse.error(message, 500))
     }
   })
