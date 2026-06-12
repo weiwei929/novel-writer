@@ -30,6 +30,9 @@ const matchesPath = (pathname: string, target: string): boolean =>
 const isWritingEditorPath = (pathname: string): boolean =>
   /^\/writing\/[^/]+\/[^/]+$/.test(pathname)
 
+const isLegacyEditorPath = (pathname: string): boolean =>
+  pathname === '/editor' || pathname.startsWith('/editor/')
+
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation()
   const pathname = location.pathname
@@ -45,7 +48,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, [location.search])
 
   const activePhase = getActivePhase(pathname)
-  const isEditor = pathname.startsWith('/editor') || isWritingEditorPath(pathname)
+  const isEditor = isLegacyEditorPath(pathname) || isWritingEditorPath(pathname)
 
   const phaseTabs = (
     <nav className="flex items-center gap-1 w-max">
