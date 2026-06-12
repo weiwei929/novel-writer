@@ -3,48 +3,51 @@ import { useNavigate } from 'react-router-dom'
 import { projectsApi, type Project } from '../../services/api'
 import { useUIStore } from '../../stores/uiStore'
 import ProjectStatusBadge from '../../components/projects/ProjectStatusBadge'
-import { IconFolder } from '../../components/ui/icons'
+import { IconWriting } from '../../components/ui/icons'
 
-interface StudioSectionProps {
-  title: string
-  subtitle: string
-  projects: Project[]
-  emptyText: string
-  onOpen: (id: string) => void
+type StudioAction = 'start-writing' | 'mark-written' | 'undo-written' | 'soft-delete' | 'submit-to-editorial'
+
+const ACTIONS: Record<StudioAction, string> = {
+  'start-writing': '开始创作', 'mark-written': '作品已完成', 'undo-written': '退回写作',
+  'soft-delete': '放入文件暂存', 'submit-to-editorial': '提交编审部',
 }
 
-function StudioSection({ title, subtitle, projects, emptyText, onOpen }: StudioSectionProps) {
+function getActions(status: string): StudioAction[] {
+  switch (status) {
+    case 'planned': return ['start-writing']
+    case 'writing': return ['mark-written']
+    case 'written': return ['submit-to-editorial', 'undo-written', 'soft-delete']
+    default: return []
+  }
+}
+
+function WorkCard({ p, onOpen, onAction }: { p: Project; onOpen: (id: string) => void; onAction: (id: string, a: StudioAction) => void }) {
+  const actions = getActions(p.status)
   return (
-    <section className="space-y-3">
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-        <p className="text-sm text-gray-500">{subtitle}</p>
-      </div>
-      {projects.length === 0 ? (
-        <p className="text-sm text-gray-400 py-6 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
-          {emptyText}
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map(p => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => onOpen(p.id)}
-              className="text-left bg-white border border-gray-200 rounded-xl p-4 hover:shadow-sm hover:border-blue-200 transition-all"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="font-semibold text-gray-900 truncate">{p.title}</h3>
-                <ProjectStatusBadge status={p.status} phase="studio" />
-              </div>
-              {p.description && (
-                <p className="text-sm text-gray-500 mt-2 line-clamp-2">{p.description}</p>
-              )}
-            </button>
+    <div className="bg-white border rounded-xl p-4 hover:border-blue-200 transition-all">
+      <button type="button" onClick={() => onOpen(p.id)} className="text-left w-full">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-semibold text-sm truncate">{p.title}</h3>
+          <ProjectStatusBadge status={p.status} phase="studio" />
+        </div>
+        <div className="text-xs text-gray-400 mt-1">
+          {p.wordCount.toLocaleString()} 字{p.chapterCount != null ? ` · ${p.chapterCount} 章` : ''}
+        </div>
+      </button>
+      {actions.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-100">
+          {actions.map(a => (
+            <button key={a} type="button" onClick={e => { e.stopPropagation(); onAction(p.id, a) }}
+              className={`text-xs px-2 py-1 rounded transition-colors ${
+                a === 'start-writing' || a === 'mark-written' ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : a === 'soft-delete' ? 'text-gray-400 hover:text-amber-600 hover:bg-amber-50'
+                : a === 'submit-to-editorial' ? 'border border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}>{ACTIONS[a]}</button>
           ))}
         </div>
       )}
-    </section>
+    </div>
   )
 }
 
@@ -52,83 +55,57 @@ export default function WritingProjectsPage() {
   const navigate = useNavigate()
   const { addNotification } = useUIStore()
   const [projects, setProjects] = useState<Project[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      setProjects(await projectsApi.getAll())
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : '无法加载作品列表'
-      setError(message)
-      addNotification({ type: 'error', title: '加载失败', message })
-    } finally {
-      setLoading(false)
-    }
-  }, [addNotification])
-
-  useEffect(() => {
-    void load()
-  }, [load])
+    try { setProjects(await projectsApi.getAll()) } catch { /* */ }
+  }, [])
+  useEffect(() => { void load() }, [load])
 
   const planned = useMemo(() => projects.filter(p => p.status === 'planned'), [projects])
   const writing = useMemo(() => projects.filter(p => p.status === 'writing'), [projects])
   const written = useMemo(() => projects.filter(p => p.status === 'written'), [projects])
 
-  const openWork = (id: string) => navigate(`/work/${id}?from=writing`)
+  const handleAction = useCallback(async (id: string, a: StudioAction) => {
+    try {
+      if (a === 'start-writing') await projectsApi.startWriting(id)
+      else if (a === 'mark-written') await projectsApi.markWritten(id)
+      else if (a === 'undo-written') await projectsApi.undoWritten(id)
+      else if (a === 'soft-delete') await projectsApi.softDelete(id)
+      addNotification({ type: 'success', title: { 'start-writing': '已开始创作', 'mark-written': '作品已完成', 'undo-written': '已退回', 'soft-delete': '已放入文件暂存', 'submit-to-editorial': '已提交编审部' }[a] })
+      await load()
+    } catch (e: unknown) { addNotification({ type: 'error', title: '操作失败', message: (e as Error).message }) }
+  }, [load, addNotification])
 
   const total = planned.length + writing.length + written.length
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div className="flex items-center gap-3">
-        <div className="bg-blue-100 p-2 rounded-lg">
-          <IconFolder size={22} className="text-blue-600" />
-        </div>
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex items-start gap-4">
+        <div className="bg-blue-100 p-2 rounded-lg mt-1"><IconWriting size={22} className="text-blue-600" /></div>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">创作室</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{total} 部作品（待创作 / 创作中 / 已完成）</p>
+          <p className="text-sm text-gray-500 mt-1">承接已完成企划，将作品章节写成正文，完成后提交编审部。</p>
+          <p className="text-xs text-gray-400 mt-1">{total} 部作品（待创作 / 创作中 / 已完成创作）</p>
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="flex flex-col items-center gap-3 text-gray-400">
-            <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
-            <span className="text-sm">加载中...</span>
-          </div>
-        </div>
-      ) : error ? (
-        <div className="flex flex-col items-center justify-center py-20 text-red-400">
-          <p className="text-sm text-red-500">{error}</p>
-        </div>
-      ) : (
-        <div className="space-y-10">
-          <StudioSection
-            title="待创作"
-            subtitle={`${planned.length} 部待创作作品`}
-            projects={planned}
-            emptyText="暂无待创作作品。企划课确认企划完成后将出现在此。"
-            onOpen={openWork}
-          />
-          <StudioSection
-            title="创作中"
-            subtitle={`${writing.length} 部创作中作品`}
-            projects={writing}
-            emptyText="暂无创作中作品。开始创作后将出现在此。"
-            onOpen={openWork}
-          />
-          <StudioSection
-            title="已完成"
-            subtitle={`${written.length} 部已完成作品`}
-            projects={written}
-            emptyText="暂无已完成作品。确认创作完成后将出现在此。"
-            onOpen={openWork}
-          />
-        </div>
-      )}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold text-gray-900">待创作 {planned.length} 部</h2>
+          {planned.length === 0 ? <p className="text-sm text-gray-400 py-6 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">暂无待创作作品</p>
+          : planned.map(p => <WorkCard key={p.id} p={p} onOpen={id => navigate(`/work/${id}?from=writing`)} onAction={handleAction} />)}
+        </section>
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold text-gray-900">创作中 {writing.length} 部</h2>
+          {writing.length === 0 ? <p className="text-sm text-gray-400 py-6 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">暂无创作中作品</p>
+          : writing.map(p => <WorkCard key={p.id} p={p} onOpen={id => navigate(`/work/${id}?from=writing`)} onAction={handleAction} />)}
+        </section>
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold text-gray-900">已完成创作 {written.length} 部</h2>
+          {written.length === 0 ? <p className="text-sm text-gray-400 py-6 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">暂无已完成作品</p>
+          : written.map(p => <WorkCard key={p.id} p={p} onOpen={id => navigate(`/work/${id}?from=writing`)} onAction={handleAction} />)}
+        </section>
+      </div>
     </div>
   )
 }

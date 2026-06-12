@@ -25,13 +25,11 @@ const AiSearchPage = lazy(() => import('./pages/creative/AiSearchPage'))
 const ProposalDetailPage = lazy(() => import('./pages/creative/ProposalDetailPage'))
 const CreativeDiscussion = lazy(() => import('./components/creative/CreativeDiscussion'))
 const PlanningProposal = lazy(() => import('./components/creative/PlanningProposal'))
-const ProposalReviewPage = lazy(() => import('./pages/planning/ProposalReviewPage'))
 const ProposalEvalPage = lazy(() => import('./pages/planning/ProposalEvalPage'))
 const MetadataListPage = lazy(() => import('./pages/planning/MetadataListPage'))
 const MetadataProjectPage = lazy(() => import('./pages/planning/MetadataProjectPage'))
 const EvaluationPage = lazy(() => import('./pages/planning/EvaluationPage'))
-const PlanningProjectsPage = lazy(() => import('./pages/planning/PlanningProjectsPage'))
-const PlanningInProgressPage = lazy(() => import('./pages/planning/PlanningInProgressPage'))
+const PlanningPage = lazy(() => import('./pages/planning/PlanningPage'))
 const WritingProjectsPage = lazy(() => import('./pages/writing/WritingProjectsPage'))
 
 import { PageWrapper as UI_PageWrapper } from './components/layout/PageWrapper'
@@ -152,7 +150,7 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <SuspenseWrapper>
-          <ProposalReviewPage />
+          <PlanningPage />
         </SuspenseWrapper>
       </Layout>
     ),
@@ -199,23 +197,11 @@ const router = createBrowserRouter([
   },
   {
     path: '/planning/in-progress',
-    element: (
-      <Layout>
-        <SuspenseWrapper>
-          <PlanningInProgressPage />
-        </SuspenseWrapper>
-      </Layout>
-    ),
+    element: <Navigate to="/planning/proposals" replace />,
   },
   {
     path: '/planning/projects',
-    element: (
-      <Layout>
-        <SuspenseWrapper>
-          <PlanningProjectsPage />
-        </SuspenseWrapper>
-      </Layout>
-    ),
+    element: <Navigate to="/planning/proposals" replace />,
   },
   {
     path: '/writing/projects',
