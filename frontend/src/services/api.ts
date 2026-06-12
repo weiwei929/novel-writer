@@ -594,6 +594,13 @@ export const projectsApi = {
     return response.data
   },
 
+  // ===== 0608 文集库操作 =====
+
+  async archive(id: string): Promise<Project> {
+    const response = await api.post(`/projects/${id}/archive`)
+    return response.data
+  },
+
   // ===== 0608 暂存机制 (deletedAt) =====
 
   async softShelve(id: string): Promise<Project> {

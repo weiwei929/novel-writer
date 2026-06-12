@@ -860,7 +860,32 @@ export async function projectRoutes(app: FastifyInstance) {
     }
   })
 
-  // #10 soft-delete
+  // #10 archive — reviewed → archived（终态，走语义端点，不经 transition 跨桶）
+  app.post('/:id/archive', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    try {
+      const project = await loadActiveProject(req.params.id)
+      assertStatusFor(project.status, ['reviewed'])
+      const updated = await prisma.project.update({
+        where: { id: req.params.id },
+        data: {
+          status: 'archived',
+          archivedAt: project.archivedAt ?? new Date(),
+        },
+      })
+      return ApiResponse.success(withMappedProjectStatus(updated), '已归档')
+    } catch (e: unknown) {
+      if (e instanceof ProjectNotFoundError) {
+        return reply.status(404).send(ApiResponse.error(e.message, 404))
+      }
+      if (e instanceof StatusNotAllowedError) {
+        return reply.status(400).send(ApiResponse.error(e.message, 400))
+      }
+      const message = e instanceof Error ? e.message : 'archive failed'
+      return reply.status(500).send(ApiResponse.error(message, 500))
+    }
+  })
+
+  // #11 soft-delete
   app.post('/:id/soft-delete', async (req: FastifyRequest<GetByIdParams>, reply) => {
     try {
       const project = await assertProjectExists(req.params.id)
