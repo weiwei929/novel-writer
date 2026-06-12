@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import api from '../../services/api'
-import { IconClose, IconEye, IconEyeOff, IconInfo, IconLock } from '../ui/icons'
+import { IconEye, IconEyeOff, IconInfo, IconLock } from '../ui/icons'
 
 interface AuthStatus {
   requireAuth: boolean
@@ -21,7 +21,6 @@ const AuthGuard: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [bannerDismissed, setBannerDismissed] = useState(false)
 
   // 检查认证状态（每次路由变化或会话失效时重新校验）
   const checkAuthStatus = useCallback(async () => {
@@ -74,23 +73,6 @@ const AuthGuard: React.FC = () => {
     }
   }
 
-  // 处理登出
-  const handleLogout = async () => {
-    try {
-      const token = localStorage.getItem('novel_auth_token')
-
-      await fetch('/auth/logout', {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
-
-      localStorage.removeItem('novel_auth_token')
-      setAuthStatus(prev => (prev ? { ...prev, authenticated: false } : null))
-    } catch (error) {
-      console.error('登出失败:', error)
-    }
-  }
-
   useEffect(() => {
     void checkAuthStatus()
   }, [checkAuthStatus, location.pathname])
@@ -121,34 +103,7 @@ const AuthGuard: React.FC = () => {
 
   // 已认证才展示应用（requireAuth 为 false 时视为开放访问）
   if (authStatus.authenticated || authStatus.requireAuth === false) {
-    return (
-      <div>
-        {/* 认证状态栏 */}
-        {authStatus.requireAuth && !bannerDismissed && (
-          <div className="bg-green-50 border-b border-green-200 px-4 py-2 text-sm">
-            <div className="flex justify-between items-center max-w-7xl mx-auto">
-              <span className="text-green-800">✅ 已通过认证</span>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleLogout}
-                  className="text-green-600 hover:text-green-800 font-medium"
-                >
-                  退出登录
-                </button>
-                <button
-                  onClick={() => setBannerDismissed(true)}
-                  className="p-0.5 rounded hover:bg-green-100 text-green-500 hover:text-green-700 transition-colors"
-                  title="关闭"
-                >
-                  <IconClose size={14} />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        <Outlet />
-      </div>
-    )
+    return <Outlet />
   }
 
   // 显示登录界面
