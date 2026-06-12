@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import {
   externalRefsApi,
@@ -272,21 +273,21 @@ export default function ExternalRefs() {
                 onClick={() => void setProcessingType('complete')}
                 className="text-xs px-2 py-1 rounded border border-blue-200 text-blue-700 hover:bg-blue-50"
               >
-                Type 1
+                完整引用
               </button>
               <button
                 type="button"
                 onClick={() => void setProcessingType('partial')}
                 className="text-xs px-2 py-1 rounded border border-emerald-200 text-emerald-700 hover:bg-emerald-50"
               >
-                Type 2
+                部分引用
               </button>
               <button
                 type="button"
                 onClick={() => void setProcessingType('none')}
                 className="text-xs px-2 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
               >
-                Type 3
+                取消标记
               </button>
               <button
                 type="button"
@@ -297,6 +298,12 @@ export default function ExternalRefs() {
               </button>
             </div>
           </div>
+
+          {!partialMode && (
+            <p className="text-xs text-gray-500 px-4 py-1">
+              完整引用会整篇作为创意来源；部分引用可选择段落并添加批注。
+            </p>
+          )}
 
           {partialMode ? (
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -352,8 +359,9 @@ export default function ExternalRefs() {
                   onClick={() => void updateRef(selected.id, { tags: fileTags })}
                   className="mt-2 text-xs text-indigo-600 hover:underline"
                 >
-                  保存标签
-                </button>
+                  保存标签修改
+                  </button>
+                  <p className="text-xs text-gray-400 mt-1">标签修改需点击保存。</p>
               </div>
             </div>
           )}
@@ -371,14 +379,14 @@ export default function ExternalRefs() {
       <div className="px-3 py-2 border-b bg-gray-50 font-medium">可引用区</div>
       <div className="flex-1 overflow-y-auto p-3 space-y-4">
         <section>
-          <h4 className="text-xs font-semibold text-blue-700 mb-2">Type 1 · 完整引用</h4>
+          <h4 className="text-xs font-semibold text-blue-700 mb-2">完整引用</h4>
           {type1Refs.length === 0 ? (
             <p className="text-xs text-gray-400">暂无</p>
           ) : (
             type1Refs.map(r => (
               <div key={r.id} className="mb-2 p-2 border border-blue-100 rounded-lg bg-blue-50/40">
                 <div className="font-medium">{r.metadata?.title || r.fileName}</div>
-                <p className="text-xs text-blue-600 mt-1">→ 可进入提案</p>
+                <p className="text-xs text-blue-600 mt-1">已标记为创意来源</p>
                 <button
                   type="button"
                   onClick={() => void removeFromCited(r.id)}
@@ -391,7 +399,7 @@ export default function ExternalRefs() {
           )}
         </section>
         <section>
-          <h4 className="text-xs font-semibold text-emerald-700 mb-2">Type 2 · 部分引用</h4>
+          <h4 className="text-xs font-semibold text-emerald-700 mb-2">部分引用</h4>
           {type2Refs.length === 0 ? (
             <p className="text-xs text-gray-400">暂无</p>
           ) : (
@@ -418,13 +426,23 @@ export default function ExternalRefs() {
             ))
           )}
         </section>
+        <p className="text-xs text-gray-400 leading-relaxed mt-2 pt-2 border-t border-gray-100">
+          已处理的外来参考会出现在创意作品的引用选择中。返回创意组后，可在作品构思中引用这些材料。
+        </p>
       </div>
     </div>
   )
 
   return (
     <ThreeColumnLayout
-      header={<TagFilterBar allTags={allTags} activeTag={activeTag} onSelect={setActiveTag} />}
+      header={
+        <div className="flex items-center gap-3 px-3">
+          <Link to="/creative/chat" className="text-sm text-gray-500 hover:text-gray-900">
+            返回创意组
+          </Link>
+          <TagFilterBar allTags={allTags} activeTag={activeTag} onSelect={setActiveTag} />
+        </div>
+      }
       left={leftPanel}
       middle={middlePanel}
       right={rightPanel}

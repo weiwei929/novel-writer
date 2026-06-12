@@ -23,8 +23,7 @@ const WorkDetailPage = lazy(() => import('./pages/WorkDetailPage'))
 const ShelfPage = lazy(() => import('./pages/ShelfPage'))
 const AiSearchPage = lazy(() => import('./pages/creative/AiSearchPage'))
 const ProposalDetailPage = lazy(() => import('./pages/creative/ProposalDetailPage'))
-const CreativeDiscussion = lazy(() => import('./components/creative/CreativeDiscussion'))
-const PlanningProposal = lazy(() => import('./components/creative/PlanningProposal'))
+const CreativeWorkspace = lazy(() => import('./components/creative/CreativeWorkspace'))
 const ProposalEvalPage = lazy(() => import('./pages/planning/ProposalEvalPage'))
 const MetadataListPage = lazy(() => import('./pages/planning/MetadataListPage'))
 const MetadataProjectPage = lazy(() => import('./pages/planning/MetadataProjectPage'))
@@ -281,17 +280,13 @@ const router = createBrowserRouter([
         path: 'chat',
         element: (
           <SuspenseWrapper>
-            <CreativeDiscussion />
+            <CreativeWorkspace />
           </SuspenseWrapper>
         ),
       },
       {
         path: 'proposals',
-        element: (
-          <SuspenseWrapper>
-            <PlanningProposal />
-          </SuspenseWrapper>
-        ),
+        element: <Navigate to="/creative/chat" replace />,
       },
       {
         path: 'ai-search',

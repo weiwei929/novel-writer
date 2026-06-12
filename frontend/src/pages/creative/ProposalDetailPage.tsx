@@ -18,7 +18,7 @@ export default function ProposalDetailPage() {
   const { success, error: notifyError } = useNotifications()
 
   const [proposal, setProposal] = useState<Proposal | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [_loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
   const [title, setTitle] = useState('')
@@ -84,8 +84,8 @@ export default function ProposalDetailPage() {
         metadata: { ...meta, _tags: tags },
       })
       await proposalsApi.updateStatus(id, 'submitted')
-      success('已进入企划建议书')
-      navigate('/creative/proposals')
+      success('已提交至企划课')
+      navigate('/creative/chat')
     } catch {
       notifyError('操作失败')
     } finally {
@@ -93,29 +93,12 @@ export default function ProposalDetailPage() {
     }
   }
 
-  const handleShelve = async () => {
-    if (!id) return
-    try {
-      await proposalsApi.evaluate(id, 'shelve')
-      success('已移入作品暂存')
-      await load()
-    } catch {
-      notifyError('暂存失败')
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-20 text-gray-400 text-sm">加载中…</div>
-    )
-  }
-
   if (!proposal) {
     return (
       <div className="text-center py-20 text-gray-500">
-        <p>未找到该创意提案</p>
+        <p>未找到该创意作品</p>
         <Link to="/creative/chat" className="text-blue-600 text-sm mt-2 inline-block">
-          返回创意讨论
+          返回创意组
         </Link>
       </div>
     )
@@ -150,7 +133,7 @@ export default function ProposalDetailPage() {
       </div>
 
       <h1 className="text-2xl font-bold text-gray-900">
-        创意提案：《{proposal.title}》
+        创意作品：《{proposal.title}》
       </h1>
 
       <section className="bg-white border rounded-xl p-5 space-y-4">
@@ -201,7 +184,7 @@ export default function ProposalDetailPage() {
             {references.map(r => (
               <li key={`${r.type}-${r.id}`} className="flex items-center gap-2">
                 <span className="text-gray-400 shrink-0">
-                  [{r.type === 'scrap' ? '灵感手记' : '外来参考'}]
+                  [{r.type === 'scrap' ? '灵感碎片' : '外来参考'}]
                 </span>
                 <span className="font-medium">{r.title}</span>
                 {r.processingType && r.processingType !== 'none' && (
@@ -214,7 +197,7 @@ export default function ProposalDetailPage() {
       </section>
 
       <section className="bg-white border rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-gray-800 mb-2">创意讨论记录</h2>
+        <h2 className="text-sm font-semibold text-gray-800 mb-2">构思评估记录</h2>
         <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed bg-gray-50 rounded-lg p-4 min-h-[120px]">
           {meta._evaluation || '（无评估记录）'}
         </div>
@@ -236,18 +219,10 @@ export default function ProposalDetailPage() {
             onClick={() => void handleEnterPlanning()}
             className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm hover:bg-amber-700"
           >
-            进入企划建议书 →
+            完成构思并提交
           </button>
         )}
-        {proposal.status !== 'shelved' && proposal.status !== 'approved' && (
-          <button
-            type="button"
-            onClick={() => void handleShelve()}
-            className="px-4 py-2 text-sm text-gray-500 hover:text-amber-700"
-          >
-            暂存
-          </button>
-        )}
+        {/* 0608 P2-2b: shelve 用户路径已屏蔽 */}
       </div>
     </div>
   )
