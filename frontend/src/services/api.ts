@@ -155,6 +155,11 @@ export interface CreateProjectData {
   masterPrompt?: string
 }
 
+/** @deprecated Use Project — kept for WorkDetail refactor compatibility */
+export type Work = Project
+/** @deprecated Use CreateProjectData */
+export type CreateWorkData = CreateProjectData
+
 export interface Chapter {
   id: string
   projectId: string
