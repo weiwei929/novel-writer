@@ -71,6 +71,7 @@ export default function WritingProjectsPage() {
       else if (a === 'mark-written') await projectsApi.markWritten(id)
       else if (a === 'undo-written') await projectsApi.undoWritten(id)
       else if (a === 'soft-delete') await projectsApi.softDelete(id)
+      else if (a === 'submit-to-editorial') await projectsApi.releaseToEditorial(id)
       addNotification({ type: 'success', title: { 'start-writing': '已开始创作', 'mark-written': '作品已完成', 'undo-written': '已退回', 'soft-delete': '已放入文件暂存', 'submit-to-editorial': '已提交编审部' }[a] })
       await load()
     } catch (e: unknown) { addNotification({ type: 'error', title: '操作失败', message: (e as Error).message }) }

@@ -48,6 +48,7 @@ export default function PlanningPage() {
           addNotification({ type: 'success', title: '已放入文件暂存' })
           break
         case 'release-to-studio':
+          await projectsApi.releaseToStudio(id)
           addNotification({ type: 'success', title: '已提交创作室' })
           break
       }

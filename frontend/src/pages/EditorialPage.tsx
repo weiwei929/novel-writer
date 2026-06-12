@@ -114,6 +114,7 @@ export default function EditorialPage() {
         else if (a === 'confirm-review') await projectsApi.transition(id, 'reviewed')
         else if (a === 'back-to-reviewing') await projectsApi.transition(id, 'reviewing')
         else if (a === 'soft-delete') await projectsApi.softDelete(id)
+        else if (a === 'submit-to-library') await projectsApi.releaseToLibrary(id)
         addNotification({
           type: 'success',
           title: {
