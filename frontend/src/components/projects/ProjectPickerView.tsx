@@ -50,7 +50,7 @@ export default function ProjectPickerView({
 }: ProjectPickerViewProps) {
   if (compact) {
     return (
-      <section className="space-y-3">
+      <section className="space-y-3 min-w-0">
         <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
         <p className="text-sm text-gray-500">{subtitle}</p>
         {projects.length === 0 ? (
@@ -60,10 +60,10 @@ export default function ProjectPickerView({
             {projects.map(p => {
               const actions = onAction ? getActionsForStatus(p.status) : []
               return (
-                <div key={p.id} className="bg-white border rounded-xl p-4 hover:border-blue-200 transition-all">
-                  <button type="button" onClick={() => onOpen(p.id)} className="text-left w-full">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-semibold text-sm truncate">{p.title}</h3>
+                <div key={p.id} className="bg-white border rounded-xl p-4 hover:border-blue-200 transition-all min-w-0">
+                  <button type="button" onClick={() => onOpen(p.id)} className="text-left w-full min-w-0">
+                    <div className="flex items-start justify-between gap-2 min-w-0">
+                      <h3 className="font-semibold text-sm truncate min-w-0 flex-1">{p.title}</h3>
                       <ProjectStatusBadge status={p.status} phase={phase} />
                     </div>
                   </button>

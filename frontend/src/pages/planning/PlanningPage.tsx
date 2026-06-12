@@ -62,12 +62,15 @@ export default function PlanningPage() {
 
   const total = planningProposals.length + planning.length + planned.length
 
+  const EMPTY_CLASS =
+    'text-sm text-gray-400 py-6 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200'
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="w-full min-w-0 max-w-full space-y-6 animate-fade-in overflow-x-hidden">
       {/* 说明区 */}
-      <div className="flex items-start gap-4">
-        <div className="bg-blue-100 p-2 rounded-lg mt-1"><IconPlanning size={22} className="text-blue-600" /></div>
-        <div>
+      <div className="flex items-start gap-4 min-w-0">
+        <div className="bg-blue-100 p-2 rounded-lg mt-1 shrink-0"><IconPlanning size={22} className="text-blue-600" /></div>
+        <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold text-gray-900">企划课</h1>
           <p className="text-sm text-gray-500 mt-1">承接企划建议书，完善作品元数据与作品章节，确认后提交创作室。</p>
           <p className="text-xs text-gray-400 mt-1">{total} 部作品（待企划 / 企划进行中 / 已完成企划）</p>
@@ -75,18 +78,18 @@ export default function PlanningPage() {
       </div>
 
       {/* 三列 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 min-w-0">
         {/* 待企划 — 企划建议书 */}
-        <section className="space-y-3">
+        <section className="space-y-3 min-w-0">
           <h2 className="text-lg font-semibold text-gray-900">待企划 {planningProposals.length} 部</h2>
           {planningProposals.length === 0 ? (
-            <p className="text-sm text-gray-400 py-6 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
+            <p className={EMPTY_CLASS}>
               暂无待企划建议书
             </p>
           ) : (
             <div className="space-y-3">
               {planningProposals.map(p => (
-                <div key={p.id} className="bg-white border rounded-xl p-4 hover:border-blue-200 transition-all">
+                <div key={p.id} className="bg-white border rounded-xl p-4 hover:border-blue-200 transition-all min-w-0">
                   <button onClick={() => navigate(`/planning/proposals/${p.id}`)} className="text-left w-full">
                     <h3 className="font-medium text-sm truncate">{p.title}</h3>
                     <p className="text-xs text-gray-400 mt-1">{p.synopsis?.slice(0, 80) || '—'}</p>

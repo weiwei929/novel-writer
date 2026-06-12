@@ -54,10 +54,10 @@ function WorkCard({
 }) {
   const actions = getActions(p.status)
   return (
-    <div className="bg-white border rounded-xl p-4 hover:border-amber-200 transition-all">
-      <button type="button" onClick={() => onOpen(p.id)} className="text-left w-full">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold text-sm truncate">{p.title}</h3>
+    <div className="bg-white border rounded-xl p-4 hover:border-amber-200 transition-all min-w-0">
+      <button type="button" onClick={() => onOpen(p.id)} className="text-left w-full min-w-0">
+        <div className="flex items-start justify-between gap-2 min-w-0">
+          <h3 className="font-semibold text-sm truncate min-w-0 flex-1">{p.title}</h3>
           <ProjectStatusBadge status={p.status} phase="editorial" />
         </div>
         <div className="text-xs text-gray-400 mt-1">
@@ -143,12 +143,12 @@ export default function EditorialPage() {
   const total = pending.length + active.length + completed.length
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-start gap-4">
+    <div className="w-full min-w-0 max-w-full space-y-6 animate-fade-in overflow-x-hidden">
+      <div className="flex items-start gap-4 min-w-0">
         <div className="bg-amber-100 p-2 rounded-lg mt-1 shrink-0">
           <IconReview size={22} className="text-amber-600" />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold text-gray-900">编审部</h1>
           <p className="text-sm text-gray-500 mt-1">
             承接已完成正文，围绕正文审阅与修订确认，完成后提交文集库。
@@ -159,7 +159,7 @@ export default function EditorialPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 min-w-0">
         <section className="space-y-3 min-w-0">
           <h2 className="text-lg font-semibold text-gray-900">待审阅 {pending.length} 部</h2>
           {pending.length === 0 ? (

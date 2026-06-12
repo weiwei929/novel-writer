@@ -25,10 +25,10 @@ function getActions(status: string): StudioAction[] {
 function WorkCard({ p, onOpen, onAction }: { p: Project; onOpen: (id: string) => void; onAction: (id: string, a: StudioAction) => void }) {
   const actions = getActions(p.status)
   return (
-    <div className="bg-white border rounded-xl p-4 hover:border-blue-200 transition-all">
-      <button type="button" onClick={() => onOpen(p.id)} className="text-left w-full">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold text-sm truncate">{p.title}</h3>
+    <div className="bg-white border rounded-xl p-4 hover:border-blue-200 transition-all min-w-0">
+      <button type="button" onClick={() => onOpen(p.id)} className="text-left w-full min-w-0">
+        <div className="flex items-start justify-between gap-2 min-w-0">
+          <h3 className="font-semibold text-sm truncate min-w-0 flex-1">{p.title}</h3>
           <ProjectStatusBadge status={p.status} phase="studio" />
         </div>
         <div className="text-xs text-gray-400 mt-1">
@@ -51,6 +51,9 @@ function WorkCard({ p, onOpen, onAction }: { p: Project; onOpen: (id: string) =>
     </div>
   )
 }
+
+const EMPTY_CLASS =
+  'text-sm text-gray-400 py-6 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200'
 
 export default function WritingProjectsPage() {
   const navigate = useNavigate()
@@ -87,30 +90,30 @@ export default function WritingProjectsPage() {
   const total = planned.length + writing.length + written.length
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-start gap-4">
-        <div className="bg-blue-100 p-2 rounded-lg mt-1"><IconWriting size={22} className="text-blue-600" /></div>
-        <div>
+    <div className="w-full min-w-0 max-w-full space-y-6 animate-fade-in overflow-x-hidden">
+      <div className="flex items-start gap-4 min-w-0">
+        <div className="bg-blue-100 p-2 rounded-lg mt-1 shrink-0"><IconWriting size={22} className="text-blue-600" /></div>
+        <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold text-gray-900">创作室</h1>
           <p className="text-sm text-gray-500 mt-1">承接已完成企划，将作品章节写成正文，完成后提交编审部。</p>
           <p className="text-xs text-gray-400 mt-1">{total} 部作品（待创作 / 创作中 / 已完成创作）</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <section className="space-y-3">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 min-w-0">
+        <section className="space-y-3 min-w-0">
           <h2 className="text-lg font-semibold text-gray-900">待创作 {planned.length} 部</h2>
-          {planned.length === 0 ? <p className="text-sm text-gray-400 py-6 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">暂无待创作作品</p>
+          {planned.length === 0 ? <p className={EMPTY_CLASS}>暂无待创作作品</p>
           : planned.map(p => <WorkCard key={p.id} p={p} onOpen={id => navigate(`/work/${id}?from=writing`)} onAction={handleAction} />)}
         </section>
-        <section className="space-y-3">
+        <section className="space-y-3 min-w-0">
           <h2 className="text-lg font-semibold text-gray-900">创作中 {writing.length} 部</h2>
-          {writing.length === 0 ? <p className="text-sm text-gray-400 py-6 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">暂无创作中作品</p>
+          {writing.length === 0 ? <p className={EMPTY_CLASS}>暂无创作中作品</p>
           : writing.map(p => <WorkCard key={p.id} p={p} onOpen={id => navigate(`/work/${id}?from=writing`)} onAction={handleAction} />)}
         </section>
-        <section className="space-y-3">
+        <section className="space-y-3 min-w-0">
           <h2 className="text-lg font-semibold text-gray-900">已完成创作 {written.length} 部</h2>
-          {written.length === 0 ? <p className="text-sm text-gray-400 py-6 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">暂无已完成作品</p>
+          {written.length === 0 ? <p className={EMPTY_CLASS}>暂无已完成作品</p>
           : written.map(p => <WorkCard key={p.id} p={p} onOpen={id => navigate(`/work/${id}?from=writing`)} onAction={handleAction} />)}
         </section>
       </div>

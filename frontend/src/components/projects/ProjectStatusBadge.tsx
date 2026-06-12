@@ -21,5 +21,5 @@ export default function ProjectStatusBadge({
 }) {
   const label = getProjectStatusLabel(status, phase || 'studio')
   const cls = STATUS_CLS[status] ?? STATUS_CLS.draft
-  return <span className={`text-xs px-2 py-0.5 rounded border ${cls}`}>{label}</span>
+  return <span className={`shrink-0 text-xs px-2 py-0.5 rounded border ${cls}`}>{label}</span>
 }
