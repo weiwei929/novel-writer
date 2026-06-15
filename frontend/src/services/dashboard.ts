@@ -1,4 +1,9 @@
-import { collectionsApi, projectsApi, proposalsApi, type Project, type Proposal } from './api'
+import { projectsApi, proposalsApi, type Project, type Proposal } from './api'
+import {
+  hasReleasedToEditorial,
+  hasReleasedToLibrary,
+  hasReleasedToStudio,
+} from './releaseHandoff'
 
 export type DashboardStageId = 'creative' | 'planning' | 'writing' | 'review' | 'library'
 
@@ -51,6 +56,11 @@ function mapProposalItem(p: Proposal): DashboardListItem {
   }
 }
 
+function mapPlanningProposalItem(p: Proposal): DashboardListItem {
+  const item = mapProposalItem(p)
+  return { ...item, href: `/planning/proposals/${p.id}` }
+}
+
 function mapProjectItem(p: Project, stageId: DashboardStageId): DashboardListItem {
   const href =
     stageId === 'planning' ? `/planning/in-progress` :
@@ -66,11 +76,52 @@ function mapProjectItem(p: Project, stageId: DashboardStageId): DashboardListIte
   }
 }
 
+function takeRecentItems(items: DashboardListItem[], limit: number): DashboardListItem[] {
+  return [...items]
+    .sort((a, b) => {
+      const ta = a.updatedAt ? new Date(a.updatedAt).getTime() : 0
+      const tb = b.updatedAt ? new Date(b.updatedAt).getTime() : 0
+      return tb - ta
+    })
+    .slice(0, limit)
+}
+
+/** 0608 企划课三列：待企划 + 企划进行中 + 已完成企划（未提交创作室） */
+function inPlanningWorkspace(p: Project): boolean {
+  return p.status === 'planning' || (p.status === 'planned' && !hasReleasedToStudio(p))
+}
+
+function isPlanningProposal(p: Proposal): boolean {
+  return p.status === 'submitted' || p.status === 'evaluated'
+}
+
+/** 0608 创作室三列：待创作 + 创作中 + 已完成创作（未提交编审部） */
+function inStudioWorkspace(p: Project): boolean {
+  return (
+    (p.status === 'planned' && hasReleasedToStudio(p)) ||
+    p.status === 'writing' ||
+    (p.status === 'written' && !hasReleasedToEditorial(p))
+  )
+}
+
+/** 0608 编审部三列：待审阅 + 审阅中 + 已完成审阅（未提交文集库） */
+function inEditorialWorkspace(p: Project): boolean {
+  return (
+    (p.status === 'written' && hasReleasedToEditorial(p)) ||
+    p.status === 'reviewing' ||
+    (p.status === 'reviewed' && !hasReleasedToLibrary(p))
+  )
+}
+
+/** 0608 文集库：待归库 + 已归档 */
+function inLibraryWorkspace(p: Project): boolean {
+  return (p.status === 'reviewed' && hasReleasedToLibrary(p)) || p.status === 'archived'
+}
+
 export async function getDashboardOverview(): Promise<DashboardOverview> {
-  const [proposals, projects, collections] = await Promise.all([
+  const [proposals, projects] = await Promise.all([
     proposalsApi.getAll(),
     projectsApi.getAll(),
-    collectionsApi.getAll(),
   ])
 
   const activeProposals = proposals.filter(
@@ -87,25 +138,33 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
     .slice(0, 5)
     .map(mapProposalItem)
 
-  const planningItems = projects
-    .filter(p => p.status === 'draft' || p.status === 'planning')
-    .slice(0, 5)
-    .map(p => mapProjectItem(p, 'planning'))
+  const planningProposals = proposals.filter(isPlanningProposal)
+  const planningProjects = projects.filter(inPlanningWorkspace)
+  const planningItems = takeRecentItems(
+    [
+      ...planningProposals.map(mapPlanningProposalItem),
+      ...planningProjects.map(p => mapProjectItem(p, 'planning')),
+    ],
+    5,
+  )
 
-  const writingItems = projects
-    .filter(p => p.status === 'writing')
-    .slice(0, 5)
-    .map(p => mapProjectItem(p, 'writing'))
+  const studioProjects = projects.filter(inStudioWorkspace)
+  const writingItems = takeRecentItems(
+    studioProjects.map(p => mapProjectItem(p, 'writing')),
+    5,
+  )
 
-  const reviewItems = projects
-    .filter(p => p.status === 'reviewing')
-    .slice(0, 5)
-    .map(p => mapProjectItem(p, 'review'))
+  const editorialProjects = projects.filter(inEditorialWorkspace)
+  const reviewItems = takeRecentItems(
+    editorialProjects.map(p => mapProjectItem(p, 'review')),
+    5,
+  )
 
-  const libraryItems = projects
-    .filter(p => p.status === 'reviewed' || p.status === 'archived')
-    .slice(0, 5)
-    .map(p => mapProjectItem(p, 'library'))
+  const libraryProjects = projects.filter(inLibraryWorkspace)
+  const libraryItems = takeRecentItems(
+    libraryProjects.map(p => mapProjectItem(p, 'library')),
+    5,
+  )
 
   const activity: DashboardOverview['activity'] = []
 
@@ -125,7 +184,7 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
     }
   }
 
-  for (const p of projects.slice(0, 5)) {
+  for (const p of projects) {
     if (p.status === 'writing') {
       activity.push({
         time: p.updatedAt,
@@ -133,10 +192,10 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
         href: `/writing/projects`,
       })
     }
-    if (p.status === 'reviewed') {
+    if (p.status === 'reviewed' && hasReleasedToLibrary(p)) {
       activity.push({
         time: p.updatedAt,
-        text: `文集库「${p.title}」已完成`,
+        text: `文集库「${p.title}」待归库`,
         href: `/library`,
       })
     }
@@ -151,21 +210,19 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
       items: creativeItems,
     },
     planning: {
-      count: projects.filter(p => p.status === 'draft' || p.status === 'planning').length,
+      count: planningProposals.length + planningProjects.length,
       items: planningItems,
     },
     writing: {
-      count: projects.filter(p => p.status === 'writing').length,
+      count: studioProjects.length,
       items: writingItems,
     },
     review: {
-      count: projects.filter(p => p.status === 'reviewing').length,
+      count: editorialProjects.length,
       items: reviewItems,
     },
     library: {
-      count:
-        projects.filter(p => p.status === 'reviewed' || p.status === 'archived').length +
-        collections.length,
+      count: libraryProjects.length,
       items: libraryItems,
     },
     activity: activity.slice(0, 8),

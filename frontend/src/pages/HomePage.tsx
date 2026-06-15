@@ -61,7 +61,7 @@ const STAGE_META: {
     label: '文集库',
     icon: IconLibrary,
     to: '/library',
-    countSuffix: '部归档',
+    countSuffix: '部作品',
     accent: 'text-emerald-600 bg-emerald-50',
   },
 ]
