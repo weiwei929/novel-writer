@@ -10,6 +10,15 @@ import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
 import { AI_UI_FROZEN } from '../config/aiFreeze'
 import { useNotifications } from '../hooks/useNotifications'
 import { useSettingsStore } from '../stores/settingsStore'
+import { getWorkPermissions } from '../services/workPermissions'
+
+function workDetailPath(projectId: string) {
+  return `/work/${projectId}?from=writing`
+}
+
+function writingChapterPath(projectId: string, chapterId: string) {
+  return `/writing/${projectId}/${chapterId}?from=writing`
+}
 
 type EditorMode = 'pure' | 'reference' | 'ai' | 'review'
 
@@ -138,8 +147,12 @@ const WritingEditorPage: React.FC = () => {
     try {
       setLoading(true)
       setError(null)
-      const [projectData, chaptersData, chapterData] = await Promise.all([
-        projectsApi.getById(pId),
+      const projectData = await projectsApi.getById(pId)
+      if (!getWorkPermissions(projectData).body) {
+        navigate(workDetailPath(pId), { replace: true })
+        return
+      }
+      const [chaptersData, chapterData] = await Promise.all([
         chaptersApi.getByProjectId(pId),
         chaptersApi.getById(cId),
       ])
@@ -237,7 +250,7 @@ const WritingEditorPage: React.FC = () => {
         // handleSave 已设置 error
       }
     }
-    navigate(`/writing/${projectId}/${selectedChapter.id}`)
+    navigate(writingChapterPath(projectId!, selectedChapter.id))
   }
 
   const handleGoBack = async () => {
@@ -249,7 +262,7 @@ const WritingEditorPage: React.FC = () => {
         // handleSave 已设置 error
       }
     }
-    navigate(`/work/${projectId}`)
+    if (projectId) navigate(workDetailPath(projectId))
   }
 
   const handleApplyAIContent = (contentToInsert: string) => {
@@ -293,7 +306,7 @@ const WritingEditorPage: React.FC = () => {
           <div className="space-x-2">
             <button
               type="button"
-              onClick={() => navigate(`/work/${projectId}`)}
+              onClick={() => projectId && navigate(workDetailPath(projectId))}
               className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
             >
               返回
@@ -318,7 +331,7 @@ const WritingEditorPage: React.FC = () => {
           <p>请选择要编辑的章节</p>
           <button
             type="button"
-            onClick={() => navigate(`/work/${projectId}`)}
+            onClick={() => projectId && navigate(workDetailPath(projectId))}
             className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
             返回作品详情

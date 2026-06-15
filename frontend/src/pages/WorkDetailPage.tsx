@@ -547,7 +547,7 @@ export default function WorkDetailPage() {
                         )}
                         {isEditing && permissions.body && (
                           <button
-                            onClick={() => navigate(`/writing/${work.id}/${c.id}`)}
+                            onClick={() => navigate(`/writing/${work.id}/${c.id}?from=writing`)}
                             className="inline-flex items-center gap-1 px-2.5 py-1 border border-blue-200 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 text-xs font-medium"
                           >
                             <IconArrowRight size={12} />
@@ -642,7 +642,7 @@ export default function WorkDetailPage() {
                       </div>
                       {isEditing && permissions.body ? (
                         <button
-                          onClick={() => navigate(`/writing/${work.id}/${c.id}`)}
+                          onClick={() => navigate(`/writing/${work.id}/${c.id}?from=writing`)}
                           className="inline-flex items-center gap-1 px-2.5 py-1 border border-blue-200 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 text-xs font-medium shrink-0"
                         >
                           <IconArrowRight size={12} />
