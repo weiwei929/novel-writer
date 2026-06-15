@@ -157,7 +157,16 @@ export default function WorkDetailPage() {
   const [searchParams] = useSearchParams()
   const from = searchParams.get('from')
   const isPlanningContext = from === 'planning'
-  const badgePhase: PhaseContext = isPlanningContext ? 'planning' : 'studio'
+  const badgePhase: PhaseContext | undefined =
+    from === 'planning'
+      ? 'planning'
+      : from === 'writing'
+        ? 'studio'
+        : from === 'editorial'
+          ? 'editorial'
+          : from === 'library'
+            ? 'library'
+            : undefined
 
   const handleBack = useCallback(() => {
     setIsEditing(false)

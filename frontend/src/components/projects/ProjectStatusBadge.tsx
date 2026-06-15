@@ -1,5 +1,12 @@
 import type { Project } from '../../services/api'
+import { PROJECT_STATUS_LABEL } from '../../services/api'
+import { mapProjectStatus } from '../../services/status-migration'
 import { getProjectStatusLabel, type PhaseContext } from '../../services/statusLabels'
+
+function getGenericStatusLabel(status: string): string {
+  const mapped = mapProjectStatus(status)
+  return PROJECT_STATUS_LABEL[mapped] ?? PROJECT_STATUS_LABEL[status] ?? mapped
+}
 
 const STATUS_CLS: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-600 border-gray-200',
@@ -19,7 +26,10 @@ export default function ProjectStatusBadge({
   status: Project['status']
   phase?: PhaseContext
 }) {
-  const label = getProjectStatusLabel(status, phase || 'studio')
+  const label =
+    phase !== undefined
+      ? getProjectStatusLabel(status, phase)
+      : getGenericStatusLabel(status)
   const cls = STATUS_CLS[status] ?? STATUS_CLS.draft
   return <span className={`shrink-0 text-xs px-2 py-0.5 rounded border ${cls}`}>{label}</span>
 }
