@@ -17,6 +17,7 @@ import ContentMetadataCard from '../components/metadata/ContentMetadataCard'
 import ChapterContentModal from '../components/editor/ChapterContentModal'
 import WorkChapterEditor from '../components/editor/WorkChapterEditor'
 import WorkMetadataPanel from '../components/editor/WorkMetadataPanel'
+import { getWorkPermissions } from '../services/workPermissions'
 
 // === 作品元数据 / 作品章节 / 作品正文 / 创作资料 ===
 type WorkTab = 'synopsis' | 'chapters' | 'body' | 'world'
@@ -48,17 +49,6 @@ function getWorkSynopsis(
   if (metadata?.synopsis && typeof metadata.synopsis === 'string') return metadata.synopsis
   if (description) return description
   return ''
-}
-
-/** 按作品状态返回各区的可写权限 */
-function getWorkPermissions(status: string) {
-  switch (status) {
-    case 'draft':      return { synopsis: true, chapters: true, body: true, world: true }
-    case 'planning':   return { synopsis: true, chapters: true, body: false, world: true }
-    case 'writing':    return { synopsis: true, chapters: true, body: true, world: true }
-    case 'reviewing':  return { synopsis: false, chapters: false, body: true, world: false }
-    default:           return { synopsis: false, chapters: false, body: false, world: false }
-  }
 }
 
 /** 当前作品状态是否有任何可写权限 */
@@ -145,8 +135,11 @@ export default function WorkDetailPage() {
   )
 
   const permissions = useMemo(
-    () => (work ? getWorkPermissions(work.status) : { synopsis: false, chapters: false, body: false, world: false }),
-    [work?.status]
+    () =>
+      work
+        ? getWorkPermissions(work)
+        : { synopsis: false, chapters: false, body: false, world: false },
+    [work?.status, work?.metadata]
   )
 
   const canEverEdit = hasAnyPermission(permissions)
@@ -552,7 +545,7 @@ export default function WorkDetailPage() {
                             正文
                           </button>
                         )}
-                        {!isPlanningContext && isEditing && (
+                        {isEditing && permissions.body && (
                           <button
                             onClick={() => navigate(`/writing/${work.id}/${c.id}`)}
                             className="inline-flex items-center gap-1 px-2.5 py-1 border border-blue-200 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 text-xs font-medium"
@@ -561,7 +554,7 @@ export default function WorkDetailPage() {
                             进入正文编辑
                           </button>
                         )}
-                        {!isPlanningContext && !isEditing && hasContent && (
+                        {!isEditing && hasContent && (
                           <button
                             onClick={() =>
                               setContentModal({
@@ -647,7 +640,7 @@ export default function WorkDetailPage() {
                           {getChapterStatusLabel(c.status)}
                         </span>
                       </div>
-                      {isEditing ? (
+                      {isEditing && permissions.body ? (
                         <button
                           onClick={() => navigate(`/writing/${work.id}/${c.id}`)}
                           className="inline-flex items-center gap-1 px-2.5 py-1 border border-blue-200 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 text-xs font-medium shrink-0"
