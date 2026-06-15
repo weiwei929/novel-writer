@@ -1,9 +1,12 @@
 import { projectsApi, proposalsApi, type Project, type Proposal } from './api'
+import { hasReleasedToLibrary } from './releaseHandoff'
 import {
-  hasReleasedToEditorial,
-  hasReleasedToLibrary,
-  hasReleasedToStudio,
-} from './releaseHandoff'
+  inEditorialWorkspace,
+  inLibraryWorkspace,
+  inPlanningWorkspace,
+  inStudioWorkspace,
+  isPendingPlanningProposal,
+} from './workspaceFilters'
 
 export type DashboardStageId = 'creative' | 'planning' | 'writing' | 'review' | 'library'
 
@@ -86,38 +89,6 @@ function takeRecentItems(items: DashboardListItem[], limit: number): DashboardLi
     .slice(0, limit)
 }
 
-/** 0608 企划课三列：待企划 + 企划进行中 + 已完成企划（未提交创作室） */
-function inPlanningWorkspace(p: Project): boolean {
-  return p.status === 'planning' || (p.status === 'planned' && !hasReleasedToStudio(p))
-}
-
-function isPlanningProposal(p: Proposal): boolean {
-  return p.status === 'submitted' || p.status === 'evaluated'
-}
-
-/** 0608 创作室三列：待创作 + 创作中 + 已完成创作（未提交编审部） */
-function inStudioWorkspace(p: Project): boolean {
-  return (
-    (p.status === 'planned' && hasReleasedToStudio(p)) ||
-    p.status === 'writing' ||
-    (p.status === 'written' && !hasReleasedToEditorial(p))
-  )
-}
-
-/** 0608 编审部三列：待审阅 + 审阅中 + 已完成审阅（未提交文集库） */
-function inEditorialWorkspace(p: Project): boolean {
-  return (
-    (p.status === 'written' && hasReleasedToEditorial(p)) ||
-    p.status === 'reviewing' ||
-    (p.status === 'reviewed' && !hasReleasedToLibrary(p))
-  )
-}
-
-/** 0608 文集库：待归库 + 已归档 */
-function inLibraryWorkspace(p: Project): boolean {
-  return (p.status === 'reviewed' && hasReleasedToLibrary(p)) || p.status === 'archived'
-}
-
 export async function getDashboardOverview(): Promise<DashboardOverview> {
   const [proposals, projects] = await Promise.all([
     proposalsApi.getAll(),
@@ -138,7 +109,7 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
     .slice(0, 5)
     .map(mapProposalItem)
 
-  const planningProposals = proposals.filter(isPlanningProposal)
+  const planningProposals = proposals.filter(isPendingPlanningProposal)
   const planningProjects = projects.filter(inPlanningWorkspace)
   const planningItems = takeRecentItems(
     [

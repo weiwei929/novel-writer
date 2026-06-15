@@ -2,20 +2,61 @@ import React, { useEffect, useMemo, useState } from 'react'
 import {
   collectionsApi,
   projectsApi,
-  PROJECT_STATUS_LABEL,
+  proposalsApi,
 } from '../services/api'
+import {
+  countEditorialWorkspace,
+  countLibraryWorkspace,
+  countPlanningWorkspace,
+  countStudioWorkspace,
+} from '../services/workspaceFilters'
 import { IconCalendar, IconFile, IconFolder, IconStats } from '../components/ui/icons'
+
+interface WorkspaceDistRow {
+  id: string
+  label: string
+  subtitle: string
+  count: number
+  barColor: string
+}
 
 interface StatsData {
   totalProjects: number
   totalChapters: number
   totalWords: number
   collectionsCount: number
-  statusDist: { label: string; count: number; status: string }[]
+  workspaceDist: WorkspaceDistRow[]
   todayProjects: number
   weekProjects: number
   lastEditedLabel: string | null
 }
+
+const WORKSPACE_ROWS: Omit<WorkspaceDistRow, 'count'>[] = [
+  {
+    id: 'planning',
+    label: '企划课',
+    subtitle: '待企划 · 企划进行中 · 已完成企划',
+    barColor: 'bg-blue-500',
+  },
+  {
+    id: 'studio',
+    label: '创作室',
+    subtitle: '待创作 · 创作中 · 已完成创作',
+    barColor: 'bg-indigo-500',
+  },
+  {
+    id: 'editorial',
+    label: '编审部',
+    subtitle: '待审阅 · 审阅中 · 已完成审阅',
+    barColor: 'bg-amber-500',
+  },
+  {
+    id: 'library',
+    label: '文集库',
+    subtitle: '待归库 · 已归档',
+    barColor: 'bg-emerald-500',
+  },
+]
 
 function formatWordCount(n: number): string {
   if (n >= 10000) return `${(n / 10000).toFixed(1)}w`
@@ -37,16 +78,6 @@ function Skeleton({ className = '' }: { className?: string }) {
   return <div className={`animate-pulse bg-gray-200 rounded-lg ${className}`} />
 }
 
-const STATUS_BAR_COLORS: Record<string, string> = {
-  draft: 'bg-gray-500',
-  planning: 'bg-blue-500',
-  writing: 'bg-indigo-500',
-  reviewing: 'bg-amber-500',
-  completed: 'bg-green-500',
-  archived: 'bg-gray-400',
-  shelved: 'bg-red-400',
-}
-
 const StatsPage: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -57,8 +88,9 @@ const StatsPage: React.FC = () => {
       setLoading(true)
       setError(null)
       try {
-        const [projects, collections] = await Promise.all([
+        const [projects, proposals, collections] = await Promise.all([
           projectsApi.getAll(),
+          proposalsApi.getAll(),
           collectionsApi.getAll(),
         ])
 
@@ -67,20 +99,17 @@ const StatsPage: React.FC = () => {
         const totalWords = projects.reduce((sum, p) => sum + (p.wordCount || 0), 0)
         const collectionsCount = collections.length
 
-        const distMap: Record<string, number> = {}
-        for (const p of projects) {
-          if (p.status === 'shelved') continue
-          const label = PROJECT_STATUS_LABEL[p.status] || p.status
-          distMap[label] = (distMap[label] || 0) + 1
+        const workspaceCounts: Record<string, number> = {
+          planning: countPlanningWorkspace(proposals, projects),
+          studio: countStudioWorkspace(projects),
+          editorial: countEditorialWorkspace(projects),
+          library: countLibraryWorkspace(projects),
         }
 
-        const statusDist = Object.entries(distMap)
-          .map(([label, count]) => {
-            const status =
-              Object.entries(PROJECT_STATUS_LABEL).find(([, l]) => l === label)?.[0] || label
-            return { label, count, status }
-          })
-          .sort((a, b) => b.count - a.count)
+        const workspaceDist = WORKSPACE_ROWS.map(row => ({
+          ...row,
+          count: workspaceCounts[row.id] ?? 0,
+        }))
 
         const now = Date.now()
         const todayProjects = projects.filter(
@@ -99,7 +128,7 @@ const StatsPage: React.FC = () => {
           totalChapters,
           totalWords,
           collectionsCount,
-          statusDist,
+          workspaceDist,
           todayProjects,
           weekProjects,
           lastEditedLabel: newest ? formatRelativeTime(newest.updatedAt) : null,
@@ -114,9 +143,14 @@ const StatsPage: React.FC = () => {
     void loadStats()
   }, [])
 
-  const maxStatusCount = useMemo(
-    () => Math.max(1, ...(stats?.statusDist.map(s => s.count) || [1])),
-    [stats]
+  const workspaceTotal = useMemo(
+    () => stats?.workspaceDist.reduce((sum, row) => sum + row.count, 0) ?? 0,
+    [stats],
+  )
+
+  const maxWorkspaceCount = useMemo(
+    () => Math.max(1, ...(stats?.workspaceDist.map(s => s.count) || [1])),
+    [stats],
   )
 
   if (loading) {
@@ -175,27 +209,30 @@ const StatsPage: React.FC = () => {
 
       <section className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900">作品状态分布</h2>
+          <h2 className="font-semibold text-gray-900">工作台分布</h2>
+          <p className="text-xs text-gray-500 mt-1">按 0608 release handoff 口径统计各部门占用</p>
         </div>
         <div className="p-5 space-y-4">
-          {stats.statusDist.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-4">暂无作品数据</p>
+          {workspaceTotal === 0 ? (
+            <p className="text-sm text-gray-500 text-center py-4">暂无工作台占用数据</p>
           ) : (
-            stats.statusDist.map(row => {
-              const pct = Math.round((row.count / stats.totalProjects) * 100) || 0
-              const barColor = STATUS_BAR_COLORS[row.status] || 'bg-gray-400'
+            stats.workspaceDist.map(row => {
+              const pct = Math.round((row.count / workspaceTotal) * 100) || 0
               return (
-                <div key={row.label}>
-                  <div className="flex items-center justify-between text-sm mb-1">
-                    <span className="text-gray-700">{row.label}</span>
-                    <span className="text-gray-500 tabular-nums">
+                <div key={row.id}>
+                  <div className="flex items-center justify-between text-sm mb-1 gap-3">
+                    <div className="min-w-0">
+                      <span className="text-gray-900 font-medium">{row.label}</span>
+                      <span className="text-gray-400 text-xs ml-2">{row.subtitle}</span>
+                    </div>
+                    <span className="text-gray-500 tabular-nums shrink-0">
                       {row.count} ({pct}%)
                     </span>
                   </div>
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${barColor}`}
-                      style={{ width: `${(row.count / maxStatusCount) * 100}%` }}
+                      className={`h-full rounded-full ${row.barColor}`}
+                      style={{ width: `${(row.count / maxWorkspaceCount) * 100}%` }}
                     />
                   </div>
                 </div>
