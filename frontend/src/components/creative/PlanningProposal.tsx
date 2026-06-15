@@ -56,7 +56,7 @@ export default function PlanningProposal() {
       } else if (action === 'reject') {
         success('已退回创意讨论')
       } else {
-        success('已移入作品暂存')
+        success('已放入文件暂存')
       }
       setEvaluating(null)
       await load()
@@ -214,7 +214,7 @@ export default function PlanningProposal() {
                   onClick={() => void handleEvaluate('shelve')}
                   className="w-full text-left p-3 border rounded-lg hover:bg-gray-50"
                 >
-                  <span className="font-medium">📦 暂存 → 作品暂存</span>
+                  <span className="font-medium">📦 暂存 → 文件暂存</span>
                 </button>
               </div>
             </div>

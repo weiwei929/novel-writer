@@ -64,7 +64,7 @@ export function getProposalStatusLabel(status: string): string {
     created: '已提交',
     approved: '已通过评估',
     rejected: '已驳回',
-    shelved: '作品暂存',
+    shelved: '文件暂存',
   }
   return labels[s] ?? s
 }

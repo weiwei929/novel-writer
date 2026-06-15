@@ -72,7 +72,7 @@ function ShelvedProjectCard({
             <ProjectStatusBadge status={project.status} />
           </div>
           <p className="text-sm text-gray-600 mt-2">
-            原状态：{prevLabel} · 移入时间：{shelvedAt}
+            原状态：{prevLabel} · 放入时间：{shelvedAt}
           </p>
           <p className="text-xs text-gray-400 mt-1">来源：{sourceLabel}</p>
         </div>
@@ -111,7 +111,7 @@ export default function ShelfPage() {
       const graveyard = await projectsApi.getGraveyard()
       setProjects(graveyard)
     } catch {
-      notifyError('加载失败', '无法获取暂存作品列表')
+      notifyError('加载失败', '无法获取文件暂存列表')
     } finally {
       setLoading(false)
     }
@@ -125,7 +125,7 @@ export default function ShelfPage() {
     setActing(true)
     try {
       await projectsApi.unshelve(id)
-      notifySuccess('已还原', '作品已从暂存移出')
+      notifySuccess('已还原', '已从文件暂存移出')
       await load()
     } catch {
       notifyError('还原失败')
@@ -156,7 +156,7 @@ export default function ShelfPage() {
     if (projects.length === 0) return
     if (
       !window.confirm(
-        `确定要彻底删除全部 ${projects.length} 个暂存作品吗？此操作不可撤销。`
+        `确定要彻底删除全部 ${projects.length} 个暂存文件吗？此操作不可撤销。`
       )
     ) {
       return
@@ -165,7 +165,7 @@ export default function ShelfPage() {
       setActing(true)
       try {
         await Promise.all(projects.map(p => projectsApi.delete(p.id)))
-        notifySuccess('已清空', '全部暂存作品已删除')
+        notifySuccess('已清空', '文件暂存已清空')
         await load()
       } catch {
         notifyError('清空失败', '部分作品可能未删除成功，请刷新后重试')
@@ -188,7 +188,7 @@ export default function ShelfPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900">作品暂存</h1>
+        <h1 className="text-2xl font-bold text-gray-900">文件暂存</h1>
         {projects.length > 0 && (
           <button
             type="button"
@@ -204,9 +204,9 @@ export default function ShelfPage() {
       {projects.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
           <IconShelf size={48} className="text-gray-300 mx-auto mb-4" />
-          <div className="text-gray-400 text-lg">暂无暂存作品</div>
+          <div className="text-gray-400 text-lg">文件暂存为空</div>
           <div className="text-gray-500 text-sm mt-2">
-            从任意作品的操作中选择「移入暂存」即可在此处查看
+            从任意作品列表中使用「放入文件暂存」即可在此处查看
           </div>
         </div>
       ) : (

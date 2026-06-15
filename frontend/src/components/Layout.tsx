@@ -21,7 +21,7 @@ const PHASES: Phase[] = [
 const GLOBAL_ACTIONS: GlobalAction[] = [
   { path: '/stats', icon: IconStats, title: '数据统计' },
   { path: '/settings', icon: IconSettings, title: '系统设置' },
-  { path: '/shelf', icon: IconShelf, title: '作品暂存' },
+  { path: '/shelf', icon: IconShelf, title: '文件暂存' },
 ]
 
 const matchesPath = (pathname: string, target: string): boolean =>

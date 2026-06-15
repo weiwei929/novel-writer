@@ -79,7 +79,7 @@ export const PROJECT_STATUS_LABEL: Record<string, string> = {
   reviewed: '已审阅',
   completed: '已完成',
   archived: '已归档',
-  shelved: '作品暂存',
+  shelved: '文件暂存',
 }
 
 export const PROPOSAL_STATUS_LABEL: Record<string, string> = {
@@ -90,7 +90,7 @@ export const PROPOSAL_STATUS_LABEL: Record<string, string> = {
   evaluated: '已评估',
   approved: '已通过评估',
   rejected: '已驳回',
-  shelved: '作品暂存',
+  shelved: '文件暂存',
 }
 
 export const getStatusLabel = (status: string): string =>
@@ -635,7 +635,7 @@ export const projectsApi = {
     return response.data
   },
 
-  // ===== 墓园 =====
+  // ===== 文件暂存（graveyard API） =====
 
   async getGraveyard(): Promise<Project[]> {
     const response = await api.get('/graveyard')

@@ -106,7 +106,7 @@ export default function PlanningPage() {
 
         {/* 企划进行中 */}
         <ProjectPickerView
-          title="企划进行中"
+          title={`企划进行中 ${planning.length} 部`}
           subtitle={`${planning.length} 部企划进行中作品`}
           projects={planning}
           loading={false}
@@ -119,7 +119,7 @@ export default function PlanningPage() {
 
         {/* 已完成企划 */}
         <ProjectPickerView
-          title="已完成企划"
+          title={`已完成企划 ${planned.length} 部`}
           subtitle={`${planned.length} 部已完成企划作品`}
           projects={planned}
           loading={false}

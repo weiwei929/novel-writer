@@ -44,9 +44,9 @@ const HOME_WORK_AREA: Record<string, WorkArea> = {
  * 当 viewedFrom 是下游部门时，使用此覆盖。
  *
  * 0608 §2：
- *   planned 在创作室是 pending   → 企划课已放行，创作室待处理
- *   written 在编审部是 pending   → 创作室已放行，编审部待处理
- *   reviewed 在文集库是 pending  → 编审部已放行，文集库待处理
+ *   planned 在创作室是 pending   → 企划课已提交，创作室待处理
+ *   written 在编审部是 pending   → 创作室已提交，编审部待处理
+ *   reviewed 在文集库是 pending  → 编审部已提交，文集库待处理
  */
 const DOWNSTREAM_OVERRIDE: Record<string, Partial<Record<Department, { department: Department; workArea: WorkArea }>>> = {
   planned: { studio: { department: 'studio', workArea: 'pending' } },
@@ -59,7 +59,7 @@ export function resolveDepartment(
   deletedAt?: string | null,
   viewedFrom?: Department | null
 ): DepartmentContext {
-  // 墓园优先
+  // 文件暂存优先
   if (deletedAt) {
     return { department: 'graveyard', workArea: 'completed' }
   }
@@ -84,5 +84,5 @@ export const DEPARTMENT_LABEL: Record<Department, string> = {
   studio: '创作室',
   editorial: '编审部',
   library: '文集库',
-  graveyard: '墓园',
+  graveyard: '文件暂存',
 }

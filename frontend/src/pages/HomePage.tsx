@@ -28,7 +28,7 @@ const STAGE_META: {
     id: 'creative',
     label: '创意组',
     icon: IconCreative,
-    to: '/creative/scraps',
+    to: '/creative/chat',
     countSuffix: '个提案',
     accent: 'text-amber-600 bg-amber-50',
   },

@@ -90,7 +90,10 @@ export default function ScrapNote() {
   const handleNew = () => selectScrap(null)
 
   const handleSave = async () => {
-    if (!title.trim() && !body.trim()) return
+    if (!title.trim() && !body.trim()) {
+      notifyError('请先填写灵感碎片内容')
+      return
+    }
     setSaving(true)
     try {
       const content = formatScrapContent(title || '未命名灵感', body)

@@ -29,9 +29,9 @@ function proposalStatusLabel(status: string): string {
   const map: Record<string, string> = {
     draft: '讨论中',
     submitted: '待评估',
-    approved: '已通过',
+    approved: '已接收入企划课',
     rejected: '已退回',
-    shelved: '已暂存', // Legacy — 0608 F-003 提案级 shelved 暂保留
+    shelved: '已放入文件暂存',
     evaluated: '已评估',
   }
   return map[status] || status
@@ -113,7 +113,7 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
     if (p.status === 'approved' && p.projectId) {
       activity.push({
         time: p.updatedAt,
-        text: `创意组「${p.title}」已通过 → 进入企划课`,
+        text: `创意组「${p.title}」已接收入企划课`,
         href: `/planning/in-progress`,
       })
     } else if (p.status === 'submitted') {
