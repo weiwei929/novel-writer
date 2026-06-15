@@ -8,6 +8,7 @@ import {
   type Collection,
   type Project,
 } from '../services/api'
+import { AI_FROZEN_HINT, AI_FROZEN_LABEL, AI_UI_FROZEN } from '../config/aiFreeze'
 import { useNotifications } from '../hooks/useNotifications'
 import ProjectStatusBadge from '../components/projects/ProjectStatusBadge'
 import FileStagingConfirmModal from '../components/projects/FileStagingConfirmModal'
@@ -96,7 +97,8 @@ export default function LibraryDetailPage() {
   const isArchived = project?.status === 'archived'
 
   const handleEditReview = () => {
-    notifyInfo('编辑书评', 'AI 书评（Day 3 接入）')
+    if (AI_UI_FROZEN) return
+    notifyInfo('编辑书评', AI_FROZEN_LABEL)
   }
 
   const handleOpenCollectionPicker = () => {
@@ -219,7 +221,8 @@ export default function LibraryDetailPage() {
           <button
             type="button"
             onClick={handleEditReview}
-            className="px-3 py-1.5 text-sm border border-emerald-200 text-emerald-800 rounded-lg hover:bg-emerald-50"
+            disabled={AI_UI_FROZEN}
+            className="px-3 py-1.5 text-sm border border-emerald-200 text-emerald-800 rounded-lg hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             编辑书评
           </button>
@@ -363,8 +366,8 @@ export default function LibraryDetailPage() {
           <IconLibrary size={18} className="text-emerald-600" />
           <h2 className="text-lg font-semibold text-gray-900">书评</h2>
         </div>
-        <p className="text-sm text-emerald-700 mb-1">AI 书评（Day 3 接入）</p>
-        <p className="text-xs text-gray-500 mb-4">书评内容将在 Day 3 由 AI 生成，可手动编辑后保存。</p>
+        <p className="text-sm text-emerald-700 mb-1">{AI_FROZEN_LABEL}</p>
+        <p className="text-xs text-gray-500 mb-4">{AI_FROZEN_HINT}</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {BOOK_REVIEW_TYPES.map(item => (
             <div
@@ -373,7 +376,7 @@ export default function LibraryDetailPage() {
             >
               <div className="text-sm font-medium text-gray-800">{item.label}</div>
               <div className="text-xs text-gray-500 mt-0.5">{item.hint}</div>
-              <div className="text-xs text-gray-400 mt-3">待生成</div>
+              <div className="text-xs text-gray-400 mt-3">{AI_FROZEN_LABEL}</div>
             </div>
           ))}
         </div>

@@ -7,6 +7,7 @@ import ContentMetadataCard from '../components/metadata/ContentMetadataCard'
 import AIAssistantPanel from '../components/writer/AIAssistantPanel'
 import ReferenceSidebar from '../components/writer/ReferenceSidebar'
 import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
+import { AI_UI_FROZEN } from '../config/aiFreeze'
 import { useNotifications } from '../hooks/useNotifications'
 import { useSettingsStore } from '../stores/settingsStore'
 
@@ -70,6 +71,7 @@ const WritingEditorPage: React.FC = () => {
   const editorRef = useRef<MarkdownEditorRef>(null)
   const { success: notifySuccess } = useNotifications()
   const aiWriter = useSettingsStore(s => s.ai.writer)
+  const showAiMode = aiWriter && !AI_UI_FROZEN
   const editorPrefs = useSettingsStore(s => s.editor)
 
   const [project, setProject] = useState<Project | null>(null)
@@ -98,10 +100,10 @@ const WritingEditorPage: React.FC = () => {
   }, [editorPrefs.referenceSidebar])
 
   useEffect(() => {
-    if (!aiWriter && editorMode === 'ai') {
+    if (!showAiMode && editorMode === 'ai') {
       setEditorMode('pure')
     }
-  }, [aiWriter, editorMode])
+  }, [showAiMode, editorMode])
 
   useEffect(() => {
     if (!projectId || !chapterId) {
@@ -369,7 +371,7 @@ const WritingEditorPage: React.FC = () => {
               label="参考"
               onClick={toggleReference}
             />
-            {aiWriter && (
+            {showAiMode && (
               <ModeButton
                 active={editorMode === 'ai'}
                 label="AI"
@@ -436,7 +438,7 @@ const WritingEditorPage: React.FC = () => {
             {editorMode === 'reference' && projectId && (
               <ReferenceSidebar projectId={projectId} width={referenceWidth} />
             )}
-            {editorMode === 'ai' && (
+            {showAiMode && editorMode === 'ai' && (
               <AIAssistantPanel
                 onClose={() => setMode('pure')}
                 onApplyContent={handleApplyAIContent}

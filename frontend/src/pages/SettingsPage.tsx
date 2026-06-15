@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { aiApi } from '../services/api'
+import { AI_FROZEN_LABEL, AI_UI_FROZEN } from '../config/aiFreeze'
 import { useSettingsStore, type AutoSaveDelay, type EditorFontSize, type EditorTheme } from '../stores/settingsStore'
 import { useNotifications } from '../hooks/useNotifications'
 import { IconRefresh, IconSave, IconSettings } from '../components/ui/icons'
@@ -10,10 +11,12 @@ function Toggle({
   checked,
   onChange,
   label,
+  disabled = false,
 }: {
   checked: boolean
   onChange: (v: boolean) => void
   label: string
+  disabled?: boolean
 }) {
   return (
     <button
@@ -21,10 +24,14 @@ function Toggle({
       role="switch"
       aria-checked={checked}
       aria-label={label}
-      onClick={() => onChange(!checked)}
+      aria-disabled={disabled}
+      disabled={disabled}
+      onClick={() => {
+        if (!disabled) onChange(!checked)
+      }}
       className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors ${
-        checked ? 'bg-blue-600' : 'bg-gray-300'
-      }`}
+        disabled ? 'opacity-50 cursor-not-allowed' : ''
+      } ${checked ? 'bg-blue-600' : 'bg-gray-300'}`}
     >
       <span
         className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform mt-0.5 ${
@@ -65,12 +72,16 @@ const SettingsPage: React.FC = () => {
 
   const checkServices = async () => {
     setApiStatus('checking')
-    setAiStatus('checking')
+    if (!AI_UI_FROZEN) setAiStatus('checking')
     try {
       const r = await fetch('/health')
       setApiStatus(r.ok ? 'connected' : 'error')
     } catch {
       setApiStatus('error')
+    }
+    if (AI_UI_FROZEN) {
+      setAiStatus('unconfigured')
+      return
     }
     try {
       const r = await aiApi.checkStatus()
@@ -86,6 +97,7 @@ const SettingsPage: React.FC = () => {
   }, [])
 
   const handleTestConnection = async () => {
+    if (AI_UI_FROZEN) return
     setTesting(true)
     await checkServices()
     try {
@@ -105,7 +117,7 @@ const SettingsPage: React.FC = () => {
   }
 
   const aiRows: { key: keyof typeof ai; title: string; hint: string }[] = [
-    { key: 'partner', title: 'AI 创意合伙人', hint: '隐藏 AI 搜索 + 创意讨论 Tab' },
+    { key: 'partner', title: 'AI 创意合伙人', hint: '隐藏 AI 搜索入口' },
     { key: 'writer', title: 'AI 写作助手', hint: '隐藏 AI 写作助手面板' },
     { key: 'reviewer', title: 'AI 审校官-企划课', hint: '隐藏立项评估中的 AI 评估区域' },
     { key: 'auditor', title: 'AI 审校官-编审部', hint: '隐藏编审 AI 审校报告' },
@@ -122,6 +134,9 @@ const SettingsPage: React.FC = () => {
       <section className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/60">
           <h2 className="font-semibold text-gray-900">AI 功能开关</h2>
+          {AI_UI_FROZEN && (
+            <p className="text-xs text-amber-700 mt-1">{AI_FROZEN_LABEL}，开关暂不可用</p>
+          )}
         </div>
         <ul className="divide-y divide-gray-100">
           {aiRows.map(row => (
@@ -133,6 +148,7 @@ const SettingsPage: React.FC = () => {
               <Toggle
                 label={row.title}
                 checked={ai[row.key]}
+                disabled={AI_UI_FROZEN}
                 onChange={v => setAISettings({ [row.key]: v })}
               />
             </li>
@@ -257,21 +273,25 @@ const SettingsPage: React.FC = () => {
             <span className="text-gray-700">AI 服务</span>
             <span className="flex items-center gap-2 text-gray-600">
               <StatusDot status={aiStatus} />
-              {aiStatus === 'checking' && '检测中…'}
-              {aiStatus === 'connected' && '已连接'}
-              {aiStatus === 'unconfigured' && '未配置'}
-              {aiStatus === 'error' && '不可用'}
+              {AI_UI_FROZEN && '开发中'}
+              {!AI_UI_FROZEN && aiStatus === 'checking' && '检测中…'}
+              {!AI_UI_FROZEN && aiStatus === 'connected' && '已连接'}
+              {!AI_UI_FROZEN && aiStatus === 'unconfigured' && '未配置'}
+              {!AI_UI_FROZEN && aiStatus === 'error' && '不可用'}
             </span>
           </div>
           <button
             type="button"
             onClick={() => void handleTestConnection()}
-            disabled={testing}
-            className="mt-2 inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            disabled={testing || AI_UI_FROZEN}
+            className="mt-2 inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <IconRefresh size={16} className={testing ? 'animate-spin' : ''} />
             测试连接
           </button>
+          {AI_UI_FROZEN && (
+            <p className="text-xs text-gray-500">{AI_FROZEN_LABEL}</p>
+          )}
         </div>
       </section>
     </div>

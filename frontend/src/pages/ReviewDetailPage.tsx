@@ -9,6 +9,7 @@ import {
 import { useNotifications } from '../hooks/useNotifications'
 import ProjectStatusBadge from '../components/projects/ProjectStatusBadge'
 import FileStagingConfirmModal from '../components/projects/FileStagingConfirmModal'
+import { AI_FROZEN_HINT, AI_FROZEN_LABEL, AI_UI_FROZEN } from '../config/aiFreeze'
 import ThreeColumnLayout from '../components/creative/ThreeColumnLayout'
 import { IconArrowLeft, IconSparkles } from '../components/ui/icons'
 
@@ -81,7 +82,8 @@ export default function ReviewDetailPage() {
   }
 
   const handleGenerateReport = () => {
-    notifyInfo('生成报告', 'AI 审查（Day 3 接入）')
+    if (AI_UI_FROZEN) return
+    notifyInfo('生成报告', AI_FROZEN_LABEL)
   }
 
   const handleConfirmFileStaging = async () => {
@@ -130,7 +132,7 @@ export default function ReviewDetailPage() {
     return (
       <div className="text-center py-20 space-y-4">
         <p className="text-sm text-gray-600">该作品不在编审队列。</p>
-        <ProjectStatusBadge status={project.status} />
+        <ProjectStatusBadge status={project.status} phase="editorial" />
         <button
           type="button"
           onClick={() => navigate('/editorial')}
@@ -208,8 +210,8 @@ export default function ReviewDetailPage() {
           <IconSparkles className="w-4 h-4 text-amber-600" />
           <h3 className="text-sm font-semibold text-gray-900">AI 审阅报告</h3>
         </div>
-        <p className="text-xs text-amber-700">AI 审查（Day 3 接入）</p>
-        <p className="text-xs text-gray-500 mt-1">审阅报告将在 Day 3 由 AI 审查官生成</p>
+        <p className="text-xs text-amber-700">{AI_FROZEN_LABEL}</p>
+        <p className="text-xs text-gray-500 mt-1">{AI_FROZEN_HINT}</p>
       </div>
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {REVIEW_DIMENSIONS.map(dim => (
@@ -219,7 +221,7 @@ export default function ReviewDetailPage() {
           >
             <div className="text-sm font-medium text-gray-800">{dim.label}</div>
             <div className="text-xs text-gray-500 mt-0.5">{dim.hint}</div>
-            <div className="text-xs text-gray-400 mt-2">待生成</div>
+            <div className="text-xs text-gray-400 mt-2">{AI_FROZEN_LABEL}</div>
           </div>
         ))}
       </div>
@@ -239,7 +241,7 @@ export default function ReviewDetailPage() {
             返回审阅任务
           </button>
           <h1 className="text-xl font-bold text-gray-900 truncate">{project.title}</h1>
-          <ProjectStatusBadge status={project.status} />
+          <ProjectStatusBadge status={project.status} phase="editorial" />
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <p className="text-sm text-gray-500">{project.author?.trim() || '—'}</p>
@@ -248,7 +250,7 @@ export default function ReviewDetailPage() {
             onClick={() => setShowFileStaging(true)}
             className="px-3 py-1.5 text-sm border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50"
           >
-            📂 放入文件暂存
+            放入文件暂存
           </button>
         </div>
       </div>
@@ -263,7 +265,8 @@ export default function ReviewDetailPage() {
         <button
           type="button"
           onClick={handleGenerateReport}
-          className="px-3 py-1.5 text-sm border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50"
+          disabled={AI_UI_FROZEN}
+          className="px-3 py-1.5 text-sm border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           生成报告
         </button>
