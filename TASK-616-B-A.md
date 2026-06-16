@@ -6,7 +6,9 @@
 - [docs/design/0608-616-coordination-draft.md](docs/design/0608-616-coordination-draft.md) §3、§4（企划中 = 内容劳动 / save）
 - [TASK-616-A-closure.md](TASK-616-A-closure.md)（命名与梗概已收官）
 
-**状态**：已审卡 · 已执行（`feature/616-b-a-work-setting`）  
+**状态**：**已合并**（PR #4 → `feature/workdetail-p1`，`5f376d1`；含 review fix `5bc9d2f`）  
+**合并验收**（2026-06-16）：主基线 build 通过；API smoke 验证 `workSetting` patch 写入、`planning` status 不变、legacy 元数据不被覆盖。  
+**作战记录**：616-B-A 已合并 — 作品设定最小模型落地，企划课主路径切到 `workSetting`。
 **类型**：616-B 第一轮实现战役  
 **母卡**：616-B（作品设定最小模型）  
 **建议分支**：`feature/616-b-a-work-setting`（自 `feature/workdetail-p1` 切出）  
