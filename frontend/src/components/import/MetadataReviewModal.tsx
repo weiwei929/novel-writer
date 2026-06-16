@@ -84,7 +84,7 @@ export const MetadataReviewModal: React.FC<MetadataReviewModalProps> = ({
   const metadataFields = [
     { key: 'synopsis', label: '作品梗概', icon: '📖' },
     { key: 'characters', label: '人物设定', icon: '👥' },
-    { key: 'worldBuilding', label: '作品设定', icon: '🌍' },
+    { key: 'worldBuilding', label: '背景设定', icon: '🌍' },
     { key: 'plotStructure', label: '情节结构', icon: '📊' },
     { key: 'themes', label: '主题思想', icon: '💡' },
     { key: 'writingStyle', label: '写作风格', icon: '✍️' },
@@ -122,7 +122,7 @@ export const MetadataReviewModal: React.FC<MetadataReviewModalProps> = ({
                 <ul className="list-disc list-inside space-y-1 text-blue-700">
                   <li>元数据是 AI 写作和审阅的"宪法"，请仔细审阅</li>
                   <li>确认后，这些元数据将成为所有 AI 功能的核心约束</li>
-                  <li>您可以稍后在项目元数据面板中修改</li>
+                  <li>您可以稍后在作品设定面板中修改</li>
                 </ul>
               </div>
             </div>

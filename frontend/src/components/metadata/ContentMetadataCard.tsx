@@ -15,10 +15,10 @@ type MetadataField = {
 }
 
 const FIELDS: MetadataField[] = [
-  { key: 'synopsis', label: '项目梗概' },
+  { key: 'synopsis', label: '作品梗概' },
   { key: 'characters', label: '人物设定' },
   { key: 'timeline', label: '时间线' },
-    { key: 'settings', label: '作品设定' },
+    { key: 'settings', label: '背景设定' },
   { key: 'relationships', label: '关系网' },
   { key: 'plotStructure', label: '情节结构' },
 ]
@@ -41,14 +41,14 @@ const ContentMetadataCard: React.FC<ContentMetadataCardProps> = ({
       {/* 标题 */}
       <div className="px-4 py-3 border-b shrink-0 flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">内容元数据</h3>
+          <h3 className="text-sm font-semibold text-gray-900">作品设定</h3>
           <p className="text-xs text-gray-400 mt-0.5">{onEdit ? '' : '只读参考'}</p>
         </div>
         {onEdit && (
           <button
             onClick={onEdit}
             className="flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-            title="编辑内容元数据"
+            title="编辑作品设定"
           >
             <IconSettings size={13} />
             编辑
@@ -91,7 +91,7 @@ const ContentMetadataCard: React.FC<ContentMetadataCardProps> = ({
       {/* 底部提示 */}
       <div className="px-4 py-2 border-t bg-gray-50 shrink-0">
         <p className="text-xs text-gray-400">
-          {onEdit ? '点击右上角编辑按钮进行编辑' : '在作品详情页编辑内容元数据'}
+          {onEdit ? '点击右上角编辑按钮进行编辑' : '在作品详情页编辑作品设定'}
         </p>
       </div>
     </div>

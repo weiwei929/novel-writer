@@ -35,7 +35,7 @@ const WorkMetadataPanel: React.FC<WorkMetadataPanelProps> = ({
     { key: 'synopsis', label: '作品梗概', required: true },
     { key: 'characters', label: '人物设定', required: false },
     { key: 'timeline', label: '时间线', required: false },
-    { key: 'settings', label: '作品设定', required: false },
+    { key: 'settings', label: '背景设定', required: false },
     { key: 'relationships', label: '关系网', required: false },
     { key: 'plotStructure', label: '情节结构', required: false },
   ]
@@ -93,7 +93,7 @@ const WorkMetadataPanel: React.FC<WorkMetadataPanelProps> = ({
         {/* 顶部工具栏 */}
         <div className="flex items-center justify-between p-3 border-b bg-white">
           <div className="min-w-0">
-            <h2 className="font-semibold text-gray-900 truncate">作品元数据</h2>
+            <h2 className="font-semibold text-gray-900 truncate">作品设定</h2>
             <div className="text-xs text-gray-500 truncate">{work.title}</div>
           </div>
           <div className="flex items-center gap-2">

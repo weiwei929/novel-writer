@@ -140,17 +140,18 @@ export default function ProposalEvalPage() {
       )}
 
       <div>
-        <h2 className="text-lg font-bold text-gray-900 mb-3">作品设定（只读）</h2>
+        <h2 className="text-lg font-bold text-gray-900 mb-3">遗留资料（只读）</h2>
         {proposal.status === 'approved' && proposal.projectId ? (
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-600">
-            该提案已接收入企划课，作品设定已迁入企划进行中。
+            该提案已接收入企划课。作品设定请前往
             <button
               type="button"
               onClick={() => navigate(`/work/${proposal.projectId}?from=planning`)}
-              className="ml-2 text-blue-600 hover:underline"
+              className="mx-1 text-blue-600 hover:underline"
             >
-              查看作品
+              作品详情 · 作品设定
             </button>
+            查看。
           </div>
         ) : (
           <WorldBuildingPage readOnly />

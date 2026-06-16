@@ -68,16 +68,31 @@ export default function MetadataProjectPage() {
         </button>
         <div className="flex items-center gap-2">
           <h1 className="text-xl font-bold text-gray-900">{project.title}</h1>
-          <ProjectStatusBadge status={project.status} />
+          <ProjectStatusBadge status={project.status} phase="planning" />
         </div>
       </div>
 
-      <div>
-        <h2 className="text-lg font-bold text-gray-900 mb-3">作品设定</h2>
-        <p className="text-sm text-gray-500 mb-4">
-          人物设定、故事线、创作心流已迁入本项目，可在此继续编辑。
+      <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-900">
+        <p className="font-medium">遗留资料入口</p>
+        <p className="mt-1 text-amber-800">
+          请优先在
+          <button
+            type="button"
+            onClick={() => navigate(`/work/${projectId}?from=planning`)}
+            className="mx-1 text-blue-700 underline hover:text-blue-900"
+          >
+            作品详情 · 作品设定
+          </button>
+          编辑。本页仅保留旧版人物/故事线/心流（只读兼容期）。
         </p>
-        <WorldBuildingPage readOnly={false} />
+      </div>
+
+      <div>
+        <h2 className="text-lg font-bold text-gray-900 mb-3">遗留资料（只读）</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          以下为冻结中的旧创作资料线，不再扩展。新内容请写入作品详情页的作品设定。
+        </p>
+        <WorldBuildingPage readOnly />
       </div>
     </div>
   )
