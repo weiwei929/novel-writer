@@ -54,7 +54,7 @@ export default function PlanningProposal() {
       if (action === 'approve' && result.projectId) {
         success('已同意立项', `作品已创建，可前往 /work/${result.projectId}`)
       } else if (action === 'reject') {
-        success('已退回创意讨论')
+        success('已退回作品构思')
       } else {
         success('已放入文件暂存')
       }
@@ -89,7 +89,7 @@ export default function PlanningProposal() {
         <h2 className="text-sm font-semibold text-gray-800 mb-3">待评估</h2>
         {pending.length === 0 ? (
           <p className="text-sm text-gray-400 border border-dashed rounded-xl p-8 text-center">
-            暂无待评估提案。在创意作品详情页提交至企划课后会出现于此。
+            暂无待评估的待企划作品。在创意作品详情页提交至企划课后会出现于此。
           </p>
         ) : (
           <ul className="space-y-2">
@@ -155,7 +155,7 @@ export default function PlanningProposal() {
                     to={`/creative/proposals/${p.id}`}
                     className="text-xs text-gray-500 shrink-0"
                   >
-                    查看提案
+                    查看创意作品
                   </Link>
                 )}
               </li>
@@ -197,7 +197,7 @@ export default function PlanningProposal() {
                 >
                   <span className="font-medium text-blue-800">✓ 同意 → 进入企划课</span>
                   <p className="text-xs text-gray-500 mt-1">
-                    创建作品（draft），Type 1 全文自动拆分为章节
+                    创建作品草稿，全文参考将自动拆分为章节
                   </p>
                 </button>
                 <button
@@ -206,7 +206,7 @@ export default function PlanningProposal() {
                   onClick={() => void handleEvaluate('reject')}
                   className="w-full text-left p-3 border rounded-lg hover:bg-gray-50"
                 >
-                  <span className="font-medium">↩ 退回 → 创意讨论</span>
+                  <span className="font-medium">↩ 退回 → 作品构思中</span>
                 </button>
                 <button
                   type="button"

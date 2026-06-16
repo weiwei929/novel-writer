@@ -145,7 +145,7 @@ export default function ReferencePicker({
               })
             )
           ) : files.length === 0 ? (
-            <p className="text-sm text-gray-400">暂无已标记的外来参考（Type 1/2）</p>
+            <p className="text-sm text-gray-400">暂无已标记的外来参考</p>
           ) : (
             files.map(f => {
               const ref: ProposalReference = {
