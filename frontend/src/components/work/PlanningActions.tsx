@@ -16,6 +16,7 @@ import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IconList, IconRefresh, IconDownload } from '../ui/icons'
 import { projectsApi, type Project } from '../../services/api'
+import { confirmPlanningWithReadiness } from '../../services/planningConfirm'
 import { useNotifications } from '../../hooks/useNotifications'
 
 interface PlanningActionsProps {
@@ -57,7 +58,7 @@ export default function PlanningActions({
 
   // 企划完成 → 进入 planned
   const handleConfirmPlanned = () =>
-    doAction('确认企划完成', () => projectsApi.confirmGreenlight(project.id))
+    doAction('确认企划完成', () => confirmPlanningWithReadiness(project))
 
   // 退回设定中：planned → planning
   const handleBackToPlanning = () =>

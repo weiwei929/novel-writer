@@ -364,6 +364,13 @@ export interface ProposalMetadata {
   _sourceNote?: string
   _creativeNotes?: string
   _workExpectation?: string
+  /** 创意组可选设定雏形（与 workSetting 同构）；立项时复制到 Project.metadata.workSetting */
+  _settingSketch?: Partial<{
+    charactersAndRelations: string
+    timeAndPlace: string
+    eventsAndPlot: string
+    narrativeStyle: string
+  }>
 }
 
 export interface Proposal {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { projectsApi, type Project } from '../../services/api'
+import { confirmPlanningWithReadiness } from '../../services/planningConfirm'
 import { useUIStore } from '../../stores/uiStore'
 import ProjectPickerView, { type PlanningAction } from '../../components/projects/ProjectPickerView'
 
@@ -37,10 +38,13 @@ export default function PlanningInProgressPage() {
   const handleAction = useCallback(async (id: string, action: PlanningAction) => {
     try {
       switch (action) {
-        case 'confirm-planning':
-          await projectsApi.confirmGreenlight(id)
+        case 'confirm-planning': {
+          const project = planningProjects.find(p => p.id === id)
+          if (!project) throw new Error('作品不存在')
+          await confirmPlanningWithReadiness(project)
           addNotification({ type: 'success', title: '企划已完成', message: '作品已移入企划已完成' })
           break
+        }
         case 'soft-delete':
           await projectsApi.softDelete(id)
           addNotification({ type: 'success', title: '已放入文件暂存', message: '作品可在文件暂存中查看' })
@@ -53,7 +57,7 @@ export default function PlanningInProgressPage() {
       const message = e instanceof Error ? e.message : '操作失败'
       addNotification({ type: 'error', title: '操作失败', message })
     }
-  }, [load, addNotification])
+  }, [load, addNotification, planningProjects])
 
   return (
     <ProjectPickerView

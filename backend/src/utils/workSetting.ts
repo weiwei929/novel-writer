@@ -9,6 +9,58 @@ export const WORK_SETTING_KEYS = [
 
 export type WorkSettingKey = (typeof WORK_SETTING_KEYS)[number]
 
+export const WORK_SETTING_REQUIRED_KEYS: WorkSettingKey[] = [
+  'charactersAndRelations',
+  'timeAndPlace',
+  'eventsAndPlot',
+]
+
+export const WORK_SETTING_BLOCK_LABELS: Record<WorkSettingKey, string> = {
+  charactersAndRelations: '人物与关系',
+  timeAndPlace: '时间与地点',
+  eventsAndPlot: '事件与情节',
+  narrativeStyle: '叙事风格 / 创作心流',
+}
+
+export type PlanningSettingReadiness = {
+  requiredFilled: number
+  missingLabels: string[]
+  ready: boolean
+}
+
+export function getPlanningSettingReadiness(
+  metadata: Record<string, unknown> | null | undefined
+): PlanningSettingReadiness {
+  const ws = normalizeWorkSetting(metadata?.workSetting)
+  const missingLabels: string[] = []
+  for (const key of WORK_SETTING_REQUIRED_KEYS) {
+    if (!ws[key].trim()) missingLabels.push(WORK_SETTING_BLOCK_LABELS[key])
+  }
+  return {
+    requiredFilled: WORK_SETTING_REQUIRED_KEYS.length - missingLabels.length,
+    missingLabels,
+    ready: missingLabels.length === 0,
+  }
+}
+
+export function assertPlanningSettingReady(metadata: Record<string, unknown>): void {
+  const readiness = getPlanningSettingReadiness(metadata)
+  if (!readiness.ready) {
+    throw new Error(`请先完善作品设定：${readiness.missingLabels.join('、')}`)
+  }
+}
+
+/** 立项：将 _settingSketch 非空块 seed 到 workSetting（不写 legacy 六字段） */
+export function seedWorkSettingFromSketch(sketch: unknown): Record<WorkSettingKey, string> | undefined {
+  const patch = pickWorkSettingPatch(sketch)
+  const hasContent = Object.values(patch).some(v => v.trim().length > 0)
+  if (!hasContent) return undefined
+  return {
+    ...normalizeWorkSetting(undefined),
+    ...patch,
+  }
+}
+
 export function pickWorkSettingPatch(value: unknown): Partial<Record<WorkSettingKey, string>> {
   const patch: Partial<Record<WorkSettingKey, string>> = {}
   if (!value || typeof value !== 'object' || Array.isArray(value)) return patch

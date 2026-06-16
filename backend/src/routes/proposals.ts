@@ -6,6 +6,7 @@ import { ApiResponse } from '../utils/response'
 import { META_KEYS_DAY1 } from '../constants/metadata-keys'
 import { mapProposalStatus } from '../services/status-migration'
 import { synopsisFieldsForCreate } from '../utils/workSynopsis'
+import { seedWorkSettingFromSketch } from '../utils/workSetting'
 
 const PROPOSAL_STATUSES = ['draft', 'submitted', 'evaluated', 'approved', 'rejected', 'shelved'] as const
 
@@ -64,6 +65,7 @@ export async function acceptIntoPlanningCore(
   const refs = Array.isArray(proposal.references) ? proposal.references : []
   const now = new Date()
   const synopsisWrite = synopsisFieldsForCreate(proposal.synopsis)
+  const workSettingFromSketch = seedWorkSettingFromSketch(metadata._settingSketch)
 
   const projectMetadata = {
     [META_KEYS_DAY1.SOURCE_FROM]: 'proposal',
@@ -74,6 +76,7 @@ export async function acceptIntoPlanningCore(
     ...(synopsisWrite.metadataSynopsis !== undefined
       ? { synopsis: synopsisWrite.metadataSynopsis }
       : {}),
+    ...(workSettingFromSketch ? { workSetting: workSettingFromSketch } : {}),
   }
 
   const created = await tx.project.create({
