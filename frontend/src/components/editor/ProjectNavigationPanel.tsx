@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Project, Chapter } from '../../services/api'
 import { useNotifications } from '../../hooks/useNotifications'
-import { readMetadataFieldValue } from '../../utils/metadataField'
+import { getWorkSynopsis } from '../../utils/workSynopsis'
 import ChapterPlanningEditor from './ChapterPlanningEditor'
 import { IconBookOpen, IconClose, IconFile, IconSettings } from '../ui/icons'
 
@@ -90,7 +90,7 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
 
         {/* 作品梗概 */}
         {(() => {
-          const synopsis = readMetadataFieldValue(project.metadata?.synopsis)
+          const synopsis = getWorkSynopsis(project.description, project.metadata as Record<string, unknown>)
           if (!synopsis) return null
           return (
             <div className="border border-gray-100 rounded-lg bg-gray-50/50 overflow-hidden">

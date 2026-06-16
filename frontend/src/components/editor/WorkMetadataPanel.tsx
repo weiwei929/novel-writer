@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Work, projectsApi } from '../../services/api'
 import MetadataEditor from '../metadata/MetadataEditor'
 import { IconClose } from '../ui/icons'
+import { getWorkSynopsis } from '../../utils/workSynopsis'
 
 interface WorkMetadataPanelProps {
   work: Work
@@ -47,8 +48,12 @@ const WorkMetadataPanel: React.FC<WorkMetadataPanelProps> = ({
         .getById(work.id)
         .then(res => {
           const metadata = res.metadata || {}
+          const current =
+            activeField === 'synopsis'
+              ? getWorkSynopsis(res.description, metadata as Record<string, unknown>)
+              : (metadata[activeField] as string) || ''
           setPreview({
-            current: metadata[activeField] || '',
+            current,
             lastModified: res.updatedAt,
             wordCount: undefined,
           })
@@ -71,7 +76,10 @@ const WorkMetadataPanel: React.FC<WorkMetadataPanelProps> = ({
           > = {}
           metadataFields.forEach(f => {
             map[f.key] = {
-              current: metadata[f.key] || '',
+              current:
+                f.key === 'synopsis'
+                  ? getWorkSynopsis(res.description, metadata as Record<string, unknown>)
+                  : (metadata[f.key] as string) || '',
               lastModified: res.updatedAt,
               wordCount: undefined,
             }
