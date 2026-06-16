@@ -52,6 +52,39 @@ export function hasAnyWorkSettingContent(ws: WorkSetting): boolean {
   return WORK_SETTING_BLOCKS.some(b => isWorkSettingBlockFilled(ws[b.key]))
 }
 
+export type PlanningSettingReadiness = {
+  requiredFilled: number
+  missingLabels: string[]
+  ready: boolean
+}
+
+export function getPlanningSettingReadiness(
+  metadata: Record<string, unknown> | null | undefined
+): PlanningSettingReadiness {
+  const ws = getWorkSetting(metadata)
+  const missingLabels = WORK_SETTING_BLOCKS.filter(
+    b => b.required && !isWorkSettingBlockFilled(ws[b.key])
+  ).map(b => b.label)
+  return {
+    requiredFilled: WORK_SETTING_BLOCKS.filter(b => b.required).length - missingLabels.length,
+    missingLabels,
+    ready: missingLabels.length === 0,
+  }
+}
+
+export function formatPlanningReadinessError(readiness: PlanningSettingReadiness): string {
+  return `请先完善作品设定：${readiness.missingLabels.join('、')}`
+}
+
+export function assertPlanningSettingReadyForConfirm(
+  project: Pick<Project, 'metadata'>
+): void {
+  const readiness = getPlanningSettingReadiness(project.metadata as Record<string, unknown>)
+  if (!readiness.ready) {
+    throw new Error(formatPlanningReadinessError(readiness))
+  }
+}
+
 /** planning 主路径：仅 PATCH metadata.workSetting，由后端与 existing 合并 */
 export async function saveWorkSetting(
   projectId: string,

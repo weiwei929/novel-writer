@@ -12,7 +12,7 @@ import { mapProjectStatus, withMappedProjectStatus } from '../services/status-mi
 import { META_KEYS_DAY1 } from '../constants/metadata-keys'
 import { PROJECT_STATUS_ALL } from '../constants/statuses'
 import { applySynopsisMetadataWrite, mergeProjectUpdateWithSynopsis } from '../utils/workSynopsis'
-import { mergeWorkSettingInProjectUpdate } from '../utils/workSetting'
+import { mergeWorkSettingInProjectUpdate, assertPlanningSettingReady } from '../utils/workSetting'
 import {
   assertProjectExists,
   assertNotDeleted,
@@ -766,6 +766,12 @@ export async function projectRoutes(app: FastifyInstance) {
       const project = await loadActiveProject(req.params.id)
       assertStatusFor(project.status, ['planning'])
       const metadata = (project.metadata as Record<string, unknown>) || {}
+      try {
+        assertPlanningSettingReady(metadata)
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : '作品设定未达标'
+        return reply.status(400).send(ApiResponse.error(message, 400))
+      }
       const updated = await prisma.project.update({
         where: { id: req.params.id },
         data: {

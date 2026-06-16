@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { projectsApi, proposalsApi, type Project, type Proposal } from '../../services/api'
+import { confirmPlanningWithReadiness } from '../../services/planningConfirm'
 import { hasReleasedToStudio } from '../../services/releaseHandoff'
 import { useUIStore } from '../../stores/uiStore'
 import ProjectPickerView, { type PlanningAction } from '../../components/projects/ProjectPickerView'
@@ -39,10 +40,13 @@ export default function PlanningPage() {
   const handleAction = useCallback(async (id: string, action: PlanningAction) => {
     try {
       switch (action) {
-        case 'confirm-planning':
-          await projectsApi.confirmGreenlight(id)
+        case 'confirm-planning': {
+          const project = projects.find(p => p.id === id)
+          if (!project) throw new Error('作品不存在')
+          await confirmPlanningWithReadiness(project)
           addNotification({ type: 'success', title: '企划已完成' })
           break
+        }
         case 'back-to-planning':
           await projectsApi.transition(id, 'planning')
           addNotification({ type: 'success', title: '已退回企划中' })
@@ -58,7 +62,7 @@ export default function PlanningPage() {
       }
       await load()
     } catch (e: unknown) { addNotification({ type: 'error', title: '操作失败', message: (e as Error).message }) }
-  }, [load, addNotification])
+  }, [load, addNotification, projects])
 
   const total = planningProposals.length + planning.length + planned.length
 

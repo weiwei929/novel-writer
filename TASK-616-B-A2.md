@@ -6,7 +6,11 @@
 - [docs/design/creative-v2-consultation-agenda.md](docs/design/creative-v2-consultation-agenda.md)（创意组可选设定雏形）
 - [TASK-616-B-A.md](TASK-616-B-A.md)（**已合并**）
 
-**状态**：待司令部审卡  
+**状态**：已执行 · 待合并审查（`feature/616-b-a2-planning-closure` → `feature/workdetail-p1`）  
+**司令部裁决（2026-06-16）**：
+1. confirm-planning **硬拦**（三必未填不得 `planning → planned`）
+2. 后端 `POST /projects/:id/confirm-greenlight` **必做**成熟度双保险
+3. **P3 章节检查不纳入**本卡
 **类型**：616-B 第二轮实现战役  
 **母卡**：616-B（作品设定最小模型）  
 **建议分支**：`feature/616-b-a2-planning-closure`（自 `feature/workdetail-p1` 切出）  
@@ -59,11 +63,10 @@
 
 在企划课 **「企划进行中」列表**触发 `confirmGreenlight` 之前（`PlanningInProgressPage` / `ProjectPickerView`）：
 
-- 调用 readiness；未 `ready` 时 **阻止**状态变更并提示缺项（列缺失块名称）
+- 未达标时 **硬拦**并提示缺项（列缺失块名称）
 - **不得**在作品详情 Tab / `WorkSettingEditor` 的 save 中隐式触发 confirm
 - `save` 仍只写内容，不推进 status
-
-**审卡待裁**：硬拦 vs 二次确认软拦（本卡默认写 **硬拦**；审卡可改）
+- 后端 `confirm-greenlight` **必须**同步硬拦（非可选）
 
 ### P3：章节成熟度（默认不做，审卡可开）
 
@@ -97,7 +100,7 @@
 | 文件 | 要点 |
 |------|------|
 | `backend/src/utils/workSetting.ts` | 服务端 readiness（若前端检查不足） |
-| `backend/src/routes/projects.ts` | `confirm-greenlight` 服务端双保险（可选） |
+| `backend/src/routes/projects.ts` | `confirm-greenlight` 服务端**必做**硬拦 |
 | `frontend/src/services/api.ts` | `ProposalMetadata` 增加 `_settingSketch` 类型 |
 
 ### 明确不改
@@ -117,23 +120,23 @@
 ## 验收标准
 
 ```text
-[ ] accept 后 Project.metadata.workSetting 含 Proposal._settingSketch 非空块
+[x] accept 后 Project.metadata.workSetting 含 Proposal._settingSketch 非空块
 
-[ ] 无 _settingSketch 时立项行为与 A-A 后一致（不回归）
+[x] 无 _settingSketch 时立项行为与 A-A 后一致（不回归）
 
-[ ] 三必未填时「确认企划完成」不推进 status（硬拦或审卡裁定方案）
+[x] 三必未填时「确认企划完成」不推进 status（硬拦）
 
-[ ] 三必已填时可正常 confirm-planning（planning → planned）
+[x] 三必已填时可正常 confirm-planning（planning → planned）
 
-[ ] save 作品设定仍不触发 confirm / 不改 status
+[x] save 作品设定仍不触发 confirm / 不改 status
 
-[ ] 未夹带 616-C 章节模型、release 门槛、references[]、拆章
+[x] 未夹带 616-C 章节模型、release 门槛、references[]、拆章
 
-[ ] frontend / backend npm run build 通过
+[x] frontend / backend npm run build 通过
 
-[ ] API smoke + 建议 UI smoke：
-    1. Proposal 带 _settingSketch → accept → 企划详情可见继承内容
-    2. 三必未填点「确认企划完成」被拦；补全后可通过
+[x] API smoke：
+    1. Proposal 带 _settingSketch → accept → workSetting 继承
+    2. 三必未填 confirm-greenlight 400；补全后 200 → planned
 ```
 
 ## GitHub 审查点
@@ -149,14 +152,14 @@
 |------|------|
 | 创意组无雏形 UI | 本卡只做复制；测试用 API 种子 |
 | 章节条件扯入 616-C | 默认不做；审卡单开 P3 |
-| 前后端双重检查不一致 | 至少前端硬拦；后端可选双保险 |
+| 前后端双重检查不一致 | 前端体验 + 后端 **必拦** |
 | `_settingSketch` 键名漂移 | 与 `workSetting` 同构，本卡裁定 |
 
-## 未决问题（提请审卡）
+## 未决问题（已裁决）
 
-1. confirm-planning：**硬拦**还是「警告 + 二次确认」？
-2. 是否在 `confirm-greenlight` **后端**同步硬拦（双保险）？
-3. P3 章节最低检查是否纳入本卡，还是留给 616-C 协同卡？
+1. confirm-planning：**硬拦** ✅
+2. `confirm-greenlight` 后端：**必做**双保险 ✅
+3. P3 章节检查：**不纳入**本卡 ✅
 
 ## 回报格式
 
