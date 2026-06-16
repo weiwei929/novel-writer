@@ -150,7 +150,8 @@ async function main() {
       detailData.title === TEST_TITLE &&
       Array.isArray(chapterList) &&
       chapterList.length >= 1 &&
-      detailData.metadata?.synopsis === synopsis
+      detailData.metadata?.synopsis === synopsis &&
+      detailData.description === synopsis
 
     record(
       'F1',

@@ -11,6 +11,7 @@ import type { ProjectMetadata } from '../types/metadata'
 import { mapProjectStatus, withMappedProjectStatus } from '../services/status-migration'
 import { META_KEYS_DAY1 } from '../constants/metadata-keys'
 import { PROJECT_STATUS_ALL } from '../constants/statuses'
+import { applySynopsisMetadataWrite, mergeProjectUpdateWithSynopsis } from '../utils/workSynopsis'
 import {
   assertProjectExists,
   assertNotDeleted,
@@ -470,15 +471,34 @@ export async function projectRoutes(app: FastifyInstance) {
           }
         }
         
+        const mergedMeta = { ...rest, ...processedMetadata }
+        const author = processedMetadata.author || project.author
+
+        let updateData: {
+          metadata: Record<string, unknown>
+          author: string | null | undefined
+          description?: string | null
+        } = {
+          metadata: mergedMeta,
+          author,
+        }
+
+        if (Object.prototype.hasOwnProperty.call(processedMetadata, 'synopsis')) {
+          const applied = applySynopsisMetadataWrite(mergedMeta, processedMetadata.synopsis)
+          updateData = {
+            metadata: applied.metadata,
+            author,
+            description: applied.description,
+          }
+        } else if (processedMetadata.description !== undefined) {
+          updateData.description = processedMetadata.description
+        } else {
+          updateData.description = project.description
+        }
+
         await prisma.project.update({
           where: { id },
-          data: {
-            metadata: { ...rest, ...processedMetadata },
-            author: processedMetadata.author || project.author,
-            description: typeof processedMetadata.synopsis === 'string' 
-              ? processedMetadata.synopsis 
-              : (processedMetadata.description || project.description)
-          }
+          data: updateData as Prisma.ProjectUpdateInput,
         })
         req.log.info({ projectId: id }, 'Metadata confirmed and saved')
         return reply.send(ApiResponse.success(null, '元数据已确认并保存'))
@@ -1122,9 +1142,22 @@ export async function projectRoutes(app: FastifyInstance) {
     }
 
     try {
+      const existing = await prisma.project.findFirst({
+        where: { id: req.params.id, deletedAt: null },
+      })
+      if (!existing) {
+        return reply.status(404).send({ success: false, error: 'Project not found' })
+      }
+
+      const existingMetadata = (existing.metadata as Record<string, unknown>) || {}
+      const mergedUpdate = mergeProjectUpdateWithSynopsis(
+        updateData as Record<string, unknown>,
+        existingMetadata,
+      )
+
       const project = await prisma.project.update({
         where: { id: req.params.id },
-        data: updateData
+        data: mergedUpdate as Prisma.ProjectUpdateInput,
       })
       return { success: true, data: withMappedProjectStatus(project) }
     } catch (e) {

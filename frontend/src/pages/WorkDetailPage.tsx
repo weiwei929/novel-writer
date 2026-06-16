@@ -18,6 +18,7 @@ import ChapterContentModal from '../components/editor/ChapterContentModal'
 import WorkChapterEditor from '../components/editor/WorkChapterEditor'
 import WorkMetadataPanel from '../components/editor/WorkMetadataPanel'
 import { getWorkPermissions } from '../services/workPermissions'
+import { getWorkSynopsis } from '../utils/workSynopsis'
 
 // === 作品设定 / 作品章节 / 作品正文 / 遗留资料 ===
 type WorkTab = 'synopsis' | 'chapters' | 'body' | 'world'
@@ -35,20 +36,6 @@ function getChapterStatusLabel(status: Chapter['status']) {
     written: '已完成',
   }
   return map[status] ?? status
-}
-
-/**
- * work.synopsis — 作品梗概，Work 语义的真相源。
- * 存储位置：metadata.synopsis（legacy），远期迁移为独立字段。
- * 读取：metadata.synopsis → description（legacy fallback）。
- */
-function getWorkSynopsis(
-  description: string | undefined | null,
-  metadata: Record<string, any> | undefined | null,
-): string {
-  if (metadata?.synopsis && typeof metadata.synopsis === 'string') return metadata.synopsis
-  if (description) return description
-  return ''
 }
 
 /** 当前作品状态是否有任何可写权限 */

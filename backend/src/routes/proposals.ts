@@ -5,6 +5,7 @@ import { prisma } from '../utils/db'
 import { ApiResponse } from '../utils/response'
 import { META_KEYS_DAY1 } from '../constants/metadata-keys'
 import { mapProposalStatus } from '../services/status-migration'
+import { synopsisFieldsForCreate } from '../utils/workSynopsis'
 
 const PROPOSAL_STATUSES = ['draft', 'submitted', 'evaluated', 'approved', 'rejected', 'shelved'] as const
 
@@ -62,6 +63,7 @@ export async function acceptIntoPlanningCore(
   const metadata = (proposal.metadata as Record<string, unknown>) || {}
   const refs = Array.isArray(proposal.references) ? proposal.references : []
   const now = new Date()
+  const synopsisWrite = synopsisFieldsForCreate(proposal.synopsis)
 
   const projectMetadata = {
     [META_KEYS_DAY1.SOURCE_FROM]: 'proposal',
@@ -69,12 +71,17 @@ export async function acceptIntoPlanningCore(
     [META_KEYS_DAY1.FROM_EVALUATE]: true,
     [META_KEYS_DAY1.PLANNING_PHASE]: 'evaluating',
     ...(metadata._evaluation !== undefined ? { _evaluation: metadata._evaluation } : {}),
+    ...(synopsisWrite.metadataSynopsis !== undefined
+      ? { synopsis: synopsisWrite.metadataSynopsis }
+      : {}),
   }
 
   const created = await tx.project.create({
     data: {
       title: proposal.title,
-      description: proposal.synopsis ?? undefined,
+      ...(synopsisWrite.description !== undefined
+        ? { description: synopsisWrite.description }
+        : {}),
       status: 'planning',
       proposalId: proposal.id,
       submittedToPlanningAt: now,

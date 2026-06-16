@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { projectsApi, chaptersApi } from '../../services/api'
 import { useNotifications } from '../../hooks/useNotifications'
+import { getWorkSynopsis } from '../../utils/workSynopsis'
 
 interface MetadataEditorProps {
   type: 'project' | 'chapter'
@@ -51,6 +52,11 @@ const MetadataEditor: React.FC<MetadataEditorProps> = ({
           let content = ''
           if (type === 'chapter' && field === 'synopsis') {
             content = (item as any).summary || metadata[field] || ''
+          } else if (type === 'project' && field === 'synopsis') {
+            content = getWorkSynopsis(
+              (item as { description?: string | null }).description,
+              metadata as Record<string, unknown>,
+            )
           } else {
             content = metadata[field] || ''
           }
