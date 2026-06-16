@@ -44,7 +44,7 @@ export default function MetadataListPage() {
       projects={eligible}
       loading={loading}
       error={error}
-      emptyText="暂无已立项作品。请先在企划建议书评估中通过立项。"
+      emptyText="暂无已立项作品。请先在待企划作品评估中通过立项。"
       onOpen={id => navigate(`/planning/metadata/${id}`)}
     />
   )

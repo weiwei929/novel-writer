@@ -72,19 +72,19 @@ export default function PlanningPage() {
         <div className="bg-blue-100 p-2 rounded-lg mt-1 shrink-0"><IconPlanning size={22} className="text-blue-600" /></div>
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold text-gray-900">企划课</h1>
-          <p className="text-sm text-gray-500 mt-1">承接企划建议书，完善作品设定与作品章节，确认后提交创作室。</p>
+          <p className="text-sm text-gray-500 mt-1">承接待企划作品，完善作品设定与作品章节，确认后提交创作室。</p>
           <p className="text-xs text-gray-400 mt-1">{total} 部作品（待企划 / 企划进行中 / 已完成企划）</p>
         </div>
       </div>
 
       {/* 三列 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 min-w-0">
-        {/* 待企划 — 企划建议书 */}
+        {/* 待企划 — 待企划作品 */}
         <section className="space-y-3 min-w-0">
           <h2 className="text-lg font-semibold text-gray-900">待企划 {planningProposals.length} 部</h2>
           {planningProposals.length === 0 ? (
             <p className={EMPTY_CLASS}>
-              暂无待企划建议书
+              暂无待企划作品
             </p>
           ) : (
             <div className="space-y-3">

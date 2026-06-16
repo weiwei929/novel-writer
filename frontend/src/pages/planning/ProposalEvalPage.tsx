@@ -26,7 +26,7 @@ export default function ProposalEvalPage() {
     try {
       setProposal(await proposalsApi.getById(id))
     } catch {
-      addNotification({ type: 'error', title: '加载失败', message: '无法加载该企划建议书' })
+      addNotification({ type: 'error', title: '加载失败', message: '无法加载该待企划作品' })
     } finally {
       setLoading(false)
     }
@@ -75,7 +75,7 @@ export default function ProposalEvalPage() {
   if (!proposal) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-        <p className="text-sm">未找到该企划建议书。</p>
+        <p className="text-sm">未找到该待企划作品。</p>
         <button onClick={() => navigate('/planning/proposals')} className="mt-3 text-blue-600 text-sm">
           返回列表
         </button>
@@ -134,7 +134,7 @@ export default function ProposalEvalPage() {
         <div className="bg-violet-50 border border-violet-200 rounded-xl p-5">
           <h2 className="text-lg font-bold text-violet-900 mb-2">AI 评估</h2>
           <p className="text-sm text-violet-800/80">
-            AI 审校官将在此对企划建议书给出结构化评估意见。该功能正在开发中，当前仅显示入口占位。
+            AI 审校官将在此对待企划作品给出结构化评估意见。该功能正在开发中，当前仅显示入口占位。
           </p>
         </div>
       )}

@@ -33,12 +33,12 @@ export default function ProposalReviewPage() {
 
   return (
     <ProposalListView
-      title="企划建议书评估"
+      title="待企划作品评估"
       subtitle={`${submitted.length} 份待评估`}
       proposals={submitted}
       loading={loading}
       error={error}
-      emptyText="暂无已提交的企划建议书。创意组提交后将在此出现。"
+      emptyText="暂无待企划作品。创意组提交后将在此出现。"
       onOpen={id => navigate(`/planning/proposals/${id}`)}
     />
   )

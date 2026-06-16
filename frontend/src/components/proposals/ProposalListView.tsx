@@ -31,7 +31,7 @@ export default function ProposalListView({
   emptyText,
   onOpen,
   onCreate,
-  createLabel = '新建企划建议书',
+  createLabel = '新建待企划作品',
 }: ProposalListViewProps) {
   return (
     <div className="space-y-6 animate-fade-in">

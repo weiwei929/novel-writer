@@ -270,7 +270,7 @@ export default function WorkDetailPage() {
         <h1 className="text-xl font-bold text-gray-900 truncate">{work.title}</h1>
         <ProjectStatusBadge status={work.status} phase={badgePhase} />
         {data?.proposal && (
-          <span className="text-xs text-gray-400 shrink-0">来自企划建议书</span>
+          <span className="text-xs text-gray-400 shrink-0">来自待企划作品</span>
         )}
 
         {/* 页面级编辑态门控 */}

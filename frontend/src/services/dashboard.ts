@@ -149,7 +149,7 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
     } else if (p.status === 'submitted') {
       activity.push({
         time: p.updatedAt,
-        text: `创意组「${p.title}」已提交企划建议书`,
+        text: `创意组「${p.title}」已提交待企划作品`,
         href: `/planning/proposals`,
       })
     }

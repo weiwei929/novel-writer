@@ -70,7 +70,7 @@ export default function PlanningProposal() {
   const submitToReview = async (p: Proposal) => {
     try {
       await proposalsApi.updateStatus(p.id, 'submitted')
-      success('已进入企划建议书待评估')
+      success('待企划作品已进入评估')
       await load()
     } catch {
       notifyError('操作失败')
@@ -89,7 +89,7 @@ export default function PlanningProposal() {
         <h2 className="text-sm font-semibold text-gray-800 mb-3">待评估</h2>
         {pending.length === 0 ? (
           <p className="text-sm text-gray-400 border border-dashed rounded-xl p-8 text-center">
-            暂无待评估提案。在创意提案详情页点击「进入企划建议书」后会出现于此。
+            暂无待评估提案。在创意作品详情页提交至企划课后会出现于此。
           </p>
         ) : (
           <ul className="space-y-2">
