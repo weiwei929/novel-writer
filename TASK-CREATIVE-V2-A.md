@@ -6,7 +6,7 @@
 - [docs/design/0608-616-coordination-draft.md](docs/design/0608-616-coordination-draft.md) §3、§4、§6
 - [docs/design/616-content-asset-constitution-v0.2.1.md](docs/design/616-content-asset-constitution-v0.2.1.md)（文内 v0.2.2）
 
-**状态**：待司令部审卡  
+**状态**：已审卡 · 已执行（`feature/creative-v2-a-origin-flow`）  
 **类型**：creative-v2 第一轮小战役  
 **建议分支**：`feature/creative-v2-a-origin-flow`（自 `feature/workdetail-p1` 切出）
 
