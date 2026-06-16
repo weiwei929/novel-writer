@@ -52,16 +52,13 @@ export function hasAnyWorkSettingContent(ws: WorkSetting): boolean {
   return WORK_SETTING_BLOCKS.some(b => isWorkSettingBlockFilled(ws[b.key]))
 }
 
-/** planning 主路径：仅更新 metadata.workSetting，不触碰 status 与 legacy 六字段 */
+/** planning 主路径：仅 PATCH metadata.workSetting，由后端与 existing 合并 */
 export async function saveWorkSetting(
   projectId: string,
-  project: Pick<Project, 'metadata'>,
   workSetting: WorkSetting
 ): Promise<Project> {
-  const meta = (project.metadata as Record<string, unknown>) || {}
   return projectsApi.update(projectId, {
     metadata: {
-      ...meta,
       workSetting: normalizeWorkSetting(workSetting),
     },
   })

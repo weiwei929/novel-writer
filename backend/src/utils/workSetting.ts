@@ -9,6 +9,18 @@ export const WORK_SETTING_KEYS = [
 
 export type WorkSettingKey = (typeof WORK_SETTING_KEYS)[number]
 
+export function pickWorkSettingPatch(value: unknown): Partial<Record<WorkSettingKey, string>> {
+  const patch: Partial<Record<WorkSettingKey, string>> = {}
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return patch
+  const o = value as Record<string, unknown>
+  for (const k of WORK_SETTING_KEYS) {
+    if (Object.prototype.hasOwnProperty.call(o, k) && typeof o[k] === 'string') {
+      patch[k] = o[k]
+    }
+  }
+  return patch
+}
+
 export function normalizeWorkSetting(value: unknown): Record<WorkSettingKey, string> {
   const base: Record<WorkSettingKey, string> = {
     charactersAndRelations: '',
@@ -43,14 +55,16 @@ export function mergeWorkSettingInProjectUpdate(
 
   const mergedWorkSetting = {
     ...normalizeWorkSetting(existingMetadata.workSetting),
-    ...normalizeWorkSetting(incomingMeta.workSetting),
+    ...pickWorkSettingPatch(incomingMeta.workSetting),
   }
+
+  const { workSetting: _ignored, ...incomingMetaRest } = incomingMeta
 
   return {
     ...updateData,
     metadata: {
       ...existingMetadata,
-      ...incomingMeta,
+      ...incomingMetaRest,
       workSetting: mergedWorkSetting,
     },
   }

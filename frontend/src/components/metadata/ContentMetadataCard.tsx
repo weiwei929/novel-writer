@@ -42,7 +42,7 @@ const ContentMetadataCard: React.FC<ContentMetadataCardProps> = ({
 
   const fields: MetadataField[] = useWorkSettingView
     ? WORK_SETTING_BLOCKS.map(b => ({ key: b.key, label: b.label }))
-    : LEGACY_FIELDS.filter(f => f.key !== 'synopsis')
+    : LEGACY_FIELDS
 
   const [activeTab, setActiveTab] = useState<string>(fields[0]?.key ?? '')
 

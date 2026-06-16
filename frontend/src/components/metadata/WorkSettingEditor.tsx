@@ -26,7 +26,7 @@ export default function WorkSettingEditor({ project, onSaved }: WorkSettingEdito
   const handleSave = async () => {
     setSaving(true)
     try {
-      await saveWorkSetting(project.id, project, fields)
+      await saveWorkSetting(project.id, fields)
       success('已保存')
       onSaved?.()
     } catch {
