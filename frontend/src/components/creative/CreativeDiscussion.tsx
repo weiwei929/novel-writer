@@ -92,7 +92,7 @@ export default function CreativeDiscussion() {
   }
 
   const handleNewDiscussion = async () => {
-    const name = window.prompt('讨论标题', '新创意讨论')
+    const name = window.prompt('作品标题', '新创意作品')
     if (!name?.trim()) return
     try {
       const created = await proposalsApi.create({
@@ -160,7 +160,7 @@ export default function CreativeDiscussion() {
         },
         status: 'submitted',
       })
-      success('创意提案已提交')
+      success('创意作品已提交')
       await load()
     } catch {
       notifyError('提交失败')
@@ -173,7 +173,7 @@ export default function CreativeDiscussion() {
   const leftPanel = (
     <>
       <div className="px-3 py-2 border-b bg-gray-50 flex justify-between items-center">
-        <span className="text-sm font-medium">待讨论</span>
+        <span className="text-sm font-medium">作品构思中</span>
         <button
           type="button"
           onClick={() => void handleNewDiscussion()}
@@ -186,7 +186,7 @@ export default function CreativeDiscussion() {
         {loading ? (
           <p className="text-xs text-gray-400 p-2">加载中…</p>
         ) : pending.length === 0 ? (
-          <p className="text-xs text-gray-400 p-2">暂无讨论，点击新建</p>
+          <p className="text-xs text-gray-400 p-2">暂无作品，点击新建</p>
         ) : (
           pending.map(p => (
             <button
@@ -213,7 +213,7 @@ export default function CreativeDiscussion() {
       <div className="px-4 py-2 border-b bg-gray-50 text-sm font-medium">讨论评估区</div>
       {!selectedId ? (
         <div className="flex-1 flex items-center justify-center text-sm text-gray-400 p-8">
-          选择或新建讨论
+          选择或新建创意作品
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -271,7 +271,7 @@ export default function CreativeDiscussion() {
                 checked={submitMode === 'submit'}
                 onChange={() => setSubmitMode('submit')}
               />
-              提交创意提案
+              提交创意作品
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -317,7 +317,7 @@ export default function CreativeDiscussion() {
             <div key={p.id} className="p-2 border rounded-lg bg-green-50/50 border-green-100">
               <div className="font-medium text-sm">{p.title}</div>
               <div className="text-xs text-gray-500 mt-1">
-                {p.status === 'submitted' ? '已进入企划建议书' : '待进入企划建议书'}
+                {p.status === 'submitted' ? '已提交' : '待提交'}
               </div>
               <Link
                 to={`/creative/proposals/${p.id}`}
