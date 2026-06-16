@@ -14,6 +14,7 @@ import ProjectStatusBadge from '../components/projects/ProjectStatusBadge'
 import type { PhaseContext } from '../services/statusLabels'
 import WorldBuildingPage from './creative/WorldBuildingPage'
 import ContentMetadataCard from '../components/metadata/ContentMetadataCard'
+import WorkSettingEditor from '../components/metadata/WorkSettingEditor'
 import ChapterContentModal from '../components/editor/ChapterContentModal'
 import WorkChapterEditor from '../components/editor/WorkChapterEditor'
 import WorkMetadataPanel from '../components/editor/WorkMetadataPanel'
@@ -137,6 +138,7 @@ export default function WorkDetailPage() {
   const [searchParams] = useSearchParams()
   const from = searchParams.get('from')
   const isPlanningContext = from === 'planning'
+  const usePlanningWorkSettingPath = isPlanningContext && work?.status === 'planning'
   const badgePhase: PhaseContext | undefined =
     from === 'planning'
       ? 'planning'
@@ -322,7 +324,7 @@ export default function WorkDetailPage() {
                   onClick={() => setShowMetadataEditor(true)}
                   className="text-xs px-3 py-1.5 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
                 >
-                  {getEditActionLabel('synopsis')}
+                  {usePlanningWorkSettingPath ? '编辑作品梗概' : getEditActionLabel('synopsis')}
                 </button>
               )}
             </div>
@@ -384,10 +386,21 @@ export default function WorkDetailPage() {
             </div>
           </div>
 
-          <ContentMetadataCard
-            metadata={work.metadata}
-            onEdit={canEditCurrentTab ? () => setShowMetadataEditor(true) : undefined}
-          />
+          {usePlanningWorkSettingPath && canEditCurrentTab ? (
+            <WorkSettingEditor
+              project={work}
+              onSaved={() => void load()}
+            />
+          ) : (
+            <ContentMetadataCard
+              metadata={work.metadata as Record<string, unknown>}
+              onEdit={
+                !usePlanningWorkSettingPath && canEditCurrentTab
+                  ? () => setShowMetadataEditor(true)
+                  : undefined
+              }
+            />
+          )}
         </div>
       )}
 
@@ -706,6 +719,7 @@ export default function WorkDetailPage() {
       {showMetadataEditor && (
         <WorkMetadataPanel
           work={work}
+          planningWorkSettingMode={usePlanningWorkSettingPath}
           onClose={async () => {
             setShowMetadataEditor(false)
             await load()
