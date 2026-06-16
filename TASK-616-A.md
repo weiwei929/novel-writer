@@ -2,9 +2,9 @@
 
 **宪法依据**：[docs/design/616-content-asset-constitution-v0.2.1.md](docs/design/616-content-asset-constitution-v0.2.1.md) §7.1、§8、§8.1、§8.2
 
-**状态**：任务卡已确认 · 待授权实施后执行  
+**状态**：**已收官**（2026-06-16）· 见 [TASK-616-A-closure.md](./TASK-616-A-closure.md)  
 **类型**：内容决策线 · 第一轮小战役  
-**分支建议**：`feature/616-a-naming-readmodel`（自 `feature/workdetail-p1` 切出）
+**分支**：`feature/616-a-naming-readmodel` / `feature/616-a2-synopsis` → 已合并 `feature/workdetail-p1`（`76f14aa`）
 
 ## 目标
 
@@ -37,10 +37,10 @@
 
 ## 验收（母卡）
 
-- [ ] A1 子卡全部验收项通过
-- [ ] A2 子卡全部验收项通过
-- [ ] `npm run build`（frontend）通过
-- [ ] 无违反 §8「第一轮不做」项的夹带改动
+- [x] A1 子卡全部验收项通过（PR #1）
+- [x] A2 子卡全部验收项通过（PR #2 + review fix）
+- [x] `npm run build`（frontend / backend）通过
+- [x] 无违反 §8「第一轮不做」项的夹带改动
 
 ## 推进顺序
 

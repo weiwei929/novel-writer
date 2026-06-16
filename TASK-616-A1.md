@@ -3,7 +3,7 @@
 **宪法依据**：[docs/design/616-content-asset-constitution-v0.2.1.md](docs/design/616-content-asset-constitution-v0.2.1.md) §2.2、§3、§8.1  
 **母卡**：[TASK-616-A.md](./TASK-616-A.md)
 
-**状态**：任务卡已确认 · A1 实施完成（待审查）  
+**状态**：**已合并**（PR #1 → `feature/workdetail-p1`）  
 **依赖**：无  
 **前置**：616 v0.2.1 已落盘于 `docs/design/616-content-asset-constitution-v0.2.1.md`
 
