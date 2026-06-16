@@ -134,7 +134,7 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ onClose, onApplyCon
                                         onClick={() => handleMetadataAction('settings', msg.content)}
                                         className="text-left px-3 py-2 text-xs hover:bg-purple-50 text-gray-700"
                                     >
-                                        存为作品设定
+                                        存为背景设定
                                     </button>
                                     <button 
                                         onClick={() => handleMetadataAction('characters', msg.content)}

@@ -72,7 +72,7 @@ export default function PlanningPage() {
         <div className="bg-blue-100 p-2 rounded-lg mt-1 shrink-0"><IconPlanning size={22} className="text-blue-600" /></div>
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold text-gray-900">企划课</h1>
-          <p className="text-sm text-gray-500 mt-1">承接企划建议书，完善作品元数据与作品章节，确认后提交创作室。</p>
+          <p className="text-sm text-gray-500 mt-1">承接企划建议书，完善作品设定与作品章节，确认后提交创作室。</p>
           <p className="text-xs text-gray-400 mt-1">{total} 部作品（待企划 / 企划进行中 / 已完成企划）</p>
         </div>
       </div>

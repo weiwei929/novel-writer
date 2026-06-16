@@ -39,7 +39,7 @@ export default function MetadataListPage() {
 
   return (
     <ProjectPickerView
-      title="作品内容元数据"
+      title="作品设定（企划）"
       subtitle={`${eligible.length} 部可编辑作品`}
       projects={eligible}
       loading={loading}

@@ -74,13 +74,23 @@ export default function WritingProjectPage() {
         </button>
         <div className="flex items-center gap-2">
           <h1 className="text-xl font-bold text-gray-900">{project.title}</h1>
-          <ProjectStatusBadge status={project.status} />
+          <ProjectStatusBadge status={project.status} phase="studio" />
         </div>
       </div>
 
       <section>
-        <h2 className="text-lg font-bold text-gray-900 mb-3">作品设定（只读）</h2>
-        <p className="text-sm text-gray-500 mb-4">创作室中作品设定仅供查阅，修改请前往企划课「作品内容元数据」。</p>
+        <h2 className="text-lg font-bold text-gray-900 mb-3">遗留资料（只读）</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          以下为冻结中的旧人物/故事线/心流，仅供查阅。编辑作品设定请前往
+          <button
+            type="button"
+            onClick={() => navigate(`/work/${projectId}?from=writing`)}
+            className="mx-1 text-blue-700 underline hover:text-blue-900"
+          >
+            作品详情 · 作品设定
+          </button>
+          。
+        </p>
         <WorldBuildingPage readOnly />
       </section>
 

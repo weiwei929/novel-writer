@@ -19,14 +19,14 @@ import WorkChapterEditor from '../components/editor/WorkChapterEditor'
 import WorkMetadataPanel from '../components/editor/WorkMetadataPanel'
 import { getWorkPermissions } from '../services/workPermissions'
 
-// === 作品元数据 / 作品章节 / 作品正文 / 创作资料 ===
+// === 作品设定 / 作品章节 / 作品正文 / 遗留资料 ===
 type WorkTab = 'synopsis' | 'chapters' | 'body' | 'world'
 
 const TABS: { id: WorkTab; label: string }[] = [
-  { id: 'synopsis', label: '作品元数据' },
+  { id: 'synopsis', label: '作品设定' },
   { id: 'chapters', label: '作品章节' },
   { id: 'body', label: '作品正文' },
-  { id: 'world', label: '创作资料' },
+  { id: 'world', label: '遗留资料（只读）' },
 ]
 
 function getChapterStatusLabel(status: Chapter['status']) {
@@ -59,7 +59,7 @@ function hasAnyPermission(perms: ReturnType<typeof getWorkPermissions>) {
 /** 获取各 Tab 的编辑态按钮文案 */
 function getEditActionLabel(tab: WorkTab): string {
   switch (tab) {
-    case 'synopsis': return '编辑作品元数据'
+    case 'synopsis': return '编辑作品设定'
     case 'chapters': return '编辑作品章节'
     case 'body':     return '编辑正文'
     default:         return '编辑'
@@ -324,12 +324,12 @@ export default function WorkDetailPage() {
         ))}
       </div>
 
-      {/* ─── 作品元数据 ─── */}
+      {/* ─── 作品设定 ─── */}
       {activeTab === 'synopsis' && (
         <div className="space-y-4">
           <div className="bg-white rounded-lg border shadow-sm p-5">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-gray-900">作品元数据</h2>
+              <h2 className="text-sm font-semibold text-gray-900">作品设定</h2>
               {canEditCurrentTab && (
                 <button
                   onClick={() => setShowMetadataEditor(true)}
@@ -359,12 +359,12 @@ export default function WorkDetailPage() {
               ) : (
                 <div className="text-sm text-gray-400 italic bg-gray-50 rounded-lg p-3 border border-gray-100">
                   尚未填写作品梗概。梗概是创作时最重要的参照。
-                  {canEditCurrentTab && ' 点击右上角「编辑作品元数据」开始填写。'}
+                  {canEditCurrentTab && ' 点击右上角「编辑作品设定」开始填写。'}
                 </div>
               )}
               {work.description && (work.metadata as any)?.synopsis && work.description !== (work.metadata as any).synopsis && (
                 <div className="text-xs text-gray-400 mt-1">
-                  ℹ️ 梗概当前存储在内容元数据中，与项目描述字段不同。将来会统一为 work.synopsis。
+                  ℹ️ 梗概与项目描述字段可能暂时不同步，将来会统一为单一来源。
                 </div>
               )}
             </div>
@@ -682,15 +682,15 @@ export default function WorkDetailPage() {
         </div>
       )}
 
-      {/* ─── 创作资料 ─── */}
+      {/* ─── 遗留资料（只读） ─── */}
       {activeTab === 'world' && (
         <div>
           <div className="flex items-center gap-2 mb-3 px-1">
             <span className="text-xs text-gray-400">
-              📚 创作资料 — 角色设定、故事时间线、创意心流。不等同于作品元数据。
+              📚 遗留资料（只读）— 角色、故事线、创意心流。已冻结，不等同于作品设定；请优先在「作品设定」Tab 编辑。
             </span>
           </div>
-          <WorldBuildingPage readOnly={!canEditCurrentTab} />
+          <WorldBuildingPage readOnly />
         </div>
       )}
 

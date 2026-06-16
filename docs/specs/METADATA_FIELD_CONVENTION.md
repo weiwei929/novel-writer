@@ -88,3 +88,17 @@ readMetadataFieldValue(metadata.synopsis)
 ---
 
 **维护**：字段增删须同步更新本文与 `baseline-e2e-v01.mjs` 相关断言。
+
+---
+
+## 6. 616 产品语义（2026-06）
+
+用户可见文案以 [616 内容资产宪法 v0.2.1](../design/616-content-asset-constitution-v0.2.1.md) 为准：
+
+| 技术层 | 产品层 |
+|--------|--------|
+| `Project.metadata`（JSON） | 作品设定（容器） |
+| `metadata.settings` 等键名 | 保持不变；`settings` 的 UI 标签为 **背景设定** |
+| 旧「创作资料」线（WorldBuilding 等） | **遗留资料（只读）**，冻结，不扩展 |
+
+本节不替代 616 对作品设定内部结构的后续定义。

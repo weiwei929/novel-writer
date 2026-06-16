@@ -5,8 +5,8 @@ export default function MetadataPage() {
   return (
     <PlaceholderPage
       icon={<IconTag className="w-7 h-7" />}
-      title="作品内容元数据"
-      description="集中定型作品的名称、梗概、标签等核心元数据，提交后进入立项评估。元数据定型面板开发中。"
+      title="作品设定（企划）"
+      description="集中定型作品的名称、梗概与作品设定。本页为遗留入口，请优先使用作品详情页。"
     />
   )
 }

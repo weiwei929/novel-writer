@@ -128,7 +128,7 @@ export const ChapterOutlineGenerator: React.FC<ChapterOutlineGeneratorProps> = (
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-800">AI 章节大纲生成</h2>
-              <p className="text-sm text-gray-500">基于作品元数据，一次性生成完整的章节规划</p>
+              <p className="text-sm text-gray-500">基于作品设定，一次性生成完整的章节规划</p>
             </div>
           </div>
           <button onClick={handleClose} className="p-2 hover:bg-white/50 rounded-full transition-colors">
@@ -213,10 +213,10 @@ export const ChapterOutlineGenerator: React.FC<ChapterOutlineGeneratorProps> = (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
                   <p className="font-semibold mb-2">⚠️ 重要提示</p>
                   <ul className="space-y-1 text-xs">
-                    <li>• AI 将基于项目元数据（梗概、人物、作品设定等）生成大纲</li>
+                    <li>• AI 将基于作品设定（梗概、人物、背景设定等）生成大纲</li>
                     <li>• 生成后可以编辑每个章节的标题和梗概</li>
                     <li>• 确认无误后，点击"导入为章节"批量创建</li>
-                    <li>• 建议先完善项目元数据，再生成大纲</li>
+                    <li>• 建议先完善作品设定，再生成大纲</li>
                   </ul>
                 </div>
               </div>
