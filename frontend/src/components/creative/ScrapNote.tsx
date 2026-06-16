@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { scrapsApi, type Scrap } from '../../services/api'
+import { createOriginFromScrap } from '../../services/creativeOrigin'
 import { useNotifications } from '../../hooks/useNotifications'
 import ThreeColumnLayout from './ThreeColumnLayout'
 import TagInput, { TagFilterBar } from './TagInput'
@@ -17,6 +18,7 @@ import {
 } from './scrapUtils'
 
 export default function ScrapNote() {
+  const navigate = useNavigate()
   const { success, error: notifyError } = useNotifications()
   const notifyErrorRef = useRef(notifyError)
   notifyErrorRef.current = notifyError
@@ -32,6 +34,7 @@ export default function ScrapNote() {
   const [processingType, setProcessingType] = useState<ScrapProcessingType>('none')
   const [saving, setSaving] = useState(false)
   const [dirty, setDirty] = useState(false)
+  const [creatingOrigin, setCreatingOrigin] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -109,6 +112,25 @@ export default function ScrapNote() {
       setDirty(false)
     } catch { notifyError('保存失败') }
     finally { setSaving(false) }
+  }
+
+  const handleCreateOrigin = async () => {
+    if (!selectedId) return
+    const scrap = scraps.find(s => s.id === selectedId)
+    if (!scrap) return
+    if (dirty && !window.confirm('当前灵感碎片有未保存修改，继续创建创意缘起将使用已保存版本。是否继续？')) {
+      return
+    }
+    setCreatingOrigin(true)
+    try {
+      const created = await createOriginFromScrap(scrap)
+      success('已创建创意缘起')
+      navigate(`/creative/proposals/${created.id}`)
+    } catch {
+      notifyError('创建失败')
+    } finally {
+      setCreatingOrigin(false)
+    }
   }
 
   const handleDelete = async () => {
@@ -200,6 +222,12 @@ export default function ScrapNote() {
               className="px-4 py-2 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700 disabled:opacity-50">
               {saving ? '保存中…' : '保存灵感碎片'}
             </button>
+            {selectedId && (
+              <button type="button" onClick={() => void handleCreateOrigin()} disabled={creatingOrigin}
+                className="px-4 py-2 border border-amber-300 text-amber-800 text-sm rounded-lg hover:bg-amber-50 disabled:opacity-50">
+                {creatingOrigin ? '创建中…' : '由此创建创意缘起'}
+              </button>
+            )}
             {selectedId && (
               <button type="button" onClick={() => void handleDelete()}
                 className="px-4 py-2 border border-red-200 text-red-600 text-sm rounded-lg hover:bg-red-50">删除</button>

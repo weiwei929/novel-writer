@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { proposalsApi, scrapsApi, externalRefsApi, type Proposal, type Scrap, type FileReference } from '../../services/api'
+import {
+  getProposalMetadata,
+  proposalsApi,
+  scrapsApi,
+  externalRefsApi,
+  type Proposal,
+  type Scrap,
+  type FileReference,
+} from '../../services/api'
+import { createConceivingProposal, creativeStageLabel, getCreativeStage } from '../../services/creativeOrigin'
 import { useNotifications } from '../../hooks/useNotifications'
 import { IconCreative } from '../ui/icons'
 
@@ -37,9 +46,10 @@ export default function CreativeWorkspace() {
     const name = window.prompt('作品标题', '新创意作品')
     if (!name?.trim()) return
     try {
-      await proposalsApi.create({ title: name.trim(), metadata: { _evaluation: '', _tags: [] } })
+      const created = await createConceivingProposal(name.trim())
       await load()
       success('已创建')
+      navigate(`/creative/proposals/${created.id}`)
     } catch { notifyError('创建失败') }
   }
 
@@ -107,24 +117,31 @@ export default function CreativeWorkspace() {
         <section className="space-y-3 min-w-0">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">作品构思中 {pending.length} 部</h2>
-            <button onClick={() => void handleNew()} className="text-xs px-2 py-1 bg-amber-600 text-white rounded">新建</button>
+            <button
+              onClick={() => void handleNew()}
+              className="text-xs px-2 py-1.5 bg-amber-600 text-white rounded hover:bg-amber-700"
+            >
+              新作品创意构思
+            </button>
           </div>
           {pending.length === 0 ? (
             <p className="text-sm text-gray-400 py-6 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
-              暂无构思中作品。点击新建开始创意构思。
+              暂无构思中作品。点击「新作品创意构思」开始。
             </p>
           ) : (
             <div className="space-y-2">
-              {pending.map(p => (
+              {pending.map(p => {
+                const meta = getProposalMetadata(p)
+                const stage = getCreativeStage(meta)
+                const stageLabel = creativeStageLabel(stage, p.status)
+                return (
                 <button key={p.id} onClick={() => navigate(`/creative/proposals/${p.id}`)}
                   className="w-full text-left bg-white border rounded-xl p-4 hover:border-amber-200 transition-all min-w-0"
                 >
                   <h3 className="font-medium text-sm truncate">{p.title}</h3>
-                  <div className="text-xs text-gray-400 mt-1">
-                    引用 ×{((p.references as any[]) || []).length}
-                  </div>
+                  <div className="text-xs text-gray-400 mt-1">{stageLabel}</div>
                 </button>
-              ))}
+              )})}
             </div>
           )}
         </section>

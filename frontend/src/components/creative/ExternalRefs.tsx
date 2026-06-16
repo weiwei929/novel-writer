@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import {
   externalRefsApi,
@@ -8,6 +8,7 @@ import {
   type FileReference,
 } from '../../services/api'
 import { useNotifications } from '../../hooks/useNotifications'
+import { createOriginFromExternalRef } from '../../services/creativeOrigin'
 import ThreeColumnLayout from './ThreeColumnLayout'
 import TagInput, { TagFilterBar } from './TagInput'
 import TypeLabel from './TypeLabel'
@@ -31,6 +32,7 @@ function collectRefTags(refs: FileReference[]): string[] {
 }
 
 export default function ExternalRefs() {
+  const navigate = useNavigate()
   const { success, error: notifyError } = useNotifications()
   const notifyErrorRef = useRef(notifyError)
   notifyErrorRef.current = notifyError
@@ -41,6 +43,7 @@ export default function ExternalRefs() {
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [importing, setImporting] = useState(false)
   const [dragOver, setDragOver] = useState(false)
+  const [creatingOrigin, setCreatingOrigin] = useState(false)
 
   const [partialMode, setPartialMode] = useState(false)
   const [selectedParagraphs, setSelectedParagraphs] = useState<number[]>([])
@@ -189,6 +192,19 @@ export default function ExternalRefs() {
     }
   }
 
+  const handleCreateOrigin = async (ref: FileReference) => {
+    setCreatingOrigin(true)
+    try {
+      const created = await createOriginFromExternalRef(ref)
+      success('已提炼创意缘起')
+      navigate(`/creative/proposals/${created.id}`)
+    } catch {
+      notifyError('创建失败')
+    } finally {
+      setCreatingOrigin(false)
+    }
+  }
+
   const removeFromCited = async (id: string) => {
     try {
       await updateRef(id, { processingType: 'none', annotations: [] })
@@ -268,6 +284,14 @@ export default function ExternalRefs() {
               {selected.metadata?.title || selected.fileName}
             </h3>
             <div className="flex gap-1 flex-wrap">
+              <button
+                type="button"
+                disabled={creatingOrigin}
+                onClick={() => void handleCreateOrigin(selected)}
+                className="text-xs px-2 py-1 rounded border border-amber-300 text-amber-800 hover:bg-amber-50 disabled:opacity-50"
+              >
+                {creatingOrigin ? '提炼中…' : '由此提炼创意缘起'}
+              </button>
               <button
                 type="button"
                 onClick={() => void setProcessingType('complete')}

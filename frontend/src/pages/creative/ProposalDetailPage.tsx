@@ -7,6 +7,7 @@ import {
   type Proposal,
   type ProposalReference,
 } from '../../services/api'
+import { advanceOriginToConceiving, creativeStageHeading, creativeStageLabel, getCreativeStage } from '../../services/creativeOrigin'
 import { useNotifications } from '../../hooks/useNotifications'
 import ProposalStatusBadge from '../../components/proposals/ProposalStatusBadge'
 import TagInput from '../../components/creative/TagInput'
@@ -71,14 +72,46 @@ export default function ProposalDetailPage() {
     }
   }
 
+  const handleStartConceiving = async () => {
+    if (!id || !proposal) return
+    setSaving(true)
+    try {
+      const updated = await advanceOriginToConceiving(id, proposal, {
+        title,
+        synopsis,
+        innovation,
+        coreSetting,
+        tags,
+      })
+      setProposal(updated)
+      success('已进入作品创意构思')
+    } catch {
+      notifyError('操作失败')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const handleEnterPlanning = async () => {
     if (!id || !proposal) return
+    const meta = getProposalMetadata(proposal)
+    const currentStage = getCreativeStage(meta)
+    if (currentStage === 'origin') {
+      notifyError('提交失败', '请先点击「开始创意构思」，再提交企划课')
+      return
+    }
+    const trimmedTitle = title.trim()
+    const trimmedSynopsis = synopsis.trim()
+    if (!trimmedTitle || !trimmedSynopsis) {
+      notifyError('提交失败', '请填写标题和故事梗概后再提交企划课')
+      return
+    }
     setSaving(true)
     try {
       const meta = getProposalMetadata(proposal)
       await proposalsApi.update(id, {
-        title: title.trim() || '未命名提案',
-        synopsis,
+        title: trimmedTitle,
+        synopsis: trimmedSynopsis,
         innovation,
         coreSetting,
         metadata: { ...meta, _tags: tags },
@@ -105,6 +138,12 @@ export default function ProposalDetailPage() {
   }
 
   const meta = getProposalMetadata(proposal)
+  const stage = getCreativeStage(meta)
+  const stageLabel = creativeStageLabel(stage, proposal.status)
+  const headingPrefix = creativeStageHeading(stage, proposal.status)
+  const canStartConceiving = proposal.status === 'draft' && stage === 'origin'
+  const canSubmitPlanning =
+    proposal.status === 'draft' && stage !== 'origin'
   const references = (proposal.references as ProposalReference[]) || []
   const inputCls =
     'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-amber-500'
@@ -120,6 +159,9 @@ export default function ProposalDetailPage() {
           返回创意组
         </Link>
         <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-100">
+            {stageLabel}
+          </span>
           <ProposalStatusBadge status={proposal.status} />
           {proposal.projectId && (
             <Link
@@ -133,8 +175,18 @@ export default function ProposalDetailPage() {
       </div>
 
       <h1 className="text-2xl font-bold text-gray-900">
-        创意作品：《{proposal.title}》
+        {headingPrefix}：《{proposal.title}》
       </h1>
+
+      {(meta._sourceNote || meta._sourceRef) && (
+        <section className="bg-amber-50/60 border border-amber-100 rounded-xl p-4 text-sm text-gray-700">
+          <h2 className="text-xs font-semibold text-amber-900 mb-1">来源说明</h2>
+          {meta._sourceNote && <p>{meta._sourceNote}</p>}
+          {meta._sourceRef?.title && !meta._sourceNote && (
+            <p>启发来源：{meta._sourceRef.title}</p>
+          )}
+        </section>
+      )}
 
       <section className="bg-white border rounded-xl p-5 space-y-4">
         <h2 className="text-sm font-semibold text-gray-800">基础信息</h2>
@@ -176,7 +228,7 @@ export default function ProposalDetailPage() {
       </section>
 
       <section className="bg-white border rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-gray-800 mb-3">引用材料</h2>
+        <h2 className="text-sm font-semibold text-gray-800 mb-3">历史引用材料（只读）</h2>
         {references.length === 0 ? (
           <p className="text-sm text-gray-400">无引用材料</p>
         ) : (
@@ -203,7 +255,7 @@ export default function ProposalDetailPage() {
         </div>
       </section>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <button
           type="button"
           disabled={saving}
@@ -212,15 +264,31 @@ export default function ProposalDetailPage() {
         >
           保存
         </button>
-        {proposal.status === 'draft' && (
+        <p className="text-xs text-gray-400 sm:ml-1">仅保存当前内容，不改变作品流程状态。</p>
+        {canStartConceiving && (
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => void handleStartConceiving()}
+            className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm hover:bg-amber-700 sm:ml-auto"
+          >
+            开始创意构思
+          </button>
+        )}
+        {canSubmitPlanning && (
           <button
             type="button"
             disabled={saving}
             onClick={() => void handleEnterPlanning()}
-            className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm hover:bg-amber-700"
+            className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm hover:bg-amber-700 sm:ml-auto"
           >
-            完成构思并提交
+            提交企划课
           </button>
+        )}
+        {canStartConceiving && (
+          <p className="text-xs text-amber-700 w-full sm:w-auto">
+            确认缘起内容后，点击「开始创意构思」进入下一阶段。
+          </p>
         )}
         {/* 0608 P2-2b: shelve 用户路径已屏蔽 */}
       </div>

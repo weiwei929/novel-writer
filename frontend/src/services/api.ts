@@ -358,6 +358,12 @@ export interface ProposalMetadata {
   _sourceRef?: { type: string; id: string; title?: string }
   _rejectNote?: string
   _shelveNote?: string
+  /** creative-v2 阶段标记（非 status） */
+  _creativeStage?: 'origin' | 'conceiving' | 'formed'
+  _sourceType?: 'scrap' | 'external_ref' | 'direct' | 'ai_search'
+  _sourceNote?: string
+  _creativeNotes?: string
+  _workExpectation?: string
 }
 
 export interface Proposal {
