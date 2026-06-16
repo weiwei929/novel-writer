@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { projectsApi, type Project } from '../../services/api'
 import { useUIStore } from '../../stores/uiStore'
-import ProjectPickerView from '../../components/projects/ProjectPickerView'
+import ProjectPickerView, { type PlanningAction } from '../../components/projects/ProjectPickerView'
 
 export default function PlanningProjectsPage() {
   const navigate = useNavigate()
@@ -34,16 +34,41 @@ export default function PlanningProjectsPage() {
     [projects]
   )
 
+  const handleAction = useCallback(async (id: string, action: PlanningAction) => {
+    try {
+      switch (action) {
+        case 'back-to-planning':
+          await projectsApi.transition(id, 'planning')
+          addNotification({ type: 'success', title: '已退回', message: '作品已退回企划中' })
+          break
+        case 'soft-delete':
+          await projectsApi.softDelete(id)
+          addNotification({ type: 'success', title: '已放入文件暂存', message: '作品可在文件暂存中查看' })
+          break
+        case 'release-to-studio':
+          addNotification({ type: 'success', title: '已提交创作室', message: '作品在创作室待创作列表中可见' })
+          break
+        default:
+          break
+      }
+      await load()
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : '操作失败'
+      addNotification({ type: 'error', title: '操作失败', message })
+    }
+  }, [load, addNotification])
+
   return (
     <ProjectPickerView
-      title="企划已完成 / 待放行"
-      subtitle={`${plannedProjects.length} 部企划已完成、等待放行的作品`}
+      title="企划已完成 / 待提交"
+      subtitle={`${plannedProjects.length} 部企划已完成、等待提交的作品`}
       projects={plannedProjects}
       loading={loading}
       error={error}
       emptyText="暂无企划已完成作品。确认企划完成后将出现在此。"
       phase="planning"
       onOpen={id => navigate(`/work/${id}?from=planning`)}
+      onAction={handleAction}
     />
   )
 }

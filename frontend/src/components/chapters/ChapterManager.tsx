@@ -153,16 +153,13 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
     }
   }
 
-  const getStatusText = (status: Chapter['status'] | Project['status']) => {
-    if (status === 'draft' || status === 'written') {
-      switch (status) {
-        case 'draft':
-          return '草稿'
-        case 'written':
-          return '已写完'
-      }
+  // 章节状态标签 — 区分于 Work 流程状态
+  const getChapterStatusLabel = (status: Chapter['status']) => {
+    const map: Record<Chapter['status'], string> = {
+      draft: '写作中',
+      written: '已完成',
     }
-    return getStatusLabel(status)
+    return map[status] ?? status
   }
 
   const calculateReadingTime = (wordCount: number) => {
@@ -206,7 +203,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
             <span
               className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}
             >
-              {getStatusText(project.status)}
+              {getStatusLabel(project.status)}
             </span>
           </div>
 
@@ -233,7 +230,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
 
       {/* 章节列表头部 */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">章节管理</h3>
+        <h3 className="text-lg font-semibold">作品章节</h3>
         <button
           onClick={() => setShowCreateModal(true)}
           className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
@@ -286,7 +283,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(chapter.status)}`}
                     >
-                      {getStatusText(chapter.status)}
+                      {getChapterStatusLabel(chapter.status)}
                     </span>
                   </div>
 

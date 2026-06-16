@@ -1,7 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Project, chaptersApi, projectsApi, PROJECT_STATUS_LABEL, ProjectStatus } from '../../services/api'
-import { useNotifications } from '../../hooks/useNotifications'
+import { Project, chaptersApi, PROJECT_STATUS_LABEL, ProjectStatus } from '../../services/api'
 import { IconCalendar, IconDelete, IconDownload, IconEdit, IconEye, IconFile, IconMoveRight, IconReview, IconStats, IconUser } from '../ui/icons'
 
 interface ProjectCardProps {
@@ -24,13 +23,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   onPreview,
   onReview,
   onStatusChange,
-  onUpdate,
   compact = false
 }) => {
   const navigate = useNavigate()
-  const { success: notifySuccess, error: notifyError } = useNotifications()
-  const genres = project.genre || []
-  const tags = project.tags || [] // Support new tags
+  const tags = project.tags || []
 
   const getStatusColor = (status: ProjectStatus) => {
     switch (status) {
@@ -51,17 +47,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   }
 
   const getStatusText = (status: ProjectStatus) => PROJECT_STATUS_LABEL[status] ?? status
-
-  const handleShelve = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    try {
-      await projectsApi.shelve(project.id, 'project_card')
-      notifySuccess('已移入暂存', '作品已移入作品暂存')
-      onUpdate?.()
-    } catch {
-      notifyError('暂存失败', '无法移入作品暂存')
-    }
-  }
 
   return (
     <div className={`bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow ${compact ? 'p-4' : 'p-6'} border border-gray-100`}>
@@ -114,9 +99,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       )}
 
       {/* Tags */}
-      {(genres.length > 0 || tags.length > 0) && (
+      {tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
-          {[...genres, ...tags].slice(0, 3).map((t, i) => (
+          {tags.slice(0, 3).map((t, i) => (
             <span key={i} className="bg-gray-50 text-gray-600 px-1.5 py-0.5 rounded text-xs border border-gray-200">
               #{t}
             </span>
@@ -129,7 +114,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
          <div className="flex gap-1">
             <button 
               className="p-1.5 text-blue-500 hover:bg-blue-50 rounded" 
-              title="进入编辑器"
+              title="进入作品详情"
               onClick={async () => {
                 // Editor Navigation Logic
                 try {
@@ -176,16 +161,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             >
               <IconDelete size={16} />
             </button>
-            {project.status !== 'shelved' && (
-              <button
-                type="button"
-                onClick={e => void handleShelve(e)}
-                className="text-xs px-2 py-1 text-gray-400 hover:text-amber-600"
-                title="移入暂存"
-              >
-                移入暂存
-              </button>
-            )}
+            {/* 0608 P2-2b: shelve 用户路径已屏蔽 */}
          </div>
 
          {/* Move Actions (Kanban Support) */}

@@ -12,19 +12,17 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   onSuccess,
 }) => {
   const navigate = useNavigate()
-  const [formData, setFormData] = useState<CreateProjectData & { genre: string[]; tags: string[] }>(
+  const [formData, setFormData] = useState<CreateProjectData & { tags: string[] }>(
     {
       title: '',
       description: '',
       author: '',
-      genre: [],
       tags: [],
       status: 'draft' as ProjectStatus,
     }
   )
   const [initialSynopsis, setInitialSynopsis] = useState('')
   const [autoCreateFirstChapter, setAutoCreateFirstChapter] = useState(true)
-  const [genreInput, setGenreInput] = useState('')
   const [tagInput, setTagInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -75,24 +73,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     } finally {
       setLoading(false)
     }
-  }
-
-  const addGenre = () => {
-    const genre = genreInput.trim()
-    if (genre && !formData.genre.includes(genre)) {
-      setFormData({
-        ...formData,
-        genre: [...formData.genre, genre],
-      })
-      setGenreInput('')
-    }
-  }
-
-  const removeGenre = (genreToRemove: string) => {
-    setFormData({
-      ...formData,
-      genre: formData.genre.filter(genre => genre !== genreToRemove),
-    })
   }
 
   const addTag = () => {
@@ -168,7 +148,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">作品描述</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">作品描述（补充说明）</label>
             <textarea
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
@@ -181,7 +161,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                项目梗概（必填）
+                作品梗概（必填）
               </label>
               <textarea
                 value={initialSynopsis}
@@ -208,86 +188,44 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">类型标签</label>
-              <div className="flex gap-2 mb-2">
-                <input
-                  type="text"
-                  value={genreInput}
-                  onChange={e => setGenreInput(e.target.value)}
-                  onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), addGenre())}
-                  className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="如：玄幻、言情"
-                />
-                <button
-                  type="button"
-                  onClick={addGenre}
-                  className="bg-gray-500 text-white px-3 py-2 rounded hover:bg-gray-600"
-                >
-                  添加
-                </button>
-              </div>
-              {formData.genre.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {formData.genre.map((genre, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded text-sm"
-                    >
-                      {genre}
-                      <button
-                        type="button"
-                        onClick={() => removeGenre(genre)}
-                        className="text-green-500 hover:text-green-700"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">标签</label>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={tagInput}
+                onChange={e => setTagInput(e.target.value)}
+                onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="如：玄幻、言情、大女主"
+              />
+              <button
+                type="button"
+                onClick={addTag}
+                className="bg-gray-500 text-white px-3 py-2 rounded hover:bg-gray-600"
+              >
+                添加
+              </button>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">标签</label>
-              <div className="flex gap-2 mb-2">
-                <input
-                  type="text"
-                  value={tagInput}
-                  onChange={e => setTagInput(e.target.value)}
-                  onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                  className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="输入标签"
-                />
-                <button
-                  type="button"
-                  onClick={addTag}
-                  className="bg-gray-500 text-white px-3 py-2 rounded hover:bg-gray-600"
-                >
-                  添加
-                </button>
-              </div>
-              {formData.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {formData.tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm"
+            {formData.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {formData.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag)}
+                      className="text-blue-500 hover:text-blue-700"
                     >
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => removeTag(tag)}
-                        className="text-blue-500 hover:text-blue-700"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex gap-4">
