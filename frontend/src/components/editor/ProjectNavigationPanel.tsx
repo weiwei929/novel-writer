@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Project, Chapter } from '../../services/api'
 import { useNotifications } from '../../hooks/useNotifications'
 import { getWorkSynopsis } from '../../utils/workSynopsis'
-import ChapterPlanningEditor from './ChapterPlanningEditor'
+import WorkChapterEditor from './WorkChapterEditor'
 import { IconBookOpen, IconClose, IconFile, IconSettings } from '../ui/icons'
 
 interface ProjectNavigationPanelProps {
@@ -106,12 +106,12 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
         })()}
       </div>
 
-      {/* 章节管理分隔 */}
+      {/* 作品章节分隔 */}
       <div className="px-3 py-2 border-t border-b border-gray-300 bg-white">
         <button
           className="w-full px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium"
           onClick={() => setShowPlanning(true)}>
-          管理章节规划
+          编辑作品章节
         </button>
       </div>
 
@@ -187,13 +187,13 @@ const ProjectNavigationPanel: React.FC<ProjectNavigationPanelProps> = ({
       </div>
 
       {showPlanning && (
-        <ChapterPlanningEditor
+        <WorkChapterEditor
           projectId={project.id}
           initialPlans={(project.metadata as any)?.chapterPlanning || []}
           onClose={() => setShowPlanning(false)}
           onSaved={() => {
             setShowPlanning(false)
-            notifySuccess('章节规划已更新')
+            notifySuccess('作品章节已更新')
             onChaptersRefresh?.()
           }}
         />
