@@ -88,7 +88,7 @@ export default function ReferencePicker({
               tab === 'scrap' ? 'border-amber-500 text-amber-800' : 'border-transparent'
             }`}
           >
-            灵感手记
+            灵感碎片
           </button>
           <button
             type="button"
