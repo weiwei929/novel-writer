@@ -10,6 +10,8 @@ interface WorkMetadataPanelProps {
   className?: string
   initialField?: string
   initialMode?: 'view' | 'edit' | 'view_all'
+  /** 企划课 616-B 路径：仅允许编辑梗概，禁用 legacy 六字段写入 */
+  planningWorkSettingMode?: boolean
 }
 
 const WorkMetadataPanel: React.FC<WorkMetadataPanelProps> = ({
@@ -18,6 +20,7 @@ const WorkMetadataPanel: React.FC<WorkMetadataPanelProps> = ({
   className = '',
   initialField,
   initialMode,
+  planningWorkSettingMode = false,
 }) => {
   const [activeField, setActiveField] = useState<string>(initialField || 'synopsis')
   const [mode, setMode] = useState<'view' | 'edit' | 'view_all'>(initialMode || 'view')
@@ -31,8 +34,7 @@ const WorkMetadataPanel: React.FC<WorkMetadataPanelProps> = ({
     Record<string, { current: string; lastModified?: string; wordCount?: number } | null>
   >({})
 
-  // 作品元数据字段定义（与后端白名单一致；章节规划使用单独入口）
-  const metadataFields = [
+  const allMetadataFields = [
     { key: 'synopsis', label: '作品梗概', required: true },
     { key: 'characters', label: '人物设定', required: false },
     { key: 'timeline', label: '时间线', required: false },
@@ -40,6 +42,10 @@ const WorkMetadataPanel: React.FC<WorkMetadataPanelProps> = ({
     { key: 'relationships', label: '关系网', required: false },
     { key: 'plotStructure', label: '情节结构', required: false },
   ]
+
+  const metadataFields = planningWorkSettingMode
+    ? allMetadataFields.filter(f => f.key === 'synopsis')
+    : allMetadataFields
 
   useEffect(() => {
     if (mode === 'view' && activeField) {
@@ -236,7 +242,12 @@ const WorkMetadataPanel: React.FC<WorkMetadataPanelProps> = ({
         {/* 底部提示 */}
         <div className="p-3 border-t bg-white">
           <div className="text-xs text-gray-500">
-            <p>💡 点击"保存"按钮即时保存当前内容</p>
+            <p>💡 点击「保存」仅保存当前内容，不改变作品流程状态。</p>
+            {planningWorkSettingMode && (
+              <p className="mt-1 text-amber-800">
+                人物/时间/情节等设定请在主页面「作品设定（三必一选）」区编辑。
+              </p>
+            )}
           </div>
         </div>
       </div>

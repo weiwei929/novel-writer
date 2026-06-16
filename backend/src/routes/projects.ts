@@ -12,6 +12,7 @@ import { mapProjectStatus, withMappedProjectStatus } from '../services/status-mi
 import { META_KEYS_DAY1 } from '../constants/metadata-keys'
 import { PROJECT_STATUS_ALL } from '../constants/statuses'
 import { applySynopsisMetadataWrite, mergeProjectUpdateWithSynopsis } from '../utils/workSynopsis'
+import { mergeWorkSettingInProjectUpdate } from '../utils/workSetting'
 import {
   assertProjectExists,
   assertNotDeleted,
@@ -1150,10 +1151,11 @@ export async function projectRoutes(app: FastifyInstance) {
       }
 
       const existingMetadata = (existing.metadata as Record<string, unknown>) || {}
-      const mergedUpdate = mergeProjectUpdateWithSynopsis(
+      let mergedUpdate = mergeProjectUpdateWithSynopsis(
         updateData as Record<string, unknown>,
         existingMetadata,
       )
+      mergedUpdate = mergeWorkSettingInProjectUpdate(mergedUpdate, existingMetadata)
 
       const project = await prisma.project.update({
         where: { id: req.params.id },
