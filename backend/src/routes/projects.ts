@@ -13,6 +13,7 @@ import { META_KEYS_DAY1 } from '../constants/metadata-keys'
 import { PROJECT_STATUS_ALL } from '../constants/statuses'
 import { applySynopsisMetadataWrite, mergeProjectUpdateWithSynopsis } from '../utils/workSynopsis'
 import { mergeWorkSettingInProjectUpdate, assertPlanningSettingReady } from '../utils/workSetting'
+import { normalizeChapterPlanning } from '../utils/chapterPlanning'
 import {
   assertProjectExists,
   assertNotDeleted,
@@ -311,18 +312,17 @@ function applyHandoffTimestamp(
   }
 }
 
-// Chapter Planning Schemas
-const ChapterPlanItemSchema = z.object({
-  id: z.string(),
-  order: z.number().int().min(1),
-  title: z.string().min(1, "标题不可为空"),
-  plannedLength: z.number().int().min(0),
-  synopsisText: z.string().optional(),
-  keyPlotPoints: z.array(z.string()).optional(),
-  status: z.enum(['planned', 'started', 'completed']),
-})
+// Chapter Planning Schemas — accept legacy fields; persist canonical order/title/summary only
+const ChapterPlanningInputItemSchema = z
+  .object({
+    order: z.number().int().min(1).optional(),
+    title: z.string().min(1, '标题不可为空'),
+    summary: z.string().optional(),
+    synopsisText: z.string().optional(),
+  })
+  .passthrough()
 
-const UpdateChapterPlanningSchema = z.array(ChapterPlanItemSchema)
+const UpdateChapterPlanningSchema = z.array(ChapterPlanningInputItemSchema)
 
 type GetByIdParams = { Params: { id: string } }
 type CreateProjectBody = { Body: z.infer<typeof CreateProjectSchema> }
@@ -1198,7 +1198,7 @@ export async function projectRoutes(app: FastifyInstance) {
       }
 
       const metadata = (project.metadata as Record<string, any>) || {}
-      const plans = metadata.chapterPlanning || []
+      const plans = normalizeChapterPlanning(metadata.chapterPlanning)
 
       return ApiResponse.success(plans)
     } catch (e: any) {
@@ -1228,14 +1228,15 @@ export async function projectRoutes(app: FastifyInstance) {
       }
 
       const metadata = (project.metadata as Record<string, any>) || {}
-      const updatedMetadata = { ...metadata, chapterPlanning: result.data }
+      const canonical = normalizeChapterPlanning(result.data)
+      const updatedMetadata = { ...metadata, chapterPlanning: canonical }
 
       await prisma.project.update({
         where: { id: req.params.id },
         data: { metadata: updatedMetadata }
       })
 
-      return ApiResponse.success(result.data, '章节规划已保存')
+      return ApiResponse.success(canonical, '章节规划已保存')
     } catch (e: any) {
       req.log.error(e)
       return reply.status(500).send(ApiResponse.error(e.message, 500))

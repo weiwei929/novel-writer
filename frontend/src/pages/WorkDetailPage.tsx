@@ -5,9 +5,9 @@ import {
   chaptersApi,
   workApi,
   type Chapter,
-  type ChapterPlanItem,
   type WorkDetailResponse,
 } from '../services/api'
+import { getChapterPlanning } from '../services/chapterPlanning'
 import { useWorldStore } from '../stores/worldStore'
 import { useNotifications } from '../hooks/useNotifications'
 import ProjectStatusBadge from '../components/projects/ProjectStatusBadge'
@@ -122,6 +122,11 @@ export default function WorkDetailPage() {
     [work?.description, work?.metadata]
   )
 
+  const chapterPlanning = useMemo(
+    () => getChapterPlanning(work?.metadata as Record<string, unknown> | undefined),
+    [work?.metadata]
+  )
+
   const permissions = useMemo(
     () =>
       work
@@ -139,6 +144,8 @@ export default function WorkDetailPage() {
   const from = searchParams.get('from')
   const isPlanningContext = from === 'planning'
   const usePlanningWorkSettingPath = isPlanningContext && work?.status === 'planning'
+  const usePlanningChapterPath = isPlanningContext
+  const usePlanningChapterEditor = isPlanningContext && work?.status === 'planning'
   const badgePhase: PhaseContext | undefined =
     from === 'planning'
       ? 'planning'
@@ -405,7 +412,92 @@ export default function WorkDetailPage() {
       )}
 
       {/* ─── 作品章节 ─── */}
-      {activeTab === 'chapters' && (
+      {activeTab === 'chapters' && usePlanningChapterPath ? (
+        <div className="bg-white rounded-lg border shadow-sm flex flex-col overflow-hidden">
+          <div className="px-4 py-3 border-b flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <IconFile size={14} className="text-gray-400" />
+              <h3 className="text-sm font-semibold text-gray-900">
+                章节规划
+                <span className="text-gray-400 font-normal ml-1">({chapterPlanning.length})</span>
+              </h3>
+            </div>
+            {canEditCurrentTab && usePlanningChapterEditor && (
+              <button
+                onClick={() => setShowPlanning(true)}
+                className="text-xs px-3 py-1.5 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
+              >
+                编辑章节规划
+              </button>
+            )}
+          </div>
+          <div className="px-4 py-2 bg-amber-50 border-b border-amber-100">
+            <p className="text-xs text-amber-800">
+              企划阶段章节规划：顺序、标题与梗概。正文在创作室「作品正文」中写作，此处不含正文。
+            </p>
+          </div>
+
+          {chapterPlanning.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-10 text-gray-500">
+              <IconFile className="w-10 h-10 mb-3 text-gray-300" />
+              <p className="text-sm mb-1">暂无章节规划</p>
+              <p className="text-xs text-gray-400 mb-4">添加至少一章，并填写标题与梗概</p>
+              {canEditCurrentTab && usePlanningChapterEditor && (
+                <button
+                  onClick={() => setShowPlanning(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                >
+                  <IconList size={14} />
+                  编辑章节规划
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="divide-y">
+              {chapterPlanning.map(item => {
+                const synopsisKey = `plan-${item.order}`
+                const hasSynopsis = !!item.summary.trim()
+                const isSynopsisOpen = !collapsedSynopses.has(synopsisKey)
+
+                return (
+                  <div key={synopsisKey} className="px-4 py-3 hover:bg-gray-50">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <span className="text-xs px-2 py-0.5 bg-gray-100 rounded text-gray-600 shrink-0">
+                          第 {item.order} 章
+                        </span>
+                        <span className="font-medium text-sm text-gray-800 truncate">
+                          {item.title || `第 ${item.order} 章`}
+                        </span>
+                      </div>
+                      {hasSynopsis && (
+                        <button
+                          onClick={() => toggleSynopsis(synopsisKey)}
+                          className={`text-xs px-2 py-1 rounded transition-colors shrink-0 ${
+                            isSynopsisOpen
+                              ? 'text-amber-700 bg-amber-100'
+                              : 'text-gray-400 hover:text-amber-600 hover:bg-amber-50'
+                          }`}
+                        >
+                          {isSynopsisOpen ? '收起梗概' : '梗概'}
+                        </button>
+                      )}
+                    </div>
+                    {hasSynopsis && isSynopsisOpen && (
+                      <div className="mt-2 ml-2 pl-3 border-l-2 border-amber-200">
+                        <div className="text-xs text-amber-600 mb-1 font-medium">章节梗概</div>
+                        <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+                          {item.summary}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      ) : activeTab === 'chapters' && (
         <div className="bg-white rounded-lg border shadow-sm flex flex-col overflow-hidden">
           <div className="px-4 py-3 border-b flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -706,11 +798,12 @@ export default function WorkDetailPage() {
       {showPlanning && (
         <WorkChapterEditor
           projectId={work.id}
-          initialPlans={(work.metadata as Record<string, unknown>)?.chapterPlanning as ChapterPlanItem[] || []}
+          initialPlans={chapterPlanning}
+          planningMode={usePlanningChapterEditor}
           onClose={() => setShowPlanning(false)}
           onSaved={() => {
             setShowPlanning(false)
-            notifySuccess('作品章节已更新')
+            notifySuccess(usePlanningChapterEditor ? '章节规划已更新' : '作品章节已更新')
             void load()
           }}
         />
