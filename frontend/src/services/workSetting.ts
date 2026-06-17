@@ -40,6 +40,15 @@ export function getWorkSetting(
   return normalizeWorkSetting(raw as Partial<WorkSetting>)
 }
 
+/** 创意组 Proposal.metadata._settingSketch（与 workSetting 同构） */
+export function getSettingSketch(
+  metadata: Record<string, unknown> | null | undefined
+): WorkSetting {
+  const raw = metadata?._settingSketch
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { ...EMPTY }
+  return normalizeWorkSetting(raw as Partial<WorkSetting>)
+}
+
 export function isWorkSettingBlockFilled(value: string): boolean {
   return value.trim().length > 0
 }

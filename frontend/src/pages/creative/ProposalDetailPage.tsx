@@ -8,6 +8,12 @@ import {
   type ProposalReference,
 } from '../../services/api'
 import { advanceOriginToConceiving, creativeStageHeading, creativeStageLabel, getCreativeStage } from '../../services/creativeOrigin'
+import {
+  getSettingSketch,
+  normalizeWorkSetting,
+  WORK_SETTING_BLOCKS,
+  type WorkSetting,
+} from '../../services/workSetting'
 import { useNotifications } from '../../hooks/useNotifications'
 import ProposalStatusBadge from '../../components/proposals/ProposalStatusBadge'
 import TagInput from '../../components/creative/TagInput'
@@ -27,6 +33,25 @@ export default function ProposalDetailPage() {
   const [innovation, setInnovation] = useState('')
   const [coreSetting, setCoreSetting] = useState('')
   const [tags, setTags] = useState<string[]>([])
+  const [settingSketch, setSettingSketch] = useState<WorkSetting>(() => normalizeWorkSetting())
+
+  const buildProposalPayload = useCallback(
+    (source: Proposal) => {
+      const meta = getProposalMetadata(source)
+      return {
+        title: title.trim() || '未命名提案',
+        synopsis,
+        innovation,
+        coreSetting,
+        metadata: {
+          ...meta,
+          _tags: tags,
+          _settingSketch: normalizeWorkSetting(settingSketch),
+        },
+      }
+    },
+    [title, synopsis, innovation, coreSetting, tags, settingSketch]
+  )
 
   const load = useCallback(async () => {
     if (!id) return
@@ -40,6 +65,7 @@ export default function ProposalDetailPage() {
       setInnovation(p.innovation ?? '')
       setCoreSetting(p.coreSetting ?? '')
       setTags(meta._tags || [])
+      setSettingSketch(getSettingSketch(meta as Record<string, unknown>))
     } catch {
       notifyError('加载失败')
     } finally {
@@ -55,14 +81,7 @@ export default function ProposalDetailPage() {
     if (!id || !proposal) return
     setSaving(true)
     try {
-      const meta = getProposalMetadata(proposal)
-      const updated = await proposalsApi.update(id, {
-        title: title.trim() || '未命名提案',
-        synopsis,
-        innovation,
-        coreSetting,
-        metadata: { ...meta, _tags: tags },
-      })
+      const updated = await proposalsApi.update(id, buildProposalPayload(proposal))
       setProposal(updated)
       success('已保存')
     } catch {
@@ -82,6 +101,7 @@ export default function ProposalDetailPage() {
         innovation,
         coreSetting,
         tags,
+        settingSketch,
       })
       setProposal(updated)
       success('已进入作品创意构思')
@@ -108,13 +128,10 @@ export default function ProposalDetailPage() {
     }
     setSaving(true)
     try {
-      const meta = getProposalMetadata(proposal)
       await proposalsApi.update(id, {
+        ...buildProposalPayload(proposal),
         title: trimmedTitle,
         synopsis: trimmedSynopsis,
-        innovation,
-        coreSetting,
-        metadata: { ...meta, _tags: tags },
       })
       await proposalsApi.updateStatus(id, 'submitted')
       success('已提交至企划课')
@@ -220,11 +237,44 @@ export default function ProposalDetailPage() {
             value={coreSetting}
             onChange={e => setCoreSetting(e.target.value)}
           />
+          <p className="text-xs text-gray-400 mt-1">
+            旧字段，逐步淡出。立项后企划课优先继承下方「设定雏形」四块，不会自动同步此处内容。
+          </p>
         </div>
         <div>
           <label className="text-xs text-gray-500">标签</label>
           <TagInput tags={tags} onChange={setTags} />
         </div>
+      </section>
+
+      <section className="bg-white border rounded-xl p-5 space-y-4">
+        <div>
+          <h2 className="text-sm font-semibold text-gray-800">设定雏形（可选）</h2>
+          <p className="text-xs text-gray-500 mt-1">
+            四块均可选填，填几块算几块；提交企划课时不做硬性要求。立项后非空块会带入企划课作品设定。
+          </p>
+        </div>
+        {WORK_SETTING_BLOCKS.map(block => (
+          <div key={block.key}>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              {block.label}
+              {block.required ? (
+                <span className="text-gray-400 font-normal ml-1">（企划课完善时建议填写）</span>
+              ) : (
+                <span className="text-gray-400 font-normal ml-1">（可选）</span>
+              )}
+            </label>
+            <textarea
+              className={inputCls}
+              rows={4}
+              value={settingSketch[block.key]}
+              onChange={e =>
+                setSettingSketch(prev => ({ ...prev, [block.key]: e.target.value }))
+              }
+              placeholder={`记录${block.label}…`}
+            />
+          </div>
+        ))}
       </section>
 
       <section className="bg-white border rounded-xl p-5">
