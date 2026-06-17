@@ -1,5 +1,7 @@
 /** 616-C-A canonical chapterPlanning under Project.metadata */
 
+import type { Prisma } from '@prisma/client'
+
 export type ChapterPlanningItem = {
   order: number
   title: string
@@ -70,4 +72,54 @@ export function assertChapterPlanningReady(metadata: Record<string, unknown>): v
   if (!readiness.ready) {
     throw new Error(formatChapterPlanningReadinessError(readiness))
   }
+}
+
+export class ChapterPlanningMaterializeError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'ChapterPlanningMaterializeError'
+  }
+}
+
+/** start-writing：将 canonical chapterPlanning 落到 chapters 表（不覆盖已有 content） */
+export async function materializeChapterPlanning(
+  tx: Prisma.TransactionClient,
+  projectId: string,
+  metadata: Record<string, unknown>
+): Promise<number> {
+  const plans = normalizeChapterPlanning(metadata.chapterPlanning)
+  if (plans.length === 0) {
+    throw new ChapterPlanningMaterializeError('无章节规划，无法开始写作')
+  }
+
+  for (const plan of plans) {
+    const title = plan.title.trim() || `第${plan.order}章`
+    const summary = plan.summary
+    const existing = await tx.chapter.findFirst({
+      where: { projectId, order: plan.order },
+    })
+    if (existing) {
+      await tx.chapter.update({
+        where: { id: existing.id },
+        data: { title, summary },
+      })
+    } else {
+      await tx.chapter.create({
+        data: {
+          projectId,
+          order: plan.order,
+          title,
+          summary,
+          content: '',
+          wordCount: 0,
+        },
+      })
+    }
+  }
+
+  const count = await tx.chapter.count({ where: { projectId } })
+  if (count < 1) {
+    throw new ChapterPlanningMaterializeError('无章节，无法开始写作')
+  }
+  return count
 }

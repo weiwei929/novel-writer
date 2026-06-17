@@ -13,7 +13,12 @@ import { META_KEYS_DAY1 } from '../constants/metadata-keys'
 import { PROJECT_STATUS_ALL } from '../constants/statuses'
 import { applySynopsisMetadataWrite, mergeProjectUpdateWithSynopsis } from '../utils/workSynopsis'
 import { mergeWorkSettingInProjectUpdate, getPlanningSettingReadiness } from '../utils/workSetting'
-import { getChapterPlanningReadiness, normalizeChapterPlanning } from '../utils/chapterPlanning'
+import {
+  ChapterPlanningMaterializeError,
+  getChapterPlanningReadiness,
+  materializeChapterPlanning,
+  normalizeChapterPlanning,
+} from '../utils/chapterPlanning'
 import {
   assertProjectExists,
   assertNotDeleted,
@@ -815,19 +820,28 @@ export async function projectRoutes(app: FastifyInstance) {
     try {
       const project = await loadActiveProject(req.params.id)
       assertStatusFor(project.status, ['planned'])
-      const updated = await prisma.project.update({
-        where: { id: req.params.id },
-        data: {
-          status: 'writing',
-          writingStartedAt: project.writingStartedAt ?? new Date(),
-        },
+      const metadata = (project.metadata as Record<string, unknown>) || {}
+
+      const updated = await prisma.$transaction(async tx => {
+        await materializeChapterPlanning(tx, req.params.id, metadata)
+        return tx.project.update({
+          where: { id: req.params.id },
+          data: {
+            status: 'writing',
+            writingStartedAt: project.writingStartedAt ?? new Date(),
+          },
+        })
       })
+
       return ApiResponse.success(withMappedProjectStatus(updated), '已开始写作')
     } catch (e: unknown) {
       if (e instanceof ProjectNotFoundError) {
         return reply.status(404).send(ApiResponse.error(e.message, 404))
       }
       if (e instanceof StatusNotAllowedError) {
+        return reply.status(400).send(ApiResponse.error(e.message, 400))
+      }
+      if (e instanceof ChapterPlanningMaterializeError) {
         return reply.status(400).send(ApiResponse.error(e.message, 400))
       }
       const message = e instanceof Error ? e.message : 'start-writing failed'
