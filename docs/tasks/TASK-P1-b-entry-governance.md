@@ -1,6 +1,6 @@
 # TASK-P1-b：入口治理 — ShelfPage / ProjectCard 上下文
 
-**状态**：**已审卡** · 待执行（2026-06-17）  
+**状态**：**已合并**（PR [#8](https://github.com/weiwei929/novel-writer/pull/8)）  
 **基线**：`feature/workdetail-p1`（P1-a / PR #7 已合并）  
 **分支建议**：`feature/p1-b-entry-governance`（自 `feature/workdetail-p1` 切出）  
 **设计依据**：根目录 `design-P1-entry-architecture.md`（原则 6/7；§Q2 ShelfPage、ProjectCard；§P1-C 映射表）
