@@ -1,6 +1,6 @@
 # TASK-616-D：创作室边界 / materialize / start-writing — 加速会诊卡
 
-**状态**：待会诊 · 未授权实现
+**状态**：已会诊 · D-A 已授权 · 未授权 D-A 以外实现
 **基线**：`feature/workdetail-p1`（616-B + 616-C-A + 616-C-A2 已闭环）
 **前置**：[TASK-616-C-D-consultation.md](./TASK-616-C-D-consultation.md)（C 已落地；D 原则已初裁，本卡聚焦未决实现边界）
 
@@ -83,13 +83,13 @@
 
 | 项 | 裁定 |
 |----|------|
-| D1 创作室接收物 | |
-| D2 materialize 触发点 | |
-| D3 materialize 映射规则 | |
-| D4 正文 vs 梗概 | |
-| D5 start-writing 门槛 | |
-| D6 release 归属 | |
-| D-A 是否授权 | |
+| D1 创作室接收物 | 创作室消费 **`metadata.workSetting` + `chapters` 表**（materialize 后的章节结构/梗概/正文载体） |
+| D2 materialize 触发点 | **`start-writing`**（`planned → writing` 前/事务内）；`confirm-greenlight` **不** materialize |
+| D3 materialize 映射规则 | `chapterPlanning[]` → `Chapter`：`order`/`title`/`summary` 映射；`content=''`；已存在同 `order` 则 patch `title`/`summary`，**不覆盖 `content`** |
+| D4 正文 vs 梗概 | 正文唯一写入面 = **`Chapter.content`**；`summary` 创作室阶段 **只读** |
+| D5 start-writing 门槛 | materialize **成功**且 **`chapters` ≥ 1**；**不**重复 B/C readiness（confirm 已做） |
+| D6 release 归属 | **`release-to-studio` 归后续 0608 / release 专项**；不进 D-A |
+| D-A 是否授权 | **授权** [TASK-616-D-A.md](./TASK-616-D-A.md)：`start-writing` 前 materialize `chapterPlanning` → `chapters` |
 
 ---
 

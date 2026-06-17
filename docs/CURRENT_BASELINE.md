@@ -2,7 +2,7 @@
 
 > **单一真相源**：协作状态、已合并战役、下一战、暂不做项，以此文件为准。
 
-**最后更新**：2026-06-17（616-C-A2 合并 · 企划课闭环）
+**最后更新**：2026-06-17（616-D 会诊后）
 
 ---
 
@@ -43,18 +43,17 @@ C-A 边界保持：企划 planning 保存只写 metadata，**不写 `chapters` �
 
 ## 当前推荐下一战
 
-**616-D 会诊：创作室边界 / materialize / start-writing** — [TASK-616-D-consultation.md](./tasks/TASK-616-D-consultation.md)
+**616-D-A：start-writing materialize chapterPlanning → chapters** — [TASK-616-D-A.md](./tasks/TASK-616-D-A.md)
 
-- **只裁边界，不写代码**
-- 重点：创作室如何消费章节规划、`chapterPlanning` 何时 materialize 到 `chapters`、正文与梗概关系、`start-writing` 与 `release-to-studio` 衔接
-- C 侧原则见 [TASK-616-C-D-consultation.md](./tasks/TASK-616-C-D-consultation.md) §会诊产出（C 已落地）
+- 会诊结论：[TASK-616-D-consultation.md](./tasks/TASK-616-D-consultation.md) §会诊产出
+- 只做：`start-writing` 前 materialize；不碰 release、不大改编辑器
 
 ---
 
 ## 暂不做
 
 - P1-c 及入口文案大收口
-- **616-D 实现**（会诊授权前）
+- **616-D 实现**（D-A 外；release 门槛等）
 - `release-to-studio` **门槛改造**（可会诊讨论，本阶段不实现）
 - 正文编辑器大改
 - legacy 迁移 / 全局写入封禁
@@ -67,5 +66,5 @@ C-A 边界保持：企划 planning 保存只写 metadata，**不写 `chapters` �
 - `docs/design/616-content-asset-constitution-v0.2.1.md`
 - `docs/design/616-B-work-setting-minimal-model-draft.md`
 - `docs/design/0608-616-coordination-draft.md`
-- `docs/tasks/TASK-616-C-D-consultation.md`（C/D 首轮会诊 · C 已落地）
+- `docs/tasks/TASK-616-D-consultation.md`（616-D 会诊 · 已结案）
 - `design-P1-entry-architecture.md`（根目录，P1 已收束）
