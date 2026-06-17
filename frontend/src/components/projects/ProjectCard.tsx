@@ -1,11 +1,13 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Project, chaptersApi, PROJECT_STATUS_LABEL, ProjectStatus } from '../../services/api'
+import { workDetailPath, type WorkDetailFrom } from '../../services/shelvedNavigation'
 import { IconCalendar, IconDelete, IconDownload, IconEdit, IconEye, IconFile, IconMoveRight, IconReview, IconStats, IconUser } from '../ui/icons'
 
 interface ProjectCardProps {
   project: Project
   collectionName?: string
+  workDetailFrom?: WorkDetailFrom
   onDelete: (id: string) => void
   onUpdate?: () => void
   onExport?: (project: Project) => void
@@ -18,6 +20,7 @@ interface ProjectCardProps {
 export const ProjectCard: React.FC<ProjectCardProps> = ({
   project,
   collectionName,
+  workDetailFrom,
   onDelete,
   onExport,
   onPreview,
@@ -52,13 +55,17 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     <div className={`bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow ${compact ? 'p-4' : 'p-6'} border border-gray-100`}>
       <div className="flex justify-between items-start mb-2">
         <h3 className={`font-semibold text-gray-900 ${compact ? 'text-base' : 'text-xl'} line-clamp-2`}>
-          <button
-            onClick={() => navigate(`/work/${project.id}`)}
-            className="hover:text-blue-600 hover:underline transition-colors text-left"
-            title="查看作品详情"
-          >
-            {project.title}
-          </button>
+          {workDetailFrom ? (
+            <button
+              onClick={() => navigate(workDetailPath(project.id, workDetailFrom))}
+              className="hover:text-blue-600 hover:underline transition-colors text-left"
+              title="查看作品详情"
+            >
+              {project.title}
+            </button>
+          ) : (
+            <span className="text-left">{project.title}</span>
+          )}
         </h3>
         
         {/* Status Badge */}
@@ -116,15 +123,18 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
               className="p-1.5 text-blue-500 hover:bg-blue-50 rounded" 
               title="进入作品详情"
               onClick={async () => {
-                // Editor Navigation Logic
                 try {
                   const chapters = await chaptersApi.getByProjectId(project.id)
                   if (chapters && chapters.length > 0) {
                      navigate(`/writing/${project.id}/${chapters[0].id}`)
-                  } else {
-                     navigate(`/work/${project.id}`)
+                  } else if (workDetailFrom) {
+                     navigate(workDetailPath(project.id, workDetailFrom))
                   }
-                } catch { navigate(`/work/${project.id}`) }
+                } catch {
+                  if (workDetailFrom) {
+                    navigate(workDetailPath(project.id, workDetailFrom))
+                  }
+                }
               }}
             >
               <IconEdit size={16} />
