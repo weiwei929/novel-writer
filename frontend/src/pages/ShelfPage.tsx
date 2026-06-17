@@ -7,6 +7,10 @@ import {
 } from '../services/api'
 import { useNotifications } from '../hooks/useNotifications'
 import ProjectStatusBadge from '../components/projects/ProjectStatusBadge'
+import {
+  resolveShelvedWorkDetailFrom,
+  workDetailPath,
+} from '../services/shelvedNavigation'
 import { IconDelete, IconRefresh, IconShelf } from '../components/ui/icons'
 
 interface ShelvedMeta {
@@ -57,18 +61,24 @@ function ShelvedProjectCard({
   const shelvedAt = shelved.shelvedAt
     ? formatRelativeTime(shelved.shelvedAt)
     : formatRelativeTime(project.updatedAt)
+  const detailFrom = resolveShelvedWorkDetailFrom(shelved)
+  const titleClass = 'text-lg font-semibold text-gray-900 truncate'
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <Link
-              to={`/work/${project.id}`}
-              className="text-lg font-semibold text-gray-900 hover:text-blue-600 truncate"
-            >
-              {project.title}
-            </Link>
+            {detailFrom ? (
+              <Link
+                to={workDetailPath(project.id, detailFrom)}
+                className={`${titleClass} hover:text-blue-600`}
+              >
+                {project.title}
+              </Link>
+            ) : (
+              <span className={titleClass}>{project.title}</span>
+            )}
             <ProjectStatusBadge status={project.status} />
           </div>
           <p className="text-sm text-gray-600 mt-2">
