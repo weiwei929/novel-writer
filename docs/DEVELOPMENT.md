@@ -38,11 +38,10 @@ npm run install:all
 
 3. **环境配置**
 ```bash
-# 复制环境变量模板
-cp .env.example .env
+# 复制环境变量模板（后端见 backend/.env.example）
+cp backend/.env.example backend/.env
 
-# 编辑环境变量
-# 必须设置 GROK_API_KEY
+# 按需编辑；变量说明见 backend/.env.example（DATABASE_URL、APP_PASSWORD 等）
 ```
 
 4. **启动开发环境**
@@ -71,22 +70,19 @@ novel-writer/
 │   │   │   ├── editor/         # 编辑器
 │   │   │   ├── media/          # 媒体处理
 │   │   │   └── common/         # 通用组件
-│   │   ├── store/              # Redux状态管理
+│   │   ├── stores/             # Zustand 状态管理
 │   │   ├── hooks/              # 自定义Hooks
 │   │   ├── utils/              # 工具函数
 │   │   └── types/              # TypeScript类型定义
 │   ├── public/                 # 静态资源
 │   └── package.json
 │
-├── backend/                    # Node.js后端服务
+├── backend/                    # Fastify 后端服务
+│   ├── prisma/                 # Prisma schema + SQLite（dev.db）
 │   ├── src/
-│   │   ├── routes/             # API路由
-│   │   ├── controllers/        # 控制器
+│   │   ├── routes/             # API 路由（Fastify）
 │   │   ├── services/           # 业务逻辑
-│   │   ├── middleware/         # 中间件
-│   │   ├── models/             # 数据模型
-│   │   ├── utils/              # 工具函数
-│   │   └── types/              # TypeScript类型
+│   │   └── utils/              # 工具函数
 │   └── package.json
 │
 ├── deployment/                 # 部署配置
@@ -98,11 +94,7 @@ novel-writer/
 │   ├── DEPLOYMENT.md           # 部署指南
 │   └── API.md                  # API文档
 │
-├── data/                       # 数据存储（开发环境）
-│   ├── collections/            # 文集数据
-│   ├── projects/               # 项目数据
-│   ├── backups/                # 备份文件
-│   └── media/                  # 媒体文件
+├── data/                       # （legacy）1.0 LowDB 时代目录，现仓主数据在 backend/prisma/
 │
 ├── docker-compose.yml          # Docker编排
 ├── .env.example                # 环境变量模板
@@ -129,13 +121,15 @@ npm run type-check
 git add .
 git commit -m "feat: add collection management"
 
-# 5. 构建测试
+# 5. 构建测试（会先停 backend dev，见下方 Prisma 说明）
 npm run build
 ```
 
+> **Prisma generate**：根目录 `npm run build` / `npm run lint` 会触发 backend `prisma generate`。Windows 上若 backend dev 正在运行，可能锁 `query_engine-windows.dll.node`（EPERM）；构建前请先停止 backend dev。
+
 ### 2. 前端开发
 
-**技术栈：** React 18 + TypeScript + Material-UI + Redux Toolkit
+**技术栈：** React 18 + TypeScript + Tailwind CSS + Zustand + Vite
 
 ```bash
 # 进入前端目录
@@ -156,13 +150,13 @@ npm run build
 
 **关键文件：**
 - `src/App.tsx` - 应用入口
-- `src/store/store.ts` - Redux配置
+- `src/stores/` - Zustand stores
 - `src/components/layout/AppLayout.tsx` - 主布局
 - `vite.config.ts` - Vite配置
 
 ### 3. 后端开发
 
-**技术栈：** Node.js + Express + TypeScript + LowDB
+**技术栈：** Node.js + Fastify + TypeScript + Prisma + SQLite
 
 ```bash
 # 进入后端目录
@@ -189,7 +183,9 @@ npm run backup
 
 ## 🔧 核心功能开发
 
-### 1. 添加新的API端点
+> 以下 Express / MUI / Redux 示例为 **1.0 legacy**，仅供参考。现仓请参照 `backend/src/routes/` 中的 Fastify 路由写法。
+
+### 1. 添加新的API端点（legacy 示例）
 
 1. **定义路由** (`backend/src/routes/`)
 ```typescript
@@ -224,7 +220,7 @@ export class CollectionService {
 }
 ```
 
-### 2. 添加新的React组件
+### 2. 添加新的React组件（legacy 示例）
 
 1. **创建组件** (`frontend/src/components/`)
 ```tsx
@@ -297,6 +293,7 @@ npm run test:e2e
 
 ### 开发环境构建
 ```bash
+# 建议先停止 backend dev（Windows 上避免 Prisma DLL 锁）
 npm run build
 ```
 
@@ -320,7 +317,6 @@ pm2 stop all      # 停止服务
 
 ### 1. 前端调试
 - 使用浏览器开发者工具
-- Redux DevTools扩展
 - React Developer Tools
 
 ### 2. 后端调试
@@ -343,21 +339,15 @@ proxy: {
 }
 ```
 
-**问题：Grok API调用失败**
-```bash
-# 检查环境变量
-echo $GROK_API_KEY
+**问题：AI Provider 调用失败**
 
-# 测试API连接
-curl -H "Authorization: Bearer $GROK_API_KEY" \
-  https://api.x.ai/v1/models
-```
+检查 `backend/.env` 与 `.env.example` 中的相关配置（按当前启用的 Provider 填写）。
 
 ## 🔍 性能优化
 
 ### 前端优化
-- 使用React.lazy()懒加载
-- 优化Redux状态结构
+- 使用 React.lazy() 懒加载
+- 控制 Zustand store 粒度
 - 图片压缩和懒加载
 
 ### 后端优化
@@ -367,11 +357,12 @@ curl -H "Authorization: Bearer $GROK_API_KEY" \
 
 ## 📚 扩展阅读
 
-- [React官方文档](https://react.dev)
-- [Material-UI文档](https://mui.com)
-- [Redux Toolkit文档](https://redux-toolkit.js.org)
-- [Express.js文档](https://expressjs.com)
-- [Docker文档](https://docs.docker.com)
+- [React 官方文档](https://react.dev)
+- [Fastify 文档](https://fastify.dev)
+- [Prisma 文档](https://www.prisma.io/docs)
+- [Tailwind CSS 文档](https://tailwindcss.com/docs)
+- [Zustand 文档](https://zustand.docs.pmnd.rs)
+- [Docker 文档](https://docs.docker.com)
 
 ## 🤝 贡献指南
 
