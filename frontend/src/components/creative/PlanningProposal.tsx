@@ -52,7 +52,7 @@ export default function PlanningProposal() {
     try {
       const result = await proposalsApi.evaluate(evaluating.id, action)
       if (action === 'approve' && result.projectId) {
-        success('已同意立项', `作品已创建，可前往 /work/${result.projectId}`)
+        success('已同意立项', '已接收入企划课，可在企划课查看')
       } else if (action === 'reject') {
         success('已退回作品构思')
       } else {
@@ -147,8 +147,8 @@ export default function PlanningProposal() {
                   <ProposalStatusBadge status={p.status} />
                 </div>
                 {p.projectId ? (
-                  <Link to={`/work/${p.projectId}`} className="text-xs text-blue-600 shrink-0">
-                    查看作品
+                  <Link to="/planning/in-progress" className="text-xs text-blue-600 shrink-0">
+                    查看企划承接
                   </Link>
                 ) : (
                   <Link
