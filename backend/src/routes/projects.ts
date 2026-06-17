@@ -12,8 +12,8 @@ import { mapProjectStatus, withMappedProjectStatus } from '../services/status-mi
 import { META_KEYS_DAY1 } from '../constants/metadata-keys'
 import { PROJECT_STATUS_ALL } from '../constants/statuses'
 import { applySynopsisMetadataWrite, mergeProjectUpdateWithSynopsis } from '../utils/workSynopsis'
-import { mergeWorkSettingInProjectUpdate, assertPlanningSettingReady } from '../utils/workSetting'
-import { normalizeChapterPlanning } from '../utils/chapterPlanning'
+import { mergeWorkSettingInProjectUpdate, getPlanningSettingReadiness } from '../utils/workSetting'
+import { getChapterPlanningReadiness, normalizeChapterPlanning } from '../utils/chapterPlanning'
 import {
   assertProjectExists,
   assertNotDeleted,
@@ -329,6 +329,21 @@ type CreateProjectBody = { Body: z.infer<typeof CreateProjectSchema> }
 type UpdateProjectBody = { Params: { id: string }, Body: z.infer<typeof UpdateProjectSchema> }
 type ImportProjectBody = { Body: z.infer<typeof ImportProjectSchema> }
 type ConfirmMetadataBody = { Params: { id: string }, Body: z.infer<typeof ConfirmMetadataSchema> }
+
+function assertPlanningConfirmReady(metadata: Record<string, unknown>): void {
+  const parts: string[] = []
+  const setting = getPlanningSettingReadiness(metadata)
+  if (!setting.ready) {
+    parts.push(`请先完善作品设定：${setting.missingLabels.join('、')}`)
+  }
+  const chapter = getChapterPlanningReadiness(metadata.chapterPlanning)
+  if (!chapter.ready) {
+    parts.push(`请先完善章节规划：${chapter.missingReasons.join('；')}`)
+  }
+  if (parts.length > 0) {
+    throw new Error(parts.join(' '))
+  }
+}
 
 export async function projectRoutes(app: FastifyInstance) {
   // GET /projects/:id/export - Export project as Markdown
@@ -767,9 +782,9 @@ export async function projectRoutes(app: FastifyInstance) {
       assertStatusFor(project.status, ['planning'])
       const metadata = (project.metadata as Record<string, unknown>) || {}
       try {
-        assertPlanningSettingReady(metadata)
+        assertPlanningConfirmReady(metadata)
       } catch (e: unknown) {
-        const message = e instanceof Error ? e.message : '作品设定未达标'
+        const message = e instanceof Error ? e.message : '企划成熟度未达标'
         return reply.status(400).send(ApiResponse.error(message, 400))
       }
       const updated = await prisma.project.update({
