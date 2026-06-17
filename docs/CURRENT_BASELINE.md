@@ -2,7 +2,7 @@
 
 > **单一真相源**：协作状态、已合并战役、下一战、暂不做项，以此文件为准。
 
-**最后更新**：2026-06-17（P1-b 合并后）
+**最后更新**：2026-06-17（616-C/D 会诊后）
 
 ---
 
@@ -30,14 +30,18 @@
 
 ## 当前推荐下一战
 
-**616-C / 616-D 加速会诊** — [TASK-616-C-D-consultation.md](./tasks/TASK-616-C-D-consultation.md)（先 C 后 D，未授权实现）
+**616-C-A：企划课章节规划 canonical + 最小编辑收口** — [TASK-616-C-A.md](./tasks/TASK-616-C-A.md)
+
+- C/D 会诊结论：[TASK-616-C-D-consultation.md](./tasks/TASK-616-C-D-consultation.md)
+- 616-D 只定边界，暂不实现
 
 ---
 
 ## 暂不做
 
 - P1-c 及入口文案大收口
-- 616-C/D **实现**（会诊定案前）
+- 616-D 实现
+- 616-C confirm 章节门槛（C-A 后另开小卡）
 - legacy 迁移 / 全局写入封禁
 - `release-to-studio` 门槛改造
 - 长篇立宪文档

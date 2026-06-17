@@ -97,7 +97,14 @@
 
 | 项 | 裁定 |
 |----|------|
-| C2 存储 SSOT | _待填_ |
-| C4 confirm 接入时机 | _待填_ |
-| D5 release 归属 | _待填_ |
-| C-A 是否授权 | _待填_ |
+| C1 最小模型 | 企划阶段 canonical 最小字段为 `order` / `title` / `summary`；`content` 属 616-D 正文，不进入 C 的成熟度 |
+| C2 存储 SSOT | **C-A 先以 `Project.metadata.chapterPlanning` 为企划期 SSOT**；`chapters` 表暂视为创作室正文载体，不做长期双写；materialize 到 `chapters` 的时机留给后续 C/D 衔接卡 |
+| C3 UI 主路径 | 沿用 WorkDetail `from=planning` 下的「作品章节」Tab / `WorkChapterEditor` 路径；不新开页面，不做 Tab 大重组 |
+| C4 confirm 接入时机 | 本轮不改 `confirm-greenlight`；C-A 只提供 `getChapterPlanningReadiness()` 类 helper。章节门槛在 C-A 合并后另开小卡接入 |
+| C5 与 B 关系 | B 作品设定与 C 章节规划并行生长；UI 可软引导先设定后章节，但 save / confirm 不硬编码先后顺序 |
+| D1 创作室接收物 | 创作室消费 `workSetting` 四块 + 章节结构（标题/顺序/梗概），不接收正文 |
+| D2 正文边界 | `metadata.chapterPlanning[].summary` 是章节梗概；`Chapter.content` 是正文唯一主写入面 |
+| D3 修订边界 | 创作室可以继续生长正文；改章节结构/梗概是内容保存行为，不自动回流企划流程状态 |
+| D4 参考侧栏 | D 后续实现原则：创作室只读展示作品设定 + 本章梗概；不把 B/C 编辑器搬进写作器 |
+| D5 release 归属 | `release-to-studio` / start-writing 门槛归 616-D 后续或 0608 流程专项，本卡不裁实现 |
+| C-A 是否授权 | 授权起草 **616-C-A：章节规划 canonical + 最小编辑收口**；不接 confirm，不碰 release，不写正文 |
