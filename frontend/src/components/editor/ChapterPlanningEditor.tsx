@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { projectsApi, chaptersApi, Chapter, ChapterPlanItem } from '../../services/api'
+import { legacyPlansToCanonical, toLegacyChapterPlanItems, type ChapterPlanningItem } from '../../services/chapterPlanning'
 import { useNotifications } from '../../hooks/useNotifications'
 import { IconArrowDown, IconArrowUp, IconClose, IconCopy, IconDelete, IconPlus } from '../ui/icons'
 
@@ -9,7 +10,7 @@ interface ChapterPlanningEditorProps {
   projectId: string
   initialPlans?: ChapterPlanItem[]
   onClose: () => void
-  onSaved?: (plans: ChapterPlanItem[]) => void
+  onSaved?: (plans: ChapterPlanningItem[]) => void
 }
 
 const emptyPlan = (nextOrder: number): ChapterPlanItem => ({
@@ -28,10 +29,7 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({
   onSaved,
 }) => {
   const { success, error: notifyError, warning } = useNotifications()
-  const [plans, setPlans] = useState<ChapterPlanItem[]>(() => {
-    const sorted = [...initialPlans].sort((a, b) => a.order - b.order)
-    return sorted.map((p, idx) => ({ ...p, order: idx + 1 }))
-  })
+  const [plans, setPlans] = useState<ChapterPlanItem[]>(() => toLegacyChapterPlanItems(initialPlans))
   const [saving, setSaving] = useState(false)
   const [chapters, setChapters] = useState<Chapter[]>([])
 
@@ -114,7 +112,10 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({
         return
       }
       const payload = reorder(plans)
-      const saved = await projectsApi.updateChapterPlanning(projectId, payload)
+      const saved = await projectsApi.updateChapterPlanning(
+        projectId,
+        legacyPlansToCanonical(payload)
+      )
       // 同步：根据规划创建缺失章节，并更新已存在章节的标题/状态/梗概
       try {
         const existing = await chaptersApi.getByProjectId(projectId)
@@ -155,7 +156,7 @@ const ChapterPlanningEditor: React.FC<ChapterPlanningEditorProps> = ({
         console.warn('章节同步未完成（不影响规划保存）：', syncErr)
       }
       success('章节规划已保存')
-      onSaved?.(saved as ChapterPlanItem[])
+      onSaved?.(saved)
       onClose()
     } catch (e: any) {
       console.error(e)

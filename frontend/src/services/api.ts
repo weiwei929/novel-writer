@@ -175,6 +175,12 @@ export interface Chapter {
   notes?: string // Mapped from metadata.notes
 }
 
+export interface ChapterPlanningItem {
+  order: number
+  title: string
+  summary: string
+}
+
 export interface ChapterPlanItem {
   id: string
   order: number
@@ -555,12 +561,15 @@ export const projectsApi = {
       }
   },
 
-  async getChapterPlanning(projectId: string): Promise<ChapterPlanItem[]> {
+  async getChapterPlanning(projectId: string): Promise<ChapterPlanningItem[]> {
     const response = await api.get(`/projects/${projectId}/chapter-planning`)
     return response.data || []
   },
 
-  async updateChapterPlanning(projectId: string, plans: ChapterPlanItem[]): Promise<ChapterPlanItem[]> {
+  async updateChapterPlanning(
+    projectId: string,
+    plans: ChapterPlanningItem[]
+  ): Promise<ChapterPlanningItem[]> {
     const response = await api.put(`/projects/${projectId}/chapter-planning`, plans)
     return response.data
   },
