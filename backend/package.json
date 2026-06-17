@@ -5,7 +5,9 @@
   "scripts": {
     "test": "echo \"No tests configured yet\" && exit 0",
     "dev": "nodemon --config nodemon.json --exec ts-node src/index.ts",
-    "build": "tsc",
+    "generate": "node -e \"require('dotenv').config({path:'.env.example'}); require('child_process').execSync('npx prisma generate',{stdio:'inherit',env:process.env})\"",
+    "build": "npm run generate && tsc",
+    "lint": "npm run generate && tsc --noEmit",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
