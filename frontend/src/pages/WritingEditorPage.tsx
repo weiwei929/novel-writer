@@ -11,6 +11,7 @@ import { AI_UI_FROZEN } from '../config/aiFreeze'
 import { useNotifications } from '../hooks/useNotifications'
 import { useSettingsStore } from '../stores/settingsStore'
 import { getWorkPermissions } from '../services/workPermissions'
+import { getWorkSetting } from '../services/workSetting'
 
 function workDetailPath(projectId: string) {
   return `/work/${projectId}?from=writing`
@@ -448,8 +449,14 @@ const WritingEditorPage: React.FC = () => {
         {editorMode !== 'pure' && (
           <>
             <div className="w-1 bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 shadow-sm" />
-            {editorMode === 'reference' && projectId && (
-              <ReferenceSidebar projectId={projectId} width={referenceWidth} />
+            {editorMode === 'reference' && projectId && project && chapter && (
+              <ReferenceSidebar
+                projectId={projectId}
+                width={referenceWidth}
+                workSetting={getWorkSetting(project.metadata as Record<string, unknown>)}
+                chapterSummary={chapter.summary}
+                chapterLabel={`第 ${chapter.order} 章 · ${chapter.title}`}
+              />
             )}
             {showAiMode && editorMode === 'ai' && (
               <AIAssistantPanel

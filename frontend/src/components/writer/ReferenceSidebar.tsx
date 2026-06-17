@@ -5,16 +5,48 @@ import {
   type TimelineEntry,
   type CreativeFlow,
 } from '../../services/api'
+import {
+  WORK_SETTING_BLOCKS,
+  hasAnyWorkSettingContent,
+  type WorkSetting,
+} from '../../services/workSetting'
 
-type RefTab = 'characters' | 'timeline' | 'flows'
+type RefTab = 'setting' | 'chapter' | 'characters' | 'timeline' | 'flows'
 
 interface ReferenceSidebarProps {
   projectId: string
   width?: number
+  /** 616-D-B：企划 workSetting，由写作页传入，只读展示 */
+  workSetting?: WorkSetting
+  /** 616-D-B：当前章梗概（materialize 后的 Chapter.summary） */
+  chapterSummary?: string
+  chapterLabel?: string
 }
 
-export default function ReferenceSidebar({ projectId, width = 280 }: ReferenceSidebarProps) {
-  const [activeTab, setActiveTab] = useState<RefTab>('characters')
+function ReadOnlyBlock({ label, value }: { label: string; value: string }) {
+  const trimmed = value.trim()
+  return (
+    <div className="border border-gray-100 rounded-lg p-2.5">
+      <div className="text-xs font-medium text-gray-700">{label}</div>
+      {trimmed ? (
+        <pre className="mt-1.5 text-xs text-gray-600 whitespace-pre-wrap font-sans leading-relaxed">
+          {trimmed}
+        </pre>
+      ) : (
+        <p className="mt-1.5 text-xs text-gray-400">未填写</p>
+      )}
+    </div>
+  )
+}
+
+export default function ReferenceSidebar({
+  projectId,
+  width = 280,
+  workSetting,
+  chapterSummary,
+  chapterLabel,
+}: ReferenceSidebarProps) {
+  const [activeTab, setActiveTab] = useState<RefTab>('setting')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [characters, setCharacters] = useState<WorldCharacter[]>([])
@@ -46,10 +78,16 @@ export default function ReferenceSidebar({ projectId, width = 280 }: ReferenceSi
   }, [projectId])
 
   const tabs: { id: RefTab; label: string }[] = [
+    { id: 'setting', label: '设定' },
+    { id: 'chapter', label: '本章' },
     { id: 'characters', label: '人物' },
     { id: 'timeline', label: '故事线' },
     { id: 'flows', label: '心流' },
   ]
+
+  const setting = workSetting
+  const hasSetting = setting ? hasAnyWorkSettingContent(setting) : false
+  const summaryText = chapterSummary?.trim() ?? ''
 
   return (
     <div
@@ -79,8 +117,43 @@ export default function ReferenceSidebar({ projectId, width = 280 }: ReferenceSi
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 text-sm">
-        {loading && <p className="text-gray-400 text-center py-8">加载中...</p>}
-        {error && <p className="text-red-500 text-center py-8">{error}</p>}
+        {loading && activeTab !== 'setting' && activeTab !== 'chapter' && (
+          <p className="text-gray-400 text-center py-8">加载中...</p>
+        )}
+        {error && activeTab !== 'setting' && activeTab !== 'chapter' && (
+          <p className="text-red-500 text-center py-8">{error}</p>
+        )}
+
+        {activeTab === 'setting' && (
+          <div className="space-y-2">
+            {!hasSetting ? (
+              <p className="text-gray-400 text-xs text-center py-6">暂无作品设定</p>
+            ) : (
+              WORK_SETTING_BLOCKS.map(block => (
+                <ReadOnlyBlock
+                  key={block.key}
+                  label={block.label}
+                  value={setting![block.key]}
+                />
+              ))
+            )}
+          </div>
+        )}
+
+        {activeTab === 'chapter' && (
+          <div>
+            {chapterLabel && (
+              <div className="text-xs font-medium text-gray-800 mb-2">{chapterLabel}</div>
+            )}
+            {summaryText ? (
+              <pre className="text-xs text-gray-600 whitespace-pre-wrap font-sans leading-relaxed border border-gray-100 rounded-lg p-2.5">
+                {summaryText}
+              </pre>
+            ) : (
+              <p className="text-gray-400 text-xs text-center py-6">暂无本章梗概</p>
+            )}
+          </div>
+        )}
 
         {!loading && !error && activeTab === 'characters' && (
           <div className="space-y-2">
