@@ -1,8 +1,9 @@
 /** 616-C-A canonical chapterPlanning under Project.metadata */
 
-import type { ChapterPlanItem } from './api'
+import type { ChapterPlanItem, Project } from './api'
 
-export type ChapterPlanningItem = {  order: number
+export type ChapterPlanningItem = {
+  order: number
   title: string
   summary: string
 }
@@ -69,7 +70,17 @@ export function getChapterPlanningReadiness(value: unknown): ChapterPlanningRead
 export function formatChapterPlanningReadinessError(
   readiness: ChapterPlanningReadiness
 ): string {
-  return readiness.missingReasons.join('；')
+  return `请先完善章节规划：${readiness.missingReasons.join('；')}`
+}
+
+export function assertChapterPlanningReadyForConfirm(
+  project: Pick<Project, 'metadata'>
+): void {
+  const metadata = (project.metadata ?? {}) as Record<string, unknown>
+  const readiness = getChapterPlanningReadiness(metadata.chapterPlanning)
+  if (!readiness.ready) {
+    throw new Error(formatChapterPlanningReadinessError(readiness))
+  }
 }
 
 const LEGACY_DEFAULT_STATUS: ChapterPlanItem['status'] = 'planned'

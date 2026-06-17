@@ -47,8 +47,9 @@ export default function PlanningActions({
         notifySuccess(`已${label}`)
         await onRefresh()
         onSuccess?.()
-      } catch {
-        notifyError('操作失败', `无法${label}`)
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : `无法${label}`
+        notifyError('操作失败', message)
       } finally {
         setLoading(false)
       }

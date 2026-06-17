@@ -31,3 +31,43 @@ export function normalizeChapterPlanning(value: unknown): ChapterPlanningItem[] 
     .sort((a, b) => a.order - b.order)
     .map((item, idx) => ({ ...item, order: idx + 1 }))
 }
+
+export type ChapterPlanningReadiness = {
+  chapterCount: number
+  missingReasons: string[]
+  ready: boolean
+}
+
+export function getChapterPlanningReadiness(value: unknown): ChapterPlanningReadiness {
+  const items = normalizeChapterPlanning(value)
+  const missingReasons: string[] = []
+
+  if (items.length === 0) {
+    missingReasons.push('至少添加 1 章')
+  }
+
+  for (const item of items) {
+    const label = `第 ${item.order} 章`
+    if (!item.title.trim()) missingReasons.push(`${label} 缺少标题`)
+    if (!item.summary.trim()) missingReasons.push(`${label} 缺少梗概`)
+  }
+
+  return {
+    chapterCount: items.length,
+    missingReasons,
+    ready: items.length > 0 && missingReasons.length === 0,
+  }
+}
+
+export function formatChapterPlanningReadinessError(
+  readiness: ChapterPlanningReadiness
+): string {
+  return `请先完善章节规划：${readiness.missingReasons.join('；')}`
+}
+
+export function assertChapterPlanningReady(metadata: Record<string, unknown>): void {
+  const readiness = getChapterPlanningReadiness(metadata.chapterPlanning)
+  if (!readiness.ready) {
+    throw new Error(formatChapterPlanningReadinessError(readiness))
+  }
+}
