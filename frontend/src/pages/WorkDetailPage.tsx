@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   chaptersApi,
+  projectsApi,
   workApi,
   type Chapter,
   type WorkDetailResponse,
@@ -83,6 +84,7 @@ export default function WorkDetailPage() {
   const [editingTitleId, setEditingTitleId] = useState<string | null>(null)
   const [editingTitle, setEditingTitle] = useState('')
   const [reordering, setReordering] = useState(false)
+  const [studioActionLoading, setStudioActionLoading] = useState(false)
 
   const load = useCallback(async () => {
     if (!id) return
@@ -238,6 +240,43 @@ export default function WorkDetailPage() {
     })
   }
 
+  const openWritingEditor = useCallback(
+    (chapterList: Chapter[]) => {
+      if (!work) return
+      const sorted = [...chapterList].sort((a, b) => a.order - b.order)
+      const target = sorted[0]
+      if (target) {
+        navigate(`/writing/${work.id}/${target.id}?from=writing`)
+      } else {
+        notifyError('无法进入创作室', '请先在企划课完成章节规划')
+      }
+    },
+    [work, navigate, notifyError]
+  )
+
+  const handleStartWriting = useCallback(async () => {
+    if (!work) return
+    try {
+      setStudioActionLoading(true)
+      await projectsApi.startWriting(work.id)
+      notifySuccess('已开始创作')
+      await load()
+      const fresh = await chaptersApi.getByProjectId(work.id)
+      openWritingEditor(fresh)
+    } catch (e) {
+      notifyError('开始创作失败', e instanceof Error ? e.message : '请确认章节规划已完成')
+    } finally {
+      setStudioActionLoading(false)
+    }
+  }, [work, load, openWritingEditor, notifySuccess, notifyError])
+
+  const handleEnterWriting = useCallback(() => {
+    openWritingEditor(chapters)
+  }, [chapters, openWritingEditor])
+
+  const isWritingStudioContext = from === 'writing'
+  const canOpenWritingEditor = permissions.body && (isEditing || isWritingStudioContext)
+
   if (loading) {
     return (
       <div className="h-[60vh] flex items-center justify-center">
@@ -302,6 +341,40 @@ export default function WorkDetailPage() {
           )}
         </div>
       </div>
+
+      {isWritingStudioContext && (work.status === 'planned' || work.status === 'writing') && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3">
+          <p className="text-sm text-blue-900">
+            {work.status === 'planned'
+              ? chapterPlanning.length > 0
+                ? `已有 ${chapterPlanning.length} 章规划。开始创作后将进入写作器，可对照作品设定与本章梗概写作。`
+                : '请先在企划课完成章节规划，再开始创作。'
+              : chapters.length > 0
+                ? '创作进行中。进入写作器可查看只读参考并撰写正文。'
+                : '暂无章节。若刚完成企划，请先点击「开始创作」。'}
+          </p>
+          {work.status === 'planned' ? (
+            <button
+              type="button"
+              onClick={() => void handleStartWriting()}
+              disabled={studioActionLoading || chapterPlanning.length === 0}
+              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
+            >
+              <IconArrowRight size={14} />
+              {studioActionLoading ? '处理中…' : '开始创作'}
+            </button>
+          ) : chapters.length > 0 ? (
+            <button
+              type="button"
+              onClick={handleEnterWriting}
+              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+            >
+              <IconArrowRight size={14} />
+              进入创作室
+            </button>
+          ) : null}
+        </div>
+      )}
 
       {/* Tab 导航 */}
       <div className="flex items-center gap-1 border-b border-gray-200">
@@ -637,7 +710,7 @@ export default function WorkDetailPage() {
                             正文
                           </button>
                         )}
-                        {isEditing && permissions.body && (
+                        {canOpenWritingEditor && (
                           <button
                             onClick={() => navigate(`/writing/${work.id}/${c.id}?from=writing`)}
                             className="inline-flex items-center gap-1 px-2.5 py-1 border border-blue-200 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 text-xs font-medium"
@@ -702,7 +775,9 @@ export default function WorkDetailPage() {
               <IconFile className="w-10 h-10 mb-3 text-gray-300" />
               <p className="text-sm mb-1">暂无章节</p>
               <p className="text-xs text-gray-400">
-                先在「作品章节」中创建章节框架，然后开始写作。
+                {isWritingStudioContext && work.status === 'planned' && chapterPlanning.length > 0
+                  ? '章节规划已在企划课完成。点击上方「开始创作」进入写作器。'
+                  : '先在「作品章节」中创建章节框架，然后开始写作。'}
               </p>
             </div>
           ) : (
@@ -732,7 +807,7 @@ export default function WorkDetailPage() {
                           {getChapterStatusLabel(c.status)}
                         </span>
                       </div>
-                      {isEditing && permissions.body ? (
+                      {canOpenWritingEditor ? (
                         <button
                           onClick={() => navigate(`/writing/${work.id}/${c.id}?from=writing`)}
                           className="inline-flex items-center gap-1 px-2.5 py-1 border border-blue-200 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 text-xs font-medium shrink-0"
