@@ -7,6 +7,7 @@ import {
   type Scrap,
 } from './api'
 import { parseScrapContent } from '../components/creative/scrapUtils'
+import { normalizeWorkSetting, type WorkSetting } from './workSetting'
 
 export type CreativeStage = 'origin' | 'conceiving' | 'formed'
 
@@ -56,6 +57,7 @@ export async function advanceOriginToConceiving(
     innovation: string
     coreSetting: string
     tags: string[]
+    settingSketch: WorkSetting
   }
 ): Promise<Proposal> {
   const meta = getProposalMetadata(proposal) as ProposalMetadata
@@ -67,7 +69,12 @@ export async function advanceOriginToConceiving(
     synopsis: fields.synopsis,
     innovation: fields.innovation,
     coreSetting: fields.coreSetting,
-    metadata: { ...meta, _creativeStage: 'conceiving', _tags: fields.tags },
+    metadata: {
+      ...meta,
+      _creativeStage: 'conceiving',
+      _tags: fields.tags,
+      _settingSketch: normalizeWorkSetting(fields.settingSketch),
+    },
   })
 }
 
