@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { projectsApi, type Project } from '../../services/api'
+import { projectsApi, chaptersApi, type Project } from '../../services/api'
 import { hasReleasedToEditorial, hasReleasedToStudio } from '../../services/releaseHandoff'
 import { useUIStore } from '../../stores/uiStore'
 import ProjectStatusBadge from '../../components/projects/ProjectStatusBadge'
@@ -77,15 +77,25 @@ export default function WritingProjectsPage() {
 
   const handleAction = useCallback(async (id: string, a: StudioAction) => {
     try {
-      if (a === 'start-writing') await projectsApi.startWriting(id)
-      else if (a === 'mark-written') await projectsApi.markWritten(id)
+      if (a === 'start-writing') {
+        await projectsApi.startWriting(id)
+        const chapterList = await chaptersApi.getByProjectId(id)
+        const sorted = [...chapterList].sort((x, y) => x.order - y.order)
+        addNotification({ type: 'success', title: '已开始创作' })
+        await load()
+        if (sorted.length > 0) {
+          navigate(`/writing/${id}/${sorted[0].id}?from=writing`)
+        }
+        return
+      }
+      if (a === 'mark-written') await projectsApi.markWritten(id)
       else if (a === 'undo-written') await projectsApi.undoWritten(id)
       else if (a === 'soft-delete') await projectsApi.softDelete(id)
       else if (a === 'submit-to-editorial') await projectsApi.releaseToEditorial(id)
       addNotification({ type: 'success', title: { 'start-writing': '已开始创作', 'mark-written': '作品已完成', 'undo-written': '已退回', 'soft-delete': '已放入文件暂存', 'submit-to-editorial': '已提交编审部' }[a] })
       await load()
     } catch (e: unknown) { addNotification({ type: 'error', title: '操作失败', message: (e as Error).message }) }
-  }, [load, addNotification])
+  }, [load, addNotification, navigate])
 
   const total = planned.length + writing.length + written.length
 
