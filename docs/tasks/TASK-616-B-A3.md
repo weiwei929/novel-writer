@@ -1,6 +1,6 @@
 # TASK-616-B-A3：创意组设定雏形 UI
 
-**状态**：草案 · 待 Codex 审卡  
+**状态**：**已合并**（PR #6 → `feature/workdetail-p1`，`0447350`）  
 **基线**：`feature/workdetail-p1`（616-B-A2 已合并）  
 **分支建议**：`feature/616-b-a3-setting-sketch-ui`（自 `feature/workdetail-p1` 切出）  
 **依据**：`616-B-work-setting-minimal-model-draft.md` §5；`TASK-616-B-A2.md`「创意侧 UI 可另卡」
