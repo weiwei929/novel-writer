@@ -1,0 +1,90 @@
+/* Scoped tokens — only under .writing-editor-shell (Slice-1+) */
+.writing-editor-shell {
+  --we-nav-height: 52px;
+  --we-toolbar-height: 36px;
+  --we-bg: #fafafa;
+  --we-surface: #ffffff;
+  --we-border: #e5e7eb;
+  --we-text-muted: #9ca3af;
+  --we-text-primary: #111827;
+  --we-accent: #1f2937;
+  --we-accent-hover: #374151;
+  --we-accent-muted: #f3f4f6;
+  --we-warn: #f59e0b;
+  background-color: var(--we-bg);
+  color: var(--we-text-primary);
+}
+
+.writing-editor-shell .writing-editor-nav {
+  height: var(--we-nav-height);
+  min-height: var(--we-nav-height);
+  background: var(--we-surface);
+  border-bottom: 1px solid var(--we-border);
+}
+
+.writing-editor-shell .we-nav-muted {
+  color: var(--we-text-muted);
+}
+
+.writing-editor-shell .we-nav-warn {
+  color: var(--we-warn);
+}
+
+.writing-editor-shell .we-dept-link {
+  color: var(--we-text-muted);
+  text-decoration: none;
+}
+
+.writing-editor-shell .we-dept-link:hover {
+  color: var(--we-text-primary);
+  background: var(--we-accent-muted);
+}
+
+.writing-editor-shell .we-dept-link--active {
+  color: var(--we-text-primary);
+  border-bottom: 2px solid var(--we-accent);
+}
+
+.writing-editor-shell .we-btn-save {
+  color: var(--we-surface);
+  background: var(--we-accent);
+}
+
+.writing-editor-shell .we-btn-save:hover:not(:disabled) {
+  background: var(--we-accent-hover);
+}
+
+.writing-editor-shell .we-btn-save:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.writing-editor-shell .we-mode-seg {
+  background: var(--we-accent-muted);
+}
+
+.writing-editor-shell .we-mode-btn--active {
+  background: var(--we-surface);
+  color: var(--we-text-primary);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+}
+
+.writing-editor-shell .we-global-action {
+  color: var(--we-text-muted);
+}
+
+.writing-editor-shell .we-global-action:hover {
+  color: var(--we-text-primary);
+  background: var(--we-accent-muted);
+}
+
+.writing-editor-shell .we-global-action--active {
+  color: var(--we-text-primary);
+  background: var(--we-accent-muted);
+}
+
+.writing-editor-shell .we-dept-menu-panel {
+  background: var(--we-surface);
+  border: 1px solid var(--we-border);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
+}

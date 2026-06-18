@@ -1,4 +1,3 @@
-import { IconArrowLeft, IconSave } from '../components/ui/icons'
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import MarkdownEditor, { MarkdownEditorRef } from '../components/editor/MarkdownEditor'
@@ -6,6 +5,8 @@ import ProjectNavigationPanel from '../components/editor/ProjectNavigationPanel'
 import ContentMetadataCard from '../components/metadata/ContentMetadataCard'
 import AIAssistantPanel from '../components/writer/AIAssistantPanel'
 import ReferenceSidebar from '../components/writer/ReferenceSidebar'
+import WritingEditorNav from '../components/writing/WritingEditorNav'
+import '../components/writing/WritingEditorShell.css'
 import { projectsApi, chaptersApi, Project, Chapter } from '../services/api'
 import { AI_UI_FROZEN } from '../config/aiFreeze'
 import { useNotifications } from '../hooks/useNotifications'
@@ -22,28 +23,6 @@ function writingChapterPath(projectId: string, chapterId: string) {
 }
 
 type EditorMode = 'pure' | 'reference' | 'ai' | 'review'
-
-function ModeButton({
-  active,
-  label,
-  onClick,
-}: {
-  active: boolean
-  label: string
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
-        active ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-      }`}
-    >
-      {label}
-    </button>
-  )
-}
 
 function ReviewPlaceholder({ onClose }: { onClose: () => void }) {
   return (
@@ -79,7 +58,7 @@ const WritingEditorPage: React.FC = () => {
   const { projectId, chapterId } = useParams<{ projectId: string; chapterId: string }>()
   const navigate = useNavigate()
   const editorRef = useRef<MarkdownEditorRef>(null)
-  const { success: notifySuccess } = useNotifications()
+  const { success: notifySuccess, error: notifyError } = useNotifications()
   const aiWriter = useSettingsStore(s => s.ai.writer)
   const showAiMode = aiWriter && !AI_UI_FROZEN
   const editorPrefs = useSettingsStore(s => s.editor)
@@ -234,7 +213,6 @@ const WritingEditorPage: React.FC = () => {
       setHasUnsavedChanges(false)
       setLastSaved(new Date())
     } catch (err) {
-      setError('保存章节失败')
       console.error('Error saving chapter:', err)
       throw err
     } finally {
@@ -242,28 +220,42 @@ const WritingEditorPage: React.FC = () => {
     }
   }
 
-  const handleChapterSelect = async (selectedChapter: Chapter) => {
+  const runWithSaveGuard = async (action: () => void) => {
     if (hasUnsavedChanges && chapter) {
       try {
         await handleSave()
         notifySuccess('自动保存成功', '已保存当前章节更改')
       } catch {
-        // handleSave 已设置 error
+        notifyError('保存失败', '无法离开当前页面，请稍后重试')
+        return
       }
     }
-    navigate(writingChapterPath(projectId!, selectedChapter.id))
+    action()
+  }
+
+  const handleGuardedNavigate = (to: string) => {
+    void runWithSaveGuard(() => navigate(to))
+  }
+
+  const handleChapterSelect = async (selectedChapter: Chapter) => {
+    await runWithSaveGuard(() => {
+      navigate(writingChapterPath(projectId!, selectedChapter.id))
+    })
   }
 
   const handleGoBack = async () => {
-    if (hasUnsavedChanges && chapter) {
-      try {
-        await handleSave()
-        notifySuccess('自动保存成功', '已保存当前章节更改')
-      } catch {
-        // handleSave 已设置 error
-      }
+    await runWithSaveGuard(() => {
+      if (projectId) navigate(workDetailPath(projectId))
+    })
+  }
+
+  const handleManualSave = async () => {
+    try {
+      await handleSave()
+      notifySuccess('保存成功', '章节内容已保存')
+    } catch {
+      notifyError('保存失败', '请检查网络后重试')
     }
-    if (projectId) navigate(workDetailPath(projectId))
   }
 
   const handleApplyAIContent = (contentToInsert: string) => {
@@ -343,79 +335,23 @@ const WritingEditorPage: React.FC = () => {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
-      <div className="bg-white border-b px-4 py-2 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3 min-w-0">
-          <button
-            type="button"
-            onClick={handleGoBack}
-            className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700 shrink-0"
-            title="返回作品详情"
-          >
-            <IconArrowLeft size={18} />
-            <span className="text-xs hidden sm:inline">返回</span>
-          </button>
-          <div className="h-5 w-px bg-gray-200" />
-          <div className="min-w-0">
-            <h1 className="text-sm font-semibold text-gray-900 truncate">
-              {project?.title || '加载中...'}
-            </h1>
-            {chapter && (
-              <div className="text-xs text-gray-400">
-                第 {chapter.order} 章 · {chapter.title}
-                {hasUnsavedChanges && <span className="text-amber-500 ml-1">● 未保存</span>}
-                {lastSaved && !hasUnsavedChanges && (
-                  <span className="ml-1">· {lastSaved.toLocaleTimeString()}</span>
-                )}
-                <span className="ml-1">· {chapter.wordCount?.toLocaleString() || 0} 字</span>
-              </div>
-            )}
-          </div>
-        </div>
+    <div className="writing-editor-shell h-full flex flex-col">
+      <WritingEditorNav
+        project={project}
+        chapter={chapter}
+        editorMode={editorMode}
+        showAiMode={showAiMode}
+        hasUnsavedChanges={hasUnsavedChanges}
+        lastSaved={lastSaved}
+        saving={saving}
+        onGoBack={() => void handleGoBack()}
+        onSave={() => void handleManualSave()}
+        onSetMode={setMode}
+        onToggleReference={toggleReference}
+        onGuardedNavigate={handleGuardedNavigate}
+      />
 
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-0.5">
-            <ModeButton
-              active={editorMode === 'pure'}
-              label="写作"
-              onClick={() => setMode('pure')}
-            />
-            <ModeButton
-              active={editorMode === 'reference'}
-              label="参考"
-              onClick={toggleReference}
-            />
-            {showAiMode && (
-              <ModeButton
-                active={editorMode === 'ai'}
-                label="AI"
-                onClick={() => setMode(editorMode === 'ai' ? 'pure' : 'ai')}
-              />
-            )}
-            <ModeButton
-              active={editorMode === 'review'}
-              label="审阅"
-              onClick={() => setMode(editorMode === 'review' ? 'pure' : 'review')}
-            />
-          </div>
-
-          <div className="h-5 w-px bg-gray-200 mx-1" />
-
-          {chapter && (
-            <button
-              type="button"
-              onClick={() => handleSave()}
-              disabled={saving || !hasUnsavedChanges}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-medium transition-colors"
-            >
-              <IconSave size={14} />
-              {saving ? '...' : '保存'}
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden min-h-0">
         {project && (
           <div className="bg-gray-100 border-r border-gray-300 shadow-lg h-full">
             <ProjectNavigationPanel
