@@ -1,0 +1,21 @@
+---
+description: Novel Writer 协作基线、暂不做、规则优先级（高于 Ponytail）
+alwaysApply: true
+---
+
+# Novel Writer Baseline
+
+SSOT：`docs/CURRENT_BASELINE.md`
+
+- **分支**：`feature/workdetail-p1`（PR #7–#14、release gate `43b9c24`）
+- **下一战**：战果归档 / 休整 — 616-D（D-A–D-D）已收束；无授权新实现卡前不主动开战役
+
+**616-D 主链**：confirm → release-to-studio → start-writing → 写作器入口（D-C）+ 参考侧栏（D-B/D-D）+ 正文保存
+
+**暂不做**：P1-c、`release-to-studio` 门槛改造（未授权）、正文编辑器大改、创作室改 summary SSOT、legacy 表删除、长篇立宪
+
+## 规则优先级（高于 Ponytail）
+
+冲突时以 `docs/CURRENT_BASELINE.md`、`docs/tasks/CURSOR_REFERENCE.md`、当前授权 TASK 卡为准。
+
+**测试（硬规则）**：Ponytail 的「无框架单测」规则在本项目不适用，统一用 Jest + `npm run test:backend`；非平凡逻辑须有 Jest 测试或扩展现有套件，禁止用 assert demo 替代。执行已授权任务卡时说「按任务卡执行，normal mode」可抑制过度 YAGNI。

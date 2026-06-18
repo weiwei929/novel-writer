@@ -1,0 +1,14 @@
+# 数据库备份
+backend/prisma/*.bak*
+
+# 归档（避免 Agent 读到过期任务卡）
+docs/archive/
+docs/tasks/archive/
+
+# 临时文件
+*.tmp
+.cache/
+
+# 大文件
+*.mp4
+*.mov

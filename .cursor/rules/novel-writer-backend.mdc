@@ -1,0 +1,15 @@
+---
+description: Novel Writer 后端约定（Fastify/Prisma/Zod）
+globs: backend/**/*
+alwaysApply: false
+---
+
+# Backend
+
+来源：`docs/tasks/CURSOR_REFERENCE.md`
+
+- **栈**：Fastify 5 + Prisma 6 + SQLite + Zod + TypeScript
+- **路由前缀**：`/api/v2/...`
+- **响应格式**：`{ success, data, error }`
+- **验证**：Zod；**鉴权**：复用现有 auth middleware
+- DB 模型 `Project` 与前端路由 `work` 命名不一致是允许的

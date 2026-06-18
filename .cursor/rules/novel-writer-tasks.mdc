@@ -1,0 +1,16 @@
+---
+description: 任务卡格式与执行原则
+globs: docs/tasks/TASK-*.md
+alwaysApply: false
+---
+
+# Task Cards
+
+来源：`docs/tasks/TEMPLATE.md`、`docs/tasks/README.md`
+
+- 任务卡在 `docs/tasks/`，命名 `TASK-NNN-描述.md`
+- 必含：背景、操作步骤、预期结果、验证方法、回滚方案（可选）
+- **小卡快审**：范围尽量小，验证命令必须可执行（非模糊「确认正常」）
+- 执行已授权任务卡时：按卡内步骤做，不得 YAGNI 掉卡上明确要求的多文件改动
+- 开卡前读 `CURRENT_BASELINE.md`「暂不做」
+- 提交时机由任务卡写明，不要每卡一 commit

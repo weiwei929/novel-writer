@@ -43,6 +43,7 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 
@@ -60,6 +61,7 @@ coverage/
 # 备份文件
 *.bak
 *.backup
+backend/prisma/*.bak*
 
 # 媒体文件 (开发时忽略大文件)
 *.mp4

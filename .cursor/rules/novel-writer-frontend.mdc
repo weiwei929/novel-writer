@@ -1,0 +1,17 @@
+---
+description: Novel Writer 前端约定（React/Vite/Tailwind/Zustand/Monaco）
+globs: frontend/**/*
+alwaysApply: false
+---
+
+# Frontend
+
+来源：`docs/tasks/CURSOR_REFERENCE.md`
+
+- **栈**：Vite + React 18 + TypeScript + Tailwind + Zustand + Monaco
+- **状态**：Zustand；**API**：`frontend/src/services/api.ts`（axios）
+- **路由中枢**：`/work/:id` — 阶段决定详情页行为（提案/企划/创作/审阅/文集/暂存）
+- **创作编辑器**：`/writing/:projectId/:chapterId` — Monaco 纯 Markdown
+- **章节框架**（标题/梗概/排序）在 `/work/:id` 内，不用 Monaco
+- **UI 文案中文**，变量名/API 字段英文
+- **不要**「世界观」— 用「作品设定」（AI Prompt 除外）

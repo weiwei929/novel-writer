@@ -104,4 +104,4 @@ _settingSketch → workSetting + chapterPlanning
 - `docs/design/616-B-work-setting-minimal-model-draft.md`
 - `docs/design/0608-616-coordination-draft.md`
 - `docs/tasks/TASK-616-D-consultation.md`（616-D 会诊 · 已结案）
-- `design-P1-entry-architecture.md`（根目录，P1 已收束）
+- `docs/design/design-P1-entry-architecture.md`（P1 已收束）
