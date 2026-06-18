@@ -220,6 +220,17 @@ const WritingEditorPage: React.FC = () => {
     }
   }
 
+  const handleEditorSave = async (saveContent: string, context: 'autosave' | 'shortcut') => {
+    try {
+      await handleSave(saveContent)
+      if (context === 'shortcut') {
+        notifySuccess('保存成功', '章节内容已保存')
+      }
+    } catch {
+      notifyError('保存失败', '请检查网络后重试')
+    }
+  }
+
   const runWithSaveGuard = async (action: () => void) => {
     if (hasUnsavedChanges && chapter) {
       try {
@@ -370,12 +381,12 @@ const WritingEditorPage: React.FC = () => {
           <div className="w-1 bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 shadow-sm" />
         )}
 
-        <div className="flex-1 flex flex-col overflow-hidden bg-white relative z-20 shadow-xl border-y border-gray-200">
+        <div className="flex-1 flex flex-col overflow-hidden min-h-0 bg-white relative z-20 shadow-xl border-y border-gray-200">
           <MarkdownEditor
             ref={editorRef}
             key={chapterId}
             initialContent={content}
-            onSave={handleSave}
+            onEditorSave={handleEditorSave}
             onContentChange={handleContentChange}
             autoSave={editorPrefs.autoSave}
             autoSaveDelay={editorPrefs.autoSaveDelay}

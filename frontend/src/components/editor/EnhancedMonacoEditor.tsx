@@ -182,11 +182,11 @@ const EnhancedMonacoEditor = forwardRef<EnhancedMonacoEditorRef, EnhancedMonacoE
 
     editorInstance.updateOptions({ fontSize, lineHeight: Math.round(fontSize * 1.5) })
 
-    editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      if (onSave) {
+    if (onSave) {
+      editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
         onSave(editorInstance.getValue())
-      }
-    })
+      })
+    }
     
     // Initial stats
     updateStatistics(value)
