@@ -14,6 +14,7 @@ import {
   type DashboardOverview,
   type DashboardStageId,
 } from '../services/dashboard'
+import { describeApiErrorMessage } from '../types/api'
 
 const STAGE_META: {
   id: DashboardStageId
@@ -95,8 +96,10 @@ const HomePage: React.FC = () => {
           })
           if (firstWithData) setSelectedStage(firstWithData.id)
         }
-      } catch {
-        if (!cancelled) setError('加载仪表盘数据失败')
+      } catch (err) {
+        if (!cancelled) {
+          setError(describeApiErrorMessage(err, '加载仪表盘数据失败'))
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
