@@ -1,0 +1,53 @@
+# Normalize line endings to LF for all text files tracked in this repo.
+# See docs/design/archive/design-mode-trial-2026-06-20.md for the CRLF
+# normalization incident that motivated this file (2026-07-06).
+
+*               text=auto eol=lf
+
+# Explicit per-extension rules make intent obvious even on platforms
+# whose text=auto detection is conservative.
+*.md            text eol=lf
+*.markdown      text eol=lf
+*.ts            text eol=lf
+*.tsx           text eol=lf
+*.js            text eol=lf
+*.jsx           text eol=lf
+*.mjs           text eol=lf
+*.cjs           text eol=lf
+*.json          text eol=lf
+*.jsonc         text eol=lf
+*.prisma        text eol=lf
+*.sql           text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+*.toml          text eol=lf
+*.sh            text eol=lf
+*.bat           text eol=lf
+*.ps1           text eol=lf
+*.css           text eol=lf
+*.scss          text eol=lf
+*.html          text eol=lf
+*.svg           text eol=lf
+*.gitignore     text eol=lf
+*.gitattributes text eol=lf
+*.editorconfig  text eol=lf
+*.mdc           text eol=lf
+
+# Binary (must not be touched by autocrlf / line-ending normalization)
+*.png           binary
+*.jpg           binary
+*.jpeg          binary
+*.gif           binary
+*.ico           binary
+*.webp          binary
+*.pdf           binary
+*.zip           binary
+*.gz            binary
+*.tgz           binary
+*.tar           binary
+*.woff          binary
+*.woff2         binary
+*.ttf           binary
+*.eot           binary
+*.node          binary
+*.dll           binary
