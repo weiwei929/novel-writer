@@ -15,6 +15,27 @@ import {
   type DashboardStageId,
 } from '../services/dashboard'
 
+const STAGE_ENGLISH_LABEL: Record<DashboardStageId, string> = {
+  creative: 'Creating',
+  planning: 'Planning',
+  writing: 'Writing',
+  review: 'Reviewing',
+  library: 'Library',
+}
+
+function stageEnglishLabel(id: DashboardStageId): string {
+  return STAGE_ENGLISH_LABEL[id]
+}
+
+function StageTitle({ label, id }: { label: string; id: DashboardStageId }) {
+  return (
+    <>
+      {label}
+      <span className="font-normal text-gray-500"> | {stageEnglishLabel(id)}</span>
+    </>
+  )
+}
+
 const STAGE_META: {
   id: DashboardStageId
   label: string
@@ -23,6 +44,8 @@ const STAGE_META: {
   countSuffix: string
   disabled?: boolean
   accent: string
+  card: string
+  cardSelected: string
 }[] = [
   {
     id: 'creative',
@@ -31,6 +54,8 @@ const STAGE_META: {
     to: '/creative/chat',
     countSuffix: '部创意作品',
     accent: 'text-amber-600 bg-amber-50',
+    card: 'border-amber-200 bg-amber-50/70 hover:shadow-md',
+    cardSelected: 'border-amber-400 bg-amber-50 ring-2 ring-amber-200',
   },
   {
     id: 'planning',
@@ -39,6 +64,8 @@ const STAGE_META: {
     to: '/planning/projects',
     countSuffix: '个立项',
     accent: 'text-blue-600 bg-blue-50',
+    card: 'border-blue-200 bg-blue-50/70 hover:shadow-md',
+    cardSelected: 'border-blue-400 bg-blue-50 ring-2 ring-blue-200',
   },
   {
     id: 'writing',
@@ -47,6 +74,8 @@ const STAGE_META: {
     to: '/writing/projects',
     countSuffix: '部创作中',
     accent: 'text-indigo-600 bg-indigo-50',
+    card: 'border-indigo-200 bg-indigo-50/70 hover:shadow-md',
+    cardSelected: 'border-indigo-400 bg-indigo-50 ring-2 ring-indigo-200',
   },
   {
     id: 'review',
@@ -54,7 +83,9 @@ const STAGE_META: {
     icon: IconReview,
     to: '/editorial',
     countSuffix: '待审',
-    accent: 'text-amber-600 bg-amber-50',
+    accent: 'text-orange-600 bg-orange-50',
+    card: 'border-orange-200 bg-orange-50/70 hover:shadow-md',
+    cardSelected: 'border-orange-400 bg-orange-50 ring-2 ring-orange-200',
   },
   {
     id: 'library',
@@ -63,6 +94,8 @@ const STAGE_META: {
     to: '/library',
     countSuffix: '部作品',
     accent: 'text-emerald-600 bg-emerald-50',
+    card: 'border-emerald-200 bg-emerald-50/70 hover:shadow-md',
+    cardSelected: 'border-emerald-400 bg-emerald-50 ring-2 ring-emerald-200',
   },
 ]
 
@@ -120,8 +153,8 @@ const HomePage: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-fade-in">
       <header>
-        <h1 className="text-2xl font-bold text-gray-900">我的创作台</h1>
-        <p className="text-sm text-gray-500 mt-1">五段管线一览</p>
+        <h1 className="text-2xl font-bold text-gray-900">我的小说创作工作台</h1>
+        <p className="text-sm text-gray-500 mt-1">五阶段创作流程一览</p>
       </header>
 
       {error && (
@@ -141,20 +174,26 @@ const HomePage: React.FC = () => {
                 s.disabled
                   ? 'border-gray-200 bg-gray-50 opacity-70 cursor-not-allowed'
                   : isSelected
-                    ? 'border-amber-400 bg-amber-50/50 ring-2 ring-amber-200'
-                    : 'border-gray-200 bg-white hover:shadow-md cursor-pointer'
+                    ? s.cardSelected
+                    : `${s.card} cursor-pointer`
               }`}
             >
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${s.accent}`}>
                 <Icon size={20} />
               </div>
-              <div className="text-sm font-semibold text-gray-900">{s.label}</div>
-              <div className="mt-2 text-lg font-bold text-gray-900">
-                {s.disabled ? '即将推出' : count}
+              <div className="text-sm font-semibold text-gray-900">
+                <StageTitle label={s.label} id={s.id} />
               </div>
-              {!s.disabled && (
-                <div className="text-xs text-gray-500">{s.countSuffix}</div>
-              )}
+              <div className="mt-2 text-lg font-bold text-gray-900">
+                {s.disabled ? (
+                  '即将推出'
+                ) : (
+                  <>
+                    {count}
+                    <span className="ml-1 text-sm font-normal text-gray-500">{s.countSuffix}</span>
+                  </>
+                )}
+              </div>
             </div>
           )
           if (s.disabled) {
@@ -175,7 +214,9 @@ const HomePage: React.FC = () => {
 
       <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b flex items-center justify-between">
-          <h2 className="text-base font-semibold text-gray-900">{stage.label}</h2>
+          <h2 className="text-base font-semibold text-gray-900">
+            <StageTitle label={stage.label} id={stage.id} />
+          </h2>
           <Link
             to={stage.to}
             className="text-sm text-amber-700 hover:underline inline-flex items-center gap-1"

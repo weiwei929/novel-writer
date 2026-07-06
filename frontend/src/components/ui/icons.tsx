@@ -145,6 +145,16 @@ export const IconFeather = createIcon("IconFeather", (accentFill) => (
   </>
 ));
 
+/** 顶栏品牌标：Writer 首字母 W */
+export const IconBrandLogo = createIcon("IconBrandLogo", () => (
+  <>
+    <path
+      d="M5.5 8 8.4 16.8 12 10.6 15.6 16.8 18.5 8"
+      strokeWidth={2.35}
+    />
+  </>
+));
+
 export const IconPlus = createIcon("IconPlus", (accentFill) => (
   <>
     <path d="M12 5.5v13" />
