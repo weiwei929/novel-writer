@@ -27,17 +27,46 @@
 
 ## 主战场（物理路径）
 
-**唯一日常开发目录**：
+**唯一日常开发目录**（Cursor IDE 本机）：
 
 ```text
 D:/workspace/content/docs/novel-writer
 ```
 
-开工前必须自检（或在会话第一句告知 Agent）：
+当前已知基线（以本机 `git` 输出为准，会随开发推进变化）：
+
+```text
+分支：ui/design-mode-trial
+HEAD：见 git log -1
+远端：应与 origin 同步后再开新活
+```
+
+### VM / MCP bash 同名路径（作废）
+
+Claude 3P、Codex 等工具的 **VM / `mcp__workspace__bash`** 里可能出现**完全相同的路径字符串** `D:\workspace\content\docs\novel-writer`，但那是**另一台机器或沙箱里的独立拷贝**，与本机主战场**不是同一份文件系统**。
+
+| 环境 | 状态 |
+|------|------|
+| **Cursor IDE 本机** | ✅ 主战场 — 唯一可 commit / push 的地方 |
+| **VM / mcp bash 同名路径** | ❌ 作废 — 不要修、不要 commit、不要 push |
+
+**路径字符串相同 ≠ 同一仓库。** 参谋长若未拿到本机 PowerShell 的命令输出，**不得**自行推断 index 损坏、改动文件数、HEAD 等 git 状态。
+
+### 参谋长（Codex / Claude 3P）权限
+
+| 允许 | 禁止 |
+|------|------|
+| 审 `docs/`、出任务卡、看 GitHub 远端 PR/issue | 在本机或 VM 里执行 git write、改代码 |
+| 基于用户粘贴的本机命令输出做分析 | 根据 VM 侧 `git status` 下结论 |
+
+需要仓库真相时：**司令官从本机 PowerShell 跑命令，把结果贴给参谋长**。
+
+开工前自检（本机执行，或在会话第一句告知 Agent）：
 
 ```powershell
 pwd
 git branch --show-current
+git log -1 --oneline
 git worktree list
 git status -sb
 ```
