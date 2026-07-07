@@ -1,12 +1,14 @@
 /**
- * 快速写作闭环人工 smoke（一次性脚本，不纳入产品构建）
- * 对应任务卡：Cursor 执行卡：novel-writer 快速写作闭环（2026-07-07）任务 4
+ * 「继续写作」入口人工 smoke（一次性脚本，不纳入产品构建）
+ * 对应任务卡：Cursor 修复卡：novel-writer「继续写作」入口（2026-07-07）任务 1
  *
- * 已知阻塞（2026-07-07 会诊前）：步骤 4 起会失败 —— POST /projects 落库的新作品
- * 原始状态为 Prisma 默认 'draft'，GET 读路径统一经 withMappedProjectStatus 映射为
- * 'planning'，getWorkPermissions('planning').body === false，写作页 loadData 据此
- * 重定向回 /work/:id，而非停留在写作页。这是设计假设失效，非本脚本或 UI 代码 bug，
- * 详见执行卡回报。步骤 1-3（入口可见、最小表单、仅建 1 作品 1 章）仍可通过。
+ * 业务语义（会诊裁决后）：HomePage「继续写作」只恢复最近的创作中（status=writing）
+ * 作品与其最近更新的章节；不创建任何 Project / Chapter；无创作中作品时进入创作室
+ * 列表并提示「暂无创作中作品」。
+ *
+ * 本脚本原为「快速新建作品并直达写作页」的旧假设验证脚本，已被 2026-07-07 会诊证伪
+ * （新建作品落库为 Prisma 默认 'draft'，GET 统一映射为 'planning'，写作页据此重定向），
+ * 现改写为验证会诊裁决后的新语义，不再验证旧假设。
  *
  * 用法：cd frontend && npm install --no-save playwright && npx playwright install chromium
  *       node scripts/quick-writing-loop-smoke.mjs
@@ -21,8 +23,6 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..', '..')
 const BASE_URL = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:3000'
-const AUTOSAVE_DELAY = 1000
-const OBSERVE_MS = AUTOSAVE_DELAY + 1200
 
 function readPassword() {
   try {
@@ -53,33 +53,12 @@ async function apiGet(token, path) {
   return res.json()
 }
 
-async function apiDelete(token, path) {
-  const res = await fetch(`${BASE_URL}/api/v2${path}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  return res.status
-}
-
 function assert(cond, label, evidence) {
   evidence.checks.push({ label, pass: !!cond })
   if (!cond) evidence.failures.push(label)
 }
 
-async function run() {
-  const evidence = {
-    at: new Date().toISOString(),
-    baseUrl: BASE_URL,
-    checks: [],
-    failures: [],
-    consoleErrors: [],
-    createdProjectId: null,
-    createdChapterId: null,
-    passed: false,
-  }
-
-  const token = await loginToken()
-  const browser = await chromium.launch({ headless: true })
+async function newContext(browser, token) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } })
   await context.addInitScript(t => {
     localStorage.setItem('novel_auth_token', t)
@@ -100,140 +79,132 @@ async function run() {
       }),
     )
   }, token)
+  return context
+}
 
-  const page = await context.newPage()
-  page.on('console', msg => {
-    if (msg.type() === 'error') evidence.consoleErrors.push(msg.text())
-  })
+async function run() {
+  const evidence = {
+    at: new Date().toISOString(),
+    baseUrl: BASE_URL,
+    checks: [],
+    failures: [],
+    passed: false,
+  }
+
+  const token = await loginToken()
+  const browser = await chromium.launch({ headless: true })
 
   try {
-    // --- 1. HomePage 快速入口可见 ---
-    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30000 })
-    const quickBtn = page.getByRole('button', { name: /快速开始写作/ })
-    await quickBtn.waitFor({ state: 'visible', timeout: 15000 })
-    assert(true, '1. HomePage 顶部可见「快速开始写作」入口', evidence)
+    // --- 0. 落盘前证据：当前 writing 作品与其最近章节（现有稳定排序：Project/Chapter.updatedAt） ---
+    const writingRes = await apiGet(token, '/projects?status=writing')
+    const writingProjects = (writingRes.data || [])
+      .slice()
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    evidence.writingProjectsBefore = writingProjects.map(p => ({ id: p.id, updatedAt: p.updatedAt }))
 
-    // --- 2. 只填作品名称创建 ---
-    await quickBtn.click()
-    const titleInput = page.locator('input[placeholder="输入作品名称"]')
-    await titleInput.waitFor({ state: 'visible', timeout: 5000 })
-    const title = `冒烟测试作品-${Date.now()}`
-    await titleInput.fill(title)
-    assert(true, '2. 快速创建表单仅展示作品名称输入框', evidence)
+    const projectsBeforeRes = await apiGet(token, '/projects')
+    const projectCountBefore = (projectsBeforeRes.data || []).length
+    evidence.projectCountBefore = projectCountBefore
 
-    await page.getByRole('button', { name: '开始写作 →' }).click()
-
-    // --- 3. 直接进入写作路由；只产生 1 个作品 + 1 章 ---
-    await page.waitForURL(/\/writing\/[^/]+\/[^/]+/, { timeout: 15000 })
-    const url = new URL(page.url())
-    const parts = url.pathname.split('/').filter(Boolean) // ['writing', pid, cid]
-    const projectId = parts[1]
-    const chapterId = parts[2]
-    evidence.createdProjectId = projectId
-    evidence.createdChapterId = chapterId
-    assert(!!projectId && !!chapterId, '3. 创建成功后 URL 落在 /writing/:projectId/:chapterId', evidence)
-
-    const chaptersOfProject = await apiGet(token, `/chapters/project/${projectId}`)
-    assert(
-      Array.isArray(chaptersOfProject.data) && chaptersOfProject.data.length === 1,
-      '3b. 该作品下只有 1 章（未重复创建）',
-      evidence,
-    )
-
-    // --- 4. 默认纯净态：章节导航面板不可见 ---
-    try {
-      await page.waitForSelector('.monaco-editor', { timeout: 20000 })
-    } catch (e) {
-      await page.screenshot({ path: join(ROOT, 'reports', 'smoke-debug.png'), fullPage: true })
-      writeFileSync(join(ROOT, 'reports', 'smoke-debug.html'), await page.content())
-      evidence.debugUrl = page.url()
-      throw e
+    let expectedProject = null
+    let expectedChapter = null
+    let chapterCountBefore = null
+    if (writingProjects.length > 0) {
+      expectedProject = writingProjects[0]
+      const chaptersRes = await apiGet(token, `/chapters/project/${expectedProject.id}`)
+      const chapters = (chaptersRes.data || [])
+        .slice()
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      chapterCountBefore = chapters.length
+      expectedChapter = chapters[0] || null
     }
-    await page.waitForTimeout(500)
-    const navVisibleInitially = await page.getByText('编辑作品章节').isVisible().catch(() => false)
-    assert(!navVisibleInitially, '4. 写作页默认收起章节导航（无「编辑作品章节」可见）', evidence)
-    const chapterPosVisible = await page.getByText(/第 1 章/).first().isVisible().catch(() => false)
-    assert(chapterPosVisible, '4b. 顶栏始终显示「第 1 章」位置提示', evidence)
+    evidence.expectedProjectId = expectedProject?.id ?? null
+    evidence.expectedChapterId = expectedChapter?.id ?? null
+    evidence.chapterCountBefore = chapterCountBefore
 
-    // --- 5. 输入正文，等待自动保存 ---
-    const marker = `冒烟正文-${Date.now()}`
-    await page.locator('.monaco-editor').click()
-    await page.keyboard.type(marker)
-    await page.waitForTimeout(OBSERVE_MS)
-    const savedVisible = await page.getByText(/已保存/).first().isVisible().catch(() => false)
-    assert(savedVisible, '5. 自动保存后顶栏出现「已保存」', evidence)
+    // ============ 场景 A：存在 writing 作品 → 恢复最近作品的最近章节 ============
+    {
+      const context = await newContext(browser, token)
+      const page = await context.newPage()
+      try {
+        await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30000 })
+        const continueBtn = page.getByRole('button', { name: '继续写作' })
+        await continueBtn.waitFor({ state: 'visible', timeout: 15000 })
+        assert(true, 'A1. HomePage 显示「继续写作」入口', evidence)
 
-    const chapterAfterSave = await apiGet(token, `/chapters/${chapterId}`)
-    assert(
-      typeof chapterAfterSave.data?.content === 'string' && chapterAfterSave.data.content.includes(marker),
-      '5b. 后端内容确实写入了刚输入的正文',
-      evidence,
-    )
+        assert(
+          !(await page.getByRole('button', { name: /快速开始写作/ }).isVisible().catch(() => false)),
+          'A1b. 旧「快速开始写作」文案已不再出现',
+          evidence,
+        )
 
-    // --- 6. 刷新恢复 ---
-    await page.reload({ waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('.monaco-editor', { timeout: 20000 })
-    await page.waitForTimeout(500)
-    const editorText = await page.locator('.monaco-editor').innerText().catch(() => '')
-    assert(editorText.includes(marker), '6. 刷新后正文恢复（编辑器内容含标记）', evidence)
+        if (expectedProject && expectedChapter) {
+          await continueBtn.click()
+          await page.waitForURL(/\/writing\/[^/]+\/[^/]+/, { timeout: 15000 })
+          const url = new URL(page.url())
+          const parts = url.pathname.split('/').filter(Boolean)
+          assert(parts[1] === expectedProject.id, 'A2. 进入的是最近更新的 writing 作品', evidence)
+          assert(parts[2] === expectedChapter.id, 'A3. 进入的是该作品最近更新的章节', evidence)
 
-    // --- 7. 展开/收起章节目录 ---
-    const catalogBtn = page.getByRole('button', { name: '目录' })
-    await catalogBtn.click()
-    await page.waitForTimeout(300)
-    const navVisibleExpanded = await page.getByText('编辑作品章节').isVisible().catch(() => false)
-    assert(navVisibleExpanded, '7. 点击「目录」后章节导航展开', evidence)
-    await catalogBtn.click()
-    await page.waitForTimeout(300)
-    const navVisibleCollapsed = await page.getByText('编辑作品章节').isVisible().catch(() => false)
-    assert(!navVisibleCollapsed, '7b. 再次点击「目录」后收起', evidence)
-
-    // --- 8. 模拟保存失败：常驻提示 + 正文仍在 + 编辑器未被整页错误替换 ---
-    await page.route(`**/api/v2/chapters/${chapterId}`, route => {
-      if (route.request().method() === 'PUT') {
-        route.fulfill({ status: 500, body: JSON.stringify({ success: false, error: { code: 500, message: 'simulated failure' } }) })
-      } else {
-        route.continue()
+          const quickFormVisible = await page
+            .locator('input[placeholder="输入作品名称"]')
+            .isVisible()
+            .catch(() => false)
+          assert(!quickFormVisible, 'A4. 未打开任何「快速创建作品」表单（原错误行为已不发生）', evidence)
+        } else {
+          assert(false, 'A2/A3. 环境中不存在 writing 作品，场景 A 无法验证（见 writingProjectsBefore）', evidence)
+        }
+      } finally {
+        await context.close()
       }
-    })
-    const failMarker = `失败态标记-${Date.now()}`
-    await page.locator('.monaco-editor').click()
-    await page.keyboard.press('Control+End')
-    await page.keyboard.type(failMarker)
-    await page.waitForTimeout(OBSERVE_MS)
-    const failVisible = await page.getByText(/保存失败/).first().isVisible().catch(() => false)
-    assert(failVisible, '8. 保存失败后顶栏出现常驻「保存失败」提示', evidence)
-    const editorStillThere = await page.locator('.monaco-editor').isVisible().catch(() => false)
-    assert(editorStillThere, '8b. 保存失败未被整页错误屏替换，编辑器仍在', evidence)
-    const editorTextAfterFail = await page.locator('.monaco-editor').innerText().catch(() => '')
-    assert(editorTextAfterFail.includes(failMarker), '8c. 保存失败后正文仍保留在编辑器中', evidence)
+    }
 
-    // --- 9. 手动重试恢复「已保存」 ---
-    await page.unroute(`**/api/v2/chapters/${chapterId}`)
-    await page.getByText(/保存失败/).first().click()
-    await page.waitForTimeout(1500)
-    const recoveredVisible = await page.getByText(/已保存/).first().isVisible().catch(() => false)
-    assert(recoveredVisible, '9. 点击重试后顶栏恢复「已保存」', evidence)
-    const failGone = await page.getByText(/保存失败/).first().isVisible().catch(() => false)
-    assert(!failGone, '9b. 「保存失败」提示消失', evidence)
+    // --- 场景 A 后：确认点击未创建任何 Project / Chapter ---
+    const projectsAfterRes = await apiGet(token, '/projects')
+    const projectCountAfter = (projectsAfterRes.data || []).length
+    evidence.projectCountAfter = projectCountAfter
+    assert(projectCountAfter === projectCountBefore, 'A5. 点击「继续写作」前后 Project 总数不变', evidence)
 
-    const chapterAfterRetry = await apiGet(token, `/chapters/${chapterId}`)
-    assert(
-      chapterAfterRetry.data?.content?.includes(failMarker),
-      '9c. 重试保存后后端内容包含失败态时输入的正文（无丢稿）',
-      evidence,
-    )
+    if (expectedProject) {
+      const chaptersAfterRes = await apiGet(token, `/chapters/project/${expectedProject.id}`)
+      const chapterCountAfter = (chaptersAfterRes.data || []).length
+      evidence.chapterCountAfter = chapterCountAfter
+      assert(chapterCountAfter === chapterCountBefore, 'A6. 点击「继续写作」前后该作品 Chapter 总数不变', evidence)
+    }
+
+    // ============ 场景 B：不存在 writing 作品 → 进入创作室列表 + 提示 ============
+    {
+      const context = await newContext(browser, token)
+      const page = await context.newPage()
+      try {
+        await page.route('**/api/v2/projects?status=writing', route => {
+          route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ success: true, data: [] }),
+          })
+        })
+        await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30000 })
+        const continueBtn = page.getByRole('button', { name: '继续写作' })
+        await continueBtn.waitFor({ state: 'visible', timeout: 15000 })
+        await continueBtn.click()
+
+        await page.waitForURL(/\/writing\/projects/, { timeout: 15000 })
+        assert(true, 'B1. 无 writing 作品时进入创作室列表（/writing/projects）', evidence)
+
+        const emptyHint = await page.getByText('暂无创作中作品').first().isVisible().catch(() => false)
+        assert(emptyHint, 'B2. 页面显示「暂无创作中作品」提示', evidence)
+      } finally {
+        await context.close()
+      }
+    }
   } finally {
     await browser.close()
-    if (evidence.createdProjectId) {
-      const status = await apiDelete(token, `/projects/${evidence.createdProjectId}`)
-      evidence.cleanup = { projectId: evidence.createdProjectId, deleteStatus: status }
-    }
   }
 
   evidence.passed = evidence.failures.length === 0
   mkdirSync(join(ROOT, 'reports'), { recursive: true })
-  const outPath = join(ROOT, 'reports', `quick-writing-loop-smoke-${Date.now()}.json`)
+  const outPath = join(ROOT, 'reports', `continue-writing-smoke-${Date.now()}.json`)
   writeFileSync(outPath, JSON.stringify(evidence, null, 2))
   console.log(JSON.stringify(evidence, null, 2))
   console.log(`\n证据文件：${outPath}`)

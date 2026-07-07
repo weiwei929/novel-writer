@@ -1,19 +1,15 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CreateProjectData, Project, ProjectStatus, projectsApi, chaptersApi } from '../../services/api'
-import { IconClose } from '../ui/icons'
+import { CreateProjectData, ProjectStatus, projectsApi, chaptersApi } from '../../services/api'
 
 export interface CreateProjectModalProps {
   onClose: () => void
   onSuccess: () => void
-  /** quick：HomePage「快速开始写作」入口，仅要求作品名称，创建后直接进写作页 */
-  variant?: 'full' | 'quick'
 }
 
 export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   onClose,
   onSuccess,
-  variant = 'full',
 }) => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState<CreateProjectData & { tags: string[] }>(
@@ -30,45 +26,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   const [tagInput, setTagInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  /** 快速创建的部分成功场景：作品已建好但第一章失败时缓存，重试不重复建作品 */
-  const [createdProject, setCreatedProject] = useState<Project | null>(null)
-
-  const handleQuickSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!createdProject && !formData.title.trim()) return
-
-    setLoading(true)
-    setError(null)
-    try {
-      const project =
-        createdProject ??
-        (await projectsApi.create({
-          title: formData.title.trim(),
-          author: '',
-          status: 'draft' as ProjectStatus,
-        }))
-      if (!createdProject) setCreatedProject(project)
-
-      const chapter = await chaptersApi.create({
-        projectId: project.id,
-        title: '第1章',
-        content: '',
-        order: 1,
-      })
-
-      onSuccess()
-      navigate(`/writing/${project.id}/${chapter.id}?from=writing`)
-    } catch (err) {
-      setError(
-        createdProject
-          ? `《${createdProject.title}》已创建，但第一章创建失败，请重试`
-          : '创建作品失败，请重试'
-      )
-      console.error('Quick create failed:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -134,63 +91,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
       ...formData,
       tags: formData.tags.filter(tag => tag !== tagToRemove),
     })
-  }
-
-  if (variant === 'quick') {
-    return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">开始一部新作品</h2>
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-1 -mr-1 text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100"
-            >
-              <IconClose size={18} />
-            </button>
-          </div>
-
-          {error && (
-            <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleQuickSubmit} className="mt-4 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">作品名称</label>
-              <input
-                autoFocus
-                type="text"
-                value={formData.title}
-                onChange={e => setFormData({ ...formData, title: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
-                placeholder="输入作品名称"
-                disabled={!!createdProject}
-              />
-            </div>
-            <p className="text-xs text-gray-400">创建后将自动生成「第 1 章」，直接进入写作页。</p>
-            <div className="flex gap-3 pt-1">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg text-sm hover:bg-gray-50"
-              >
-                取消
-              </button>
-              <button
-                type="submit"
-                disabled={loading || (!createdProject && !formData.title.trim())}
-                className="flex-1 bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? '创建中…' : createdProject ? '重试创建第一章 →' : '开始写作 →'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    )
   }
 
   return (

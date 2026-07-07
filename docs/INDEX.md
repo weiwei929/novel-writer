@@ -57,7 +57,7 @@
 
 | 文件 / 目录 | 说明 |
 |-------------|------|
-| [quick-writing-entry-2026-07-07.md](./design/quick-writing-entry-2026-07-07.md) | 快速开始写作 UI/交互设计方案；待 Commander 审阅 → 交 Codex 收敛实施 |
+| [quick-writing-entry-2026-07-07.md](./design/quick-writing-entry-2026-07-07.md) | HomePage 快速入口设计；原「新建作品直达写作页」方案已证伪，更正为「继续写作」（恢复最近创作中作品/章节，不新建对象），已实施 |
 | [design-mode-trial-2026-06-20.md](./design/design-mode-trial-2026-06-20.md) | Design Mode 视觉试验记录；代码在分支 `ui/design-mode-trial` |
 | [0608-constitutional-guidance/](./design/0608-constitutional-guidance/) | 0608 立宪指导与 workspace 模型 |
 | [616-content-asset-constitution-v0.2.1.md](./design/616-content-asset-constitution-v0.2.1.md) | 616 内容资产宪法 |

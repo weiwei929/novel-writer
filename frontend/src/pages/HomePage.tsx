@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   IconCreative,
   IconPlanning,
@@ -15,7 +15,8 @@ import {
   type DashboardOverview,
   type DashboardStageId,
 } from '../services/dashboard'
-import { CreateProjectModal } from '../components/projects/CreateProjectModal'
+import { projectsApi, chaptersApi } from '../services/api'
+import { useNotifications } from '../hooks/useNotifications'
 
 const STAGE_ENGLISH_LABEL: Record<DashboardStageId, string> = {
   creative: 'Creating',
@@ -112,11 +113,43 @@ function formatRelativeTime(iso: string): string {
 }
 
 const HomePage: React.FC = () => {
+  const navigate = useNavigate()
+  const { info } = useNotifications()
   const [loading, setLoading] = useState(true)
   const [overview, setOverview] = useState<DashboardOverview | null>(null)
   const [selectedStage, setSelectedStage] = useState<DashboardStageId>('creative')
   const [error, setError] = useState<string | null>(null)
-  const [showQuickStart, setShowQuickStart] = useState(false)
+  const [continuing, setContinuing] = useState(false)
+
+  /**
+   * 继续写作：只读恢复最近更新的 writing 作品与其最近更新的章节，不创建任何
+   * Project / Chapter。无合法候选时进入创作室列表并提示。
+   */
+  const handleContinueWriting = async () => {
+    if (continuing) return
+    setContinuing(true)
+    try {
+      const writingProjects = await projectsApi.getAll(undefined, 'writing')
+      const sortedProjects = [...writingProjects].sort(
+        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      )
+      for (const project of sortedProjects) {
+        const chapters = await chaptersApi.getByProjectId(project.id)
+        if (chapters.length === 0) continue
+        const latestChapter = [...chapters].sort(
+          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        )[0]
+        navigate(`/writing/${project.id}/${latestChapter.id}`)
+        return
+      }
+      info('暂无创作中作品')
+      navigate('/writing/projects')
+    } catch {
+      setError('加载创作中作品失败')
+    } finally {
+      setContinuing(false)
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -162,11 +195,12 @@ const HomePage: React.FC = () => {
         </div>
         <button
           type="button"
-          onClick={() => setShowQuickStart(true)}
-          className="inline-flex items-center gap-1.5 self-start rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 transition-colors shrink-0"
+          onClick={() => void handleContinueWriting()}
+          disabled={continuing}
+          className="inline-flex items-center gap-1.5 self-start rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 transition-colors shrink-0 disabled:opacity-50"
         >
           <IconPenTool size={16} />
-          快速开始写作
+          {continuing ? '正在恢复…' : '继续写作'}
           <IconArrowRight size={14} />
         </button>
       </header>
@@ -290,14 +324,6 @@ const HomePage: React.FC = () => {
             ))}
           </ul>
         </section>
-      )}
-
-      {showQuickStart && (
-        <CreateProjectModal
-          variant="quick"
-          onClose={() => setShowQuickStart(false)}
-          onSuccess={() => setShowQuickStart(false)}
-        />
       )}
     </div>
   )
