@@ -7,6 +7,7 @@ import {
   IconReview,
   IconLibrary,
   IconArrowRight,
+  IconPenTool,
   type IconComponent,
 } from '../components/ui/icons'
 import {
@@ -14,6 +15,7 @@ import {
   type DashboardOverview,
   type DashboardStageId,
 } from '../services/dashboard'
+import { CreateProjectModal } from '../components/projects/CreateProjectModal'
 
 const STAGE_ENGLISH_LABEL: Record<DashboardStageId, string> = {
   creative: 'Creating',
@@ -114,6 +116,7 @@ const HomePage: React.FC = () => {
   const [overview, setOverview] = useState<DashboardOverview | null>(null)
   const [selectedStage, setSelectedStage] = useState<DashboardStageId>('creative')
   const [error, setError] = useState<string | null>(null)
+  const [showQuickStart, setShowQuickStart] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -152,9 +155,20 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-fade-in">
-      <header>
-        <h1 className="text-2xl font-bold text-gray-900">我的小说创作工作台</h1>
-        <p className="text-sm text-gray-500 mt-1">五阶段创作流程一览</p>
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">我的小说创作工作台</h1>
+          <p className="text-sm text-gray-500 mt-1">五阶段创作流程一览</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowQuickStart(true)}
+          className="inline-flex items-center gap-1.5 self-start rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 transition-colors shrink-0"
+        >
+          <IconPenTool size={16} />
+          快速开始写作
+          <IconArrowRight size={14} />
+        </button>
       </header>
 
       {error && (
@@ -276,6 +290,14 @@ const HomePage: React.FC = () => {
             ))}
           </ul>
         </section>
+      )}
+
+      {showQuickStart && (
+        <CreateProjectModal
+          variant="quick"
+          onClose={() => setShowQuickStart(false)}
+          onSuccess={() => setShowQuickStart(false)}
+        />
       )}
     </div>
   )

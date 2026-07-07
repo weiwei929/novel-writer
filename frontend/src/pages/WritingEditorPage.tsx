@@ -1,4 +1,4 @@
-import { IconArrowLeft, IconSave } from '../components/ui/icons'
+import { IconAlert, IconArrowLeft, IconCheck, IconLoading, IconSave } from '../components/ui/icons'
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import MarkdownEditor, { MarkdownEditorRef } from '../components/editor/MarkdownEditor'
@@ -94,7 +94,10 @@ const WritingEditorPage: React.FC = () => {
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  /** 保存失败态，独立于页面级 error（避免整页错误屏遮住正文，见执行卡任务 3） */
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [showProjectMetadata, setShowProjectMetadata] = useState(false)
+  const [showChapterNav, setShowChapterNav] = useState(false)
   const [editorMode, setEditorMode] = useState<EditorMode>('pure')
 
   const [referenceWidth] = useState(() => {
@@ -144,6 +147,15 @@ const WritingEditorPage: React.FC = () => {
     return () => window.removeEventListener('beforeunload', handler)
   }, [hasUnsavedChanges])
 
+  useEffect(() => {
+    if (!showChapterNav) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowChapterNav(false)
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [showChapterNav])
+
   const loadData = async (pId: string, cId: string) => {
     try {
       setLoading(true)
@@ -162,6 +174,7 @@ const WritingEditorPage: React.FC = () => {
       setChapter(chapterData)
       setContent(chapterData.content || '')
       setHasUnsavedChanges(false)
+      setSaveError(null)
     } catch (err: unknown) {
       console.error('加载数据失败:', err)
       const message = err instanceof Error ? err.message : ''
@@ -233,8 +246,11 @@ const WritingEditorPage: React.FC = () => {
       await updateProjectWordCount(newWordCount)
       setHasUnsavedChanges(false)
       setLastSaved(new Date())
+      setSaveError(null)
     } catch (err) {
-      setError('保存章节失败')
+      // 保存失败只置 saveError，不动页面级 error：避免整页错误屏顶替编辑器，
+      // 正文内容（content state）和 hasUnsavedChanges 原样保留，允许手动重试。
+      setSaveError('保存失败，点击重试')
       console.error('Error saving chapter:', err)
       throw err
     } finally {
@@ -248,10 +264,11 @@ const WritingEditorPage: React.FC = () => {
         await handleSave()
         notifySuccess('自动保存成功', '已保存当前章节更改')
       } catch {
-        // handleSave 已设置 error
+        // handleSave 已设置 saveError，切章前的保存失败不阻断导航
       }
     }
     navigate(writingChapterPath(projectId!, selectedChapter.id))
+    setShowChapterNav(false)
   }
 
   const handleGoBack = async () => {
@@ -260,7 +277,7 @@ const WritingEditorPage: React.FC = () => {
         await handleSave()
         notifySuccess('自动保存成功', '已保存当前章节更改')
       } catch {
-        // handleSave 已设置 error
+        // handleSave 已设置 saveError，返回前的保存失败不阻断导航
       }
     }
     if (projectId) navigate(workDetailPath(projectId))
@@ -361,13 +378,33 @@ const WritingEditorPage: React.FC = () => {
               {project?.title || '加载中...'}
             </h1>
             {chapter && (
-              <div className="text-xs text-gray-400">
-                第 {chapter.order} 章 · {chapter.title}
-                {hasUnsavedChanges && <span className="text-amber-500 ml-1">● 未保存</span>}
-                {lastSaved && !hasUnsavedChanges && (
-                  <span className="ml-1">· {lastSaved.toLocaleTimeString()}</span>
-                )}
-                <span className="ml-1">· {chapter.wordCount?.toLocaleString() || 0} 字</span>
+              <div className="text-xs text-gray-400 flex items-center gap-1 flex-wrap">
+                <span>第 {chapter.order} 章 · {chapter.title}</span>
+                <span>·</span>
+                {saveError ? (
+                  <button
+                    type="button"
+                    onClick={() => handleSave()}
+                    className="inline-flex items-center gap-1 text-amber-600 font-medium hover:text-amber-700"
+                    title="点击重试保存"
+                  >
+                    <IconAlert size={12} />
+                    {saveError}
+                  </button>
+                ) : saving ? (
+                  <span className="inline-flex items-center gap-1">
+                    <IconLoading size={12} />
+                    正在保存…
+                  </span>
+                ) : hasUnsavedChanges ? (
+                  <span>● 编辑中…</span>
+                ) : lastSaved ? (
+                  <span className="inline-flex items-center gap-1 text-emerald-600">
+                    <IconCheck size={12} />
+                    已保存 · {lastSaved.toLocaleTimeString()}
+                  </span>
+                ) : null}
+                <span>· {chapter.wordCount?.toLocaleString() || 0} 字</span>
               </div>
             )}
           </div>
@@ -375,6 +412,13 @@ const WritingEditorPage: React.FC = () => {
 
         <div className="flex items-center gap-2 shrink-0">
           <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-0.5">
+            {project && (
+              <ModeButton
+                active={showChapterNav}
+                label="目录"
+                onClick={() => setShowChapterNav(v => !v)}
+              />
+            )}
             <ModeButton
               active={editorMode === 'pure'}
               label="写作"
@@ -415,23 +459,24 @@ const WritingEditorPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
-        {project && (
-          <div className="bg-gray-100 border-r border-gray-300 shadow-lg h-full">
-            <ProjectNavigationPanel
-              project={project}
-              chapters={chapters}
-              currentChapter={chapter}
-              onChapterSelect={handleChapterSelect}
-              onProjectSettings={() => setShowProjectMetadata(true)}
-              onChaptersRefresh={refreshChapters}
-              className="flex-shrink-0"
+      <div className="flex-1 flex overflow-hidden relative">
+        {project && showChapterNav && (
+          <>
+            <div
+              className="absolute inset-0 z-30 bg-black/20"
+              onClick={() => setShowChapterNav(false)}
             />
-          </div>
-        )}
-
-        {project && (
-          <div className="w-1 bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 shadow-sm" />
+            <div className="absolute left-0 top-0 bottom-0 z-40 shadow-2xl">
+              <ProjectNavigationPanel
+                project={project}
+                chapters={chapters}
+                currentChapter={chapter}
+                onChapterSelect={handleChapterSelect}
+                onProjectSettings={() => setShowProjectMetadata(true)}
+                onChaptersRefresh={refreshChapters}
+              />
+            </div>
+          </>
         )}
 
         <div className="flex-1 flex flex-col overflow-hidden bg-white relative z-20 shadow-xl border-y border-gray-200">
