@@ -23,6 +23,20 @@
 | [ai-integration-design.md](./ai-integration-design.md) | AI（Day 3 再动） |
 | [../plan/DAY1-DESIGN-REVIEW-2026-06-03.md](../plan/DAY1-DESIGN-REVIEW-2026-06-03.md) | 06-03 审阅（已被 v4.1 addendum 补充） |
 
+## Design Mode 试验（2026-06-20，活跃）
+
+| 文件 | 说明 |
+|------|------|
+| [design-mode-trial-2026-06-20.md](./design-mode-trial-2026-06-20.md) | Cursor Design Mode 视觉抛光试验记录 |
+| 分支 `ui/design-mode-trial` | 代码提交：`ee2d55d`（换行符归一化）+ `9b07129`（HomePage / Layout / icons） |
+| `handoffs/opendesign-ui-audit-2026-06-18/` | Open Design 冻结战役材料（工作区未入库） |
+
+约束：仅改视觉，不动 state / 路由 / 保存逻辑。详见试验记录 §2.1。
+
+## 0608 立宪指导
+
+- [0608-constitutional-guidance/](./0608-constitutional-guidance/) — workspace 模型、release protocol、legacy freeze 等
+
 ## 协作
 
 - [../plan/ALIGNMENT-2026-06-02.md](../plan/ALIGNMENT-2026-06-02.md) — Claude ↔ Cursor 对齐
