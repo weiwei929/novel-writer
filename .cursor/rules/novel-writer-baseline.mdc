@@ -14,6 +14,15 @@ SSOT：`docs/CURRENT_BASELINE.md`
 
 **暂不做**：P1-c、`release-to-studio` 门槛改造（未授权）、正文编辑器大改、创作室改 summary SSOT、legacy 表删除、长篇立宪
 
+## 多 Agent 协作（必读）
+
+完整约定见根目录 [AGENTS.md](../../AGENTS.md)。摘要：
+
+- **主战场**：`D:/workspace/content/docs/novel-writer`（仅此目录日常开发）
+- **角色**：Codex/Claude = 参谋长；Cursor IDE = 执行兵；同一时刻只有一个工具动仓库
+- **Worktree**：未授权不新建；Agent 自动创建的 worktree 任务后必须合并或删除
+- **冻结分支**：`feature/writing-editor-ui-slice-1-4`（Open Design）、`ui/design-mode-trial`（visual 试验）— 勿合并、勿续作
+
 ## 规则优先级（高于 Ponytail）
 
 冲突时以 `docs/CURRENT_BASELINE.md`、`docs/tasks/CURSOR_REFERENCE.md`、当前授权 TASK 卡为准。

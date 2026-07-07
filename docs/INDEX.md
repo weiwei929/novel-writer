@@ -14,6 +14,7 @@
 
 | 文件 | 用途 |
 |------|------|
+| [AGENTS.md](../AGENTS.md) | 多 Agent 协作总纲（角色、主战场、worktree、冻结分支） |
 | [CURRENT_BASELINE.md](./CURRENT_BASELINE.md) | 当前基线、主分支、616-D 主链、暂不做清单 |
 | [BASELINE_E2E_V01.md](./BASELINE_E2E_V01.md) | 核心流程 E2E 验证清单（历史基线记录） |
 | [tasks/CURSOR_REFERENCE.md](./tasks/CURSOR_REFERENCE.md) | Cursor 编码规范与实现约束 |
