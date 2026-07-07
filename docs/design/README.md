@@ -23,6 +23,14 @@
 | [ai-integration-design.md](./ai-integration-design.md) | AI（Day 3 再动） |
 | [../plan/DAY1-DESIGN-REVIEW-2026-06-03.md](../plan/DAY1-DESIGN-REVIEW-2026-06-03.md) | 06-03 审阅（已被 v4.1 addendum 补充） |
 
+## 快速开始写作设计（2026-07-07，待审阅）
+
+| 文件 | 说明 |
+|------|------|
+| [quick-writing-entry-2026-07-07.md](./quick-writing-entry-2026-07-07.md) | 新建作品→自动建第一章→直接进写作页的 UI/交互设计；仅设计，未实施 |
+
+基于 2026-07-07 只读侦察报告；继承 Design Mode 视觉体系与 616 主链路由/权限，不新增业务状态。审阅通过后交 Codex 拆分实施任务卡。
+
 ## Design Mode 试验（2026-06-20，活跃）
 
 | 文件 | 说明 |
