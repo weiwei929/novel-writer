@@ -2,7 +2,7 @@
 
 > **单一真相源**：协作状态、已合并战役、下一战、暂不做项，以此文件为准。
 
-**最后更新**：2026-06-17（616-D-D 合并后）
+**最后更新**：2026-07-24（quick-writing-loop 收束与测试防线建立）
 
 ---
 
@@ -10,7 +10,8 @@
 
 | 项 | 值 |
 |----|-----|
-| **主分支** | `feature/workdetail-p1`（含 PR #7–#14、release gate `43b9c24`） |
+| **主分支** | `feature/workdetail-p1`（含 PR #7–#15、release gate `43b9c24`） |
+| **工作分支** | `feature/quick-writing-loop`（快速写作逻辑收束 + 后端测试防线） |
 | **协作档位** | 轻量战役制 · **小卡快审 / 低风险快合** |
 
 ---
@@ -31,6 +32,7 @@
 | ↳ D-B | PR [#12](https://github.com/weiwei929/novel-writer/pull/12) · [TASK-616-D-B.md](./tasks/TASK-616-D-B.md) 创作室只读参考（设定 / 本章） |
 | ↳ D-C | PR [#13](https://github.com/weiwei929/novel-writer/pull/13) 写作器入口可用性（作品详情 + 创作室列表 → 自动进写作器） |
 | ↳ D-D | PR [#14](https://github.com/weiwei929/novel-writer/pull/14) 写作参考侧栏 legacy 降噪（一级 Tab 仅设定 / 本章） |
+| **quick-writing** | [TASK-618-quick-writing-loop.md](./tasks/TASK-618-quick-writing-loop.md) · HomePage「继续写作」入口与保存可靠性解耦 |
 | **release gate** | commit `43b9c24` — `backend` `build` / `lint` 前置 `prisma generate` |
 
 0608 五部门骨架、616-A 命名/梗概等见历史封版记录。

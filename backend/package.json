@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"No tests configured yet\" && exit 0",
+    "test": "jest",
     "dev": "nodemon --config nodemon.json --exec ts-node src/index.ts",
     "generate": "node -e \"require('dotenv').config({path:'.env.example'}); require('child_process').execSync('npx prisma generate',{stdio:'inherit',env:process.env})\"",
     "build": "npm run generate && tsc",
@@ -35,9 +35,12 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.10.2",
     "@types/ws": "^8.18.1",
+    "jest": "^30.4.2",
     "nodemon": "^3.1.11",
+    "ts-jest": "^29.4.12",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
