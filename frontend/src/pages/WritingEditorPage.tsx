@@ -12,6 +12,7 @@ import { useNotifications } from '../hooks/useNotifications'
 import { useSettingsStore } from '../stores/settingsStore'
 import { getWorkPermissions } from '../services/workPermissions'
 import { getWorkSetting } from '../services/workSetting'
+import { saveDraft, getDraft, clearDraft, hasUnsavedDraft, LocalDraft } from '../utils/draftStorage'
 
 function workDetailPath(projectId: string) {
   return `/work/${projectId}?from=writing`
@@ -96,6 +97,9 @@ const WritingEditorPage: React.FC = () => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   /** 保存失败态，独立于页面级 error（避免整页错误屏遮住正文，见执行卡任务 3） */
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [pendingDraft, setPendingDraft] = useState<LocalDraft | null>(null)
+  const [isOffline, setIsOffline] = useState(!navigator.onLine)
+  const draftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [showProjectMetadata, setShowProjectMetadata] = useState(false)
   const [showChapterNav, setShowChapterNav] = useState(false)
   const [editorMode, setEditorMode] = useState<EditorMode>('pure')
@@ -156,6 +160,17 @@ const WritingEditorPage: React.FC = () => {
     return () => document.removeEventListener('keydown', handler)
   }, [showChapterNav])
 
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false)
+    const handleOffline = () => setIsOffline(true)
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
+
   const loadData = async (pId: string, cId: string) => {
     try {
       setLoading(true)
@@ -172,9 +187,17 @@ const WritingEditorPage: React.FC = () => {
       setProject(projectData)
       setChapters(chaptersData)
       setChapter(chapterData)
-      setContent(chapterData.content || '')
+      const serverContent = chapterData.content || ''
+      setContent(serverContent)
       setHasUnsavedChanges(false)
       setSaveError(null)
+
+      if (hasUnsavedDraft(pId, cId, serverContent)) {
+        const draft = getDraft(pId, cId)
+        setPendingDraft(draft)
+      } else {
+        setPendingDraft(null)
+      }
     } catch (err: unknown) {
       console.error('加载数据失败:', err)
       const message = err instanceof Error ? err.message : ''
@@ -229,7 +252,31 @@ const WritingEditorPage: React.FC = () => {
     setHasUnsavedChanges(true)
     if (chapter) {
       setChapter({ ...chapter, wordCount: calculateWordCount(newContent) })
+      if (projectId) {
+        if (draftTimeoutRef.current) clearTimeout(draftTimeoutRef.current)
+        draftTimeoutRef.current = setTimeout(() => {
+          saveDraft(projectId, chapter.id, newContent)
+        }, 800)
+      }
     }
+  }
+
+  const handleRestoreDraft = () => {
+    if (!pendingDraft) return
+    setContent(pendingDraft.content)
+    setHasUnsavedChanges(true)
+    if (chapter) {
+      setChapter({ ...chapter, wordCount: calculateWordCount(pendingDraft.content) })
+    }
+    notifySuccess('已成功恢复本地暂存草稿')
+    setPendingDraft(null)
+  }
+
+  const handleDiscardDraft = () => {
+    if (projectId && chapter) {
+      clearDraft(projectId, chapter.id)
+    }
+    setPendingDraft(null)
   }
 
   const handleSave = async (saveContent?: string) => {
@@ -247,9 +294,12 @@ const WritingEditorPage: React.FC = () => {
       setHasUnsavedChanges(false)
       setLastSaved(new Date())
       setSaveError(null)
+
+      if (projectId) {
+        clearDraft(projectId, chapter.id)
+      }
+      setPendingDraft(null)
     } catch (err) {
-      // 保存失败只置 saveError，不动页面级 error：避免整页错误屏顶替编辑器，
-      // 正文内容（content state）和 hasUnsavedChanges 原样保留，允许手动重试。
       setSaveError('保存失败，点击重试')
       console.error('Error saving chapter:', err)
       throw err
@@ -381,7 +431,12 @@ const WritingEditorPage: React.FC = () => {
               <div className="text-xs text-gray-400 flex items-center gap-1 flex-wrap">
                 <span>第 {chapter.order} 章 · {chapter.title}</span>
                 <span>·</span>
-                {saveError ? (
+                {isOffline ? (
+                  <span className="inline-flex items-center gap-1 text-amber-600 font-medium" title="网络离线，修改已保存在本地">
+                    <IconAlert size={12} />
+                    离线保存中（已存本地）
+                  </span>
+                ) : saveError ? (
                   <button
                     type="button"
                     onClick={() => handleSave()}
@@ -458,6 +513,34 @@ const WritingEditorPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {pendingDraft && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-between text-xs text-amber-900 shrink-0 animate-fadeIn">
+          <div className="flex items-center gap-2 min-w-0">
+            <IconAlert size={16} className="text-amber-600 shrink-0" />
+            <span className="truncate">
+              检测到本地存在未经同步的编辑草稿（上次修改于{' '}
+              {new Date(pendingDraft.updatedAt).toLocaleTimeString()}）
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 ml-2">
+            <button
+              type="button"
+              onClick={handleRestoreDraft}
+              className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded font-medium transition-colors shadow-sm"
+            >
+              一键恢复
+            </button>
+            <button
+              type="button"
+              onClick={handleDiscardDraft}
+              className="px-2.5 py-1 bg-white hover:bg-amber-100 text-amber-700 border border-amber-300 rounded transition-colors"
+            >
+              忽略
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 flex overflow-hidden relative">
         {project && showChapterNav && (

@@ -32,6 +32,7 @@
 | ↳ D-C | PR [#13](https://github.com/weiwei929/novel-writer/pull/13) 写作器入口可用性（作品详情 + 创作室列表 → 自动进写作器） |
 | ↳ D-D | PR [#14](https://github.com/weiwei929/novel-writer/pull/14) 写作参考侧栏 legacy 降噪（一级 Tab 仅设定 / 本章） |
 | **quick-writing** | [TASK-618-quick-writing-loop.md](./tasks/TASK-618-quick-writing-loop.md) · HomePage「继续写作」入口与保存可靠性解耦 |
+| **draft-recovery** | [TASK-619-draft-recovery-offline-guard.md](./tasks/TASK-619-draft-recovery-offline-guard.md) · 创作室本地草稿自动镜像与一键恢复横幅 |
 | **release gate** | commit `43b9c24` — `backend` `build` / `lint` 前置 `prisma generate` |
 
 0608 五部门骨架、616-A 命名/梗概等见历史封版记录。
