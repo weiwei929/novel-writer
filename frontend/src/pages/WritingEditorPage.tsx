@@ -470,7 +470,7 @@ const WritingEditorPage: React.FC = () => {
             {project && (
               <ModeButton
                 active={showChapterNav}
-                label="目录"
+                label="章节"
                 onClick={() => setShowChapterNav(v => !v)}
               />
             )}

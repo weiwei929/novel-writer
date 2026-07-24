@@ -489,39 +489,39 @@ export default function WorkDetailPage() {
         <div className="bg-white rounded-lg border shadow-sm flex flex-col overflow-hidden">
           <div className="px-4 py-3 border-b flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <IconFile size={14} className="text-gray-400" />
+              <IconFile size={16} className="text-indigo-600" />
               <h3 className="text-sm font-semibold text-gray-900">
-                章节规划
-                <span className="text-gray-400 font-normal ml-1">({chapterPlanning.length})</span>
+                企划起点 · 章节大纲架构
+                <span className="text-gray-400 font-normal ml-1">({chapterPlanning.length} 章预设)</span>
               </h3>
             </div>
             {canEditCurrentTab && usePlanningChapterEditor && (
               <button
                 onClick={() => setShowPlanning(true)}
-                className="text-xs px-3 py-1.5 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
+                className="text-xs px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-medium transition-colors shadow-sm"
               >
-                编辑章节规划
+                + 构筑全书章节大纲 (第一起点)
               </button>
             )}
           </div>
-          <div className="px-4 py-2 bg-amber-50 border-b border-amber-100">
-            <p className="text-xs text-amber-800">
-              企划阶段章节规划：顺序、标题与梗概。正文在创作室「作品正文」中写作，此处不含正文。
+          <div className="px-4 py-2.5 bg-indigo-50/70 border-b border-indigo-100 text-xs text-indigo-900">
+            <p>
+              企划第一起点：在此构筑全书章节大纲（预设序号、标题与本章梗概）。企划确认放行交接至创作室时，将自动实例化生成写作章节。
             </p>
           </div>
 
           {chapterPlanning.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-10 text-gray-500">
               <IconFile className="w-10 h-10 mb-3 text-gray-300" />
-              <p className="text-sm mb-1">暂无章节规划</p>
-              <p className="text-xs text-gray-400 mb-4">添加至少一章，并填写标题与梗概</p>
+              <p className="text-sm mb-1">暂无章节大纲规划</p>
+              <p className="text-xs text-gray-400 mb-4">在此构建全书最初的章节架构，并填写标题与梗概</p>
               {canEditCurrentTab && usePlanningChapterEditor && (
                 <button
                   onClick={() => setShowPlanning(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
                 >
                   <IconList size={14} />
-                  编辑章节规划
+                  开始构筑章节大纲
                 </button>
               )}
             </div>

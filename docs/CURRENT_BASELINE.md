@@ -33,6 +33,7 @@
 | ↳ D-D | PR [#14](https://github.com/weiwei929/novel-writer/pull/14) 写作参考侧栏 legacy 降噪（一级 Tab 仅设定 / 本章） |
 | **quick-writing** | [TASK-618-quick-writing-loop.md](./tasks/TASK-618-quick-writing-loop.md) · HomePage「继续写作」入口与保存可靠性解耦 |
 | **draft-recovery** | [TASK-619-draft-recovery-offline-guard.md](./tasks/TASK-619-draft-recovery-offline-guard.md) · 创作室本地草稿自动镜像与一键恢复横幅 |
+| **chapter-origin-flow** | [TASK-620-chapter-origin-flow-alignment.md](./tasks/TASK-620-chapter-origin-flow-alignment.md) · 三大第一起点全盘对齐与 616 战役封版 |
 | **release gate** | commit `43b9c24` — `backend` `build` / `lint` 前置 `prisma generate` |
 
 0608 五部门骨架、616-A 命名/梗概等见历史封版记录。
