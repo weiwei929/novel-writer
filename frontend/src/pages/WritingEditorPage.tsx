@@ -424,91 +424,60 @@ const WritingEditorPage: React.FC = () => {
           </button>
           <div className="h-5 w-px bg-gray-200" />
           <div className="min-w-0">
-            <h1 className="text-sm font-semibold text-gray-900 truncate">
-              {project?.title || '加载中...'}
-            </h1>
+            <div className="text-[11px] text-gray-400 font-normal truncate">
+              作品：《{project?.title || '加载中...'}》
+            </div>
             {chapter && (
-              <div className="text-xs text-gray-400 flex items-center gap-1 flex-wrap">
-                <span>第 {chapter.order} 章 · {chapter.title}</span>
-                <span>·</span>
-                {isOffline ? (
-                  <span className="inline-flex items-center gap-1 text-amber-600 font-medium" title="网络离线，修改已保存在本地">
-                    <IconAlert size={12} />
-                    离线保存中（已存本地）
-                  </span>
-                ) : saveError ? (
-                  <button
-                    type="button"
-                    onClick={() => handleSave()}
-                    className="inline-flex items-center gap-1 text-amber-600 font-medium hover:text-amber-700"
-                    title="点击重试保存"
-                  >
-                    <IconAlert size={12} />
-                    {saveError}
-                  </button>
-                ) : saving ? (
-                  <span className="inline-flex items-center gap-1">
-                    <IconLoading size={12} />
-                    正在保存…
-                  </span>
-                ) : hasUnsavedChanges ? (
-                  <span>● 编辑中…</span>
-                ) : lastSaved ? (
-                  <span className="inline-flex items-center gap-1 text-emerald-600">
-                    <IconCheck size={12} />
-                    已保存 · {lastSaved.toLocaleTimeString()}
-                  </span>
-                ) : null}
-                <span>· {chapter.wordCount?.toLocaleString() || 0} 字</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-base font-bold text-indigo-900 truncate">
+                  当前写作：第 {chapter.order} 章 · {chapter.title}
+                </h1>
+                <div className="text-xs text-gray-500 flex items-center gap-1.5">
+                  {isOffline ? (
+                    <span className="inline-flex items-center gap-1 text-amber-600 font-medium" title="网络离线，修改已保存在本地">
+                      <IconAlert size={12} />
+                      离线保存中（已存本地）
+                    </span>
+                  ) : saveError ? (
+                    <button
+                      type="button"
+                      onClick={() => handleSave()}
+                      className="inline-flex items-center gap-1 text-amber-600 font-medium hover:text-amber-700"
+                      title="点击重试保存"
+                    >
+                      <IconAlert size={12} />
+                      {saveError}
+                    </button>
+                  ) : saving ? (
+                    <span className="inline-flex items-center gap-1 text-indigo-600">
+                      <IconLoading size={12} />
+                      正在保存…
+                    </span>
+                  ) : hasUnsavedChanges ? (
+                    <span className="text-amber-600 font-medium">● 编辑中…</span>
+                  ) : lastSaved ? (
+                    <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
+                      <IconCheck size={12} />
+                      已保存 · {lastSaved.toLocaleTimeString()}
+                    </span>
+                  ) : null}
+                  <span>· {chapter.wordCount?.toLocaleString() || 0} 字</span>
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-0.5">
-            {project && (
-              <ModeButton
-                active={showChapterNav}
-                label="章节"
-                onClick={() => setShowChapterNav(v => !v)}
-              />
-            )}
-            <ModeButton
-              active={editorMode === 'pure'}
-              label="写作"
-              onClick={() => setMode('pure')}
-            />
-            <ModeButton
-              active={editorMode === 'reference'}
-              label="参考"
-              onClick={toggleReference}
-            />
-            {showAiMode && (
-              <ModeButton
-                active={editorMode === 'ai'}
-                label="AI"
-                onClick={() => setMode(editorMode === 'ai' ? 'pure' : 'ai')}
-              />
-            )}
-            <ModeButton
-              active={editorMode === 'review'}
-              label="审阅"
-              onClick={() => setMode(editorMode === 'review' ? 'pure' : 'review')}
-            />
-          </div>
-
-          <div className="h-5 w-px bg-gray-200 mx-1" />
-
+        <div className="flex items-center gap-3 shrink-0">
           {chapter && (
             <button
               type="button"
               onClick={() => handleSave()}
               disabled={saving || !hasUnsavedChanges}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-medium transition-colors"
+              className="flex items-center gap-1.5 px-4 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-medium transition-colors shadow-sm"
             >
               <IconSave size={14} />
-              {saving ? '...' : '保存'}
+              {saving ? '保存中...' : '保存正文'}
             </button>
           )}
         </div>
@@ -542,27 +511,59 @@ const WritingEditorPage: React.FC = () => {
         </div>
       )}
 
-      <div className="flex-1 flex overflow-hidden relative">
-        {project && showChapterNav && (
-          <>
-            <div
-              className="absolute inset-0 z-30 bg-black/20"
-              onClick={() => setShowChapterNav(false)}
-            />
-            <div className="absolute left-0 top-0 bottom-0 z-40 shadow-2xl">
-              <ProjectNavigationPanel
-                project={project}
-                chapters={chapters}
-                currentChapter={chapter}
-                onChapterSelect={handleChapterSelect}
-                onProjectSettings={() => setShowProjectMetadata(true)}
-                onChaptersRefresh={refreshChapters}
-              />
+      {/* 创作室自然三栏经典布局 (Natural Three-Column Layout) */}
+      <div className="flex-1 flex overflow-hidden relative bg-gray-50">
+        {/* 👈 左栏：【章节栏】 (上下布局：上为本章梗概，下为章节列表) */}
+        {project && chapter && (
+          <div className="w-72 shrink-0 h-full border-r border-gray-200 bg-white flex flex-col overflow-hidden select-none">
+            {/* 上部：本章节梗概 */}
+            <div className="p-3.5 border-b border-gray-100 bg-indigo-50/40">
+              <div className="text-xs font-bold text-indigo-900 flex items-center gap-1.5 mb-1.5">
+                <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                本章节大纲梗概
+              </div>
+              <div className="text-xs text-gray-700 bg-white border border-indigo-100/80 rounded-lg p-2.5 max-h-36 overflow-y-auto leading-relaxed shadow-2xs font-sans whitespace-pre-wrap">
+                {chapter.summary?.trim() || <span className="text-gray-400 italic">企划阶段未填写本章梗概</span>}
+              </div>
             </div>
-          </>
+
+            {/* 下部：章节列表 (稳固显示，去除随手误跳的危险炫技) */}
+            <div className="flex-1 flex flex-col overflow-hidden p-3.5">
+              <div className="text-xs font-bold text-gray-700 mb-2 flex items-center justify-between">
+                <span>作品章节 ({chapters.length})</span>
+                <span className="text-[10px] font-normal text-gray-400">稳定写作中</span>
+              </div>
+              <div className="flex-1 overflow-y-auto space-y-1 pr-1">
+                {chapters.map(c => {
+                  const isCurrent = c.id === chapter.id
+                  return (
+                    <div
+                      key={c.id}
+                      className={`p-2 rounded-lg text-xs flex items-center justify-between border transition-all ${
+                        isCurrent
+                          ? 'bg-indigo-50 border-indigo-200 text-indigo-900 font-semibold shadow-2xs'
+                          : 'border-transparent text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="truncate flex-1 pr-2">
+                        <span className="text-gray-400 mr-1 font-normal">第{c.order}章</span>
+                        <span>{c.title}</span>
+                      </div>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-normal shrink-0 ${
+                        isCurrent ? 'bg-indigo-600 text-white' : 'text-gray-400'
+                      }`}>
+                        {isCurrent ? '当前写作' : `${c.wordCount || 0}字`}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
         )}
 
-        <div className="flex-1 flex flex-col overflow-hidden bg-white relative z-20 shadow-xl border-y border-gray-200">
+        {/* 📖 中栏：【正文打字工作区】 */}
+        <div className="flex-1 flex flex-col overflow-hidden bg-white relative z-10 border-r border-gray-200">
           <MarkdownEditor
             ref={editorRef}
             key={chapterId}
@@ -574,30 +575,40 @@ const WritingEditorPage: React.FC = () => {
           />
         </div>
 
-        {editorMode !== 'pure' && (
-          <>
-            <div className="w-1 bg-gradient-to-b from-gray-300 via-gray-400 to-gray-300 shadow-sm" />
-            {editorMode === 'reference' && projectId && project && chapter && (
-              <ReferenceSidebar
-                projectId={projectId}
-                width={referenceWidth}
-                workSetting={getWorkSetting(project.metadata as Record<string, unknown>)}
-                chapterSummary={chapter.summary}
-                chapterLabel={`第 ${chapter.order} 章 · ${chapter.title}`}
-              />
-            )}
-            {showAiMode && editorMode === 'ai' && (
-              <AIAssistantPanel
-                onClose={() => setMode('pure')}
-                onApplyContent={handleApplyAIContent}
-                projectId={project?.id}
-                chapterId={chapter?.id}
-              />
-            )}
-            {editorMode === 'review' && (
-              <ReviewPlaceholder onClose={() => setMode('pure')} />
-            )}
-          </>
+        {/* 👉 右栏：【作品设定】 (直接展示 4 项作品设定，替代原有的复杂 Tab 侧栏) */}
+        {project && (
+          <div className="w-80 shrink-0 h-full border-l border-gray-200 bg-white flex flex-col overflow-hidden select-none">
+            <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/70">
+              <h3 className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-blue-600" />
+                作品设定只读参阅
+              </h3>
+              <p className="text-[11px] text-gray-400 mt-0.5">企划继承设定 · 时刻对照创作</p>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5">
+              {(() => {
+                const ws = getWorkSetting(project.metadata as Record<string, unknown>)
+                const blocks = [
+                  { label: '人物与关系', val: ws.charactersAndRelations },
+                  { label: '时间与地点', val: ws.timeAndPlace },
+                  { label: '事件与情节', val: ws.eventsAndPlot },
+                  { label: '叙事风格 / 心流', val: ws.narrativeStyle },
+                ]
+                return blocks.map(b => (
+                  <div key={b.label} className="border border-gray-100 rounded-lg p-2.5 bg-gray-50/40">
+                    <div className="text-xs font-semibold text-gray-700 mb-1">{b.label}</div>
+                    {b.val?.trim() ? (
+                      <p className="text-xs text-gray-600 whitespace-pre-wrap leading-relaxed font-sans">
+                        {b.val.trim()}
+                      </p>
+                    ) : (
+                      <span className="text-xs text-gray-400 italic">企划未填写</span>
+                    )}
+                  </div>
+                ))
+              })()}
+            </div>
+          </div>
         )}
       </div>
 
