@@ -21,6 +21,7 @@ import WorkChapterEditor from '../components/editor/WorkChapterEditor'
 import WorkMetadataPanel from '../components/editor/WorkMetadataPanel'
 import { getWorkPermissions } from '../services/workPermissions'
 import { getWorkSynopsis } from '../utils/workSynopsis'
+import { canReleaseToStudio, hasReleasedToStudio } from '../services/releaseHandoff'
 
 // === 作品设定 / 作品章节 / 作品正文 / 遗留资料 ===
 type WorkTab = 'synopsis' | 'chapters' | 'body' | 'world'
@@ -373,6 +374,49 @@ export default function WorkDetailPage() {
               进入创作室
             </button>
           ) : null}
+        </div>
+      )}
+
+      {/* 企划课放行交接卡片 (Planning to Studio Release Gate) */}
+      {isPlanningContext && work && work.status === 'planning' && (
+        <div className="bg-indigo-50/80 border border-indigo-200 rounded-lg px-4 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+          {(() => {
+            const gate = canReleaseToStudio(work)
+            const isReleased = hasReleasedToStudio(work)
+            if (isReleased) {
+              return (
+                <div className="flex items-center gap-2 text-xs text-indigo-900 font-medium">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  企划已放行移交创作室（可在创作室列表或企划后段查阅与写作）。
+                </div>
+              )
+            }
+            return (
+              <>
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-indigo-900">
+                    <span className={`w-2 h-2 rounded-full ${gate.ready ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+                    企划放行审核 · 移交创作室
+                  </div>
+                  <p className="text-xs text-indigo-700">
+                    {gate.ready
+                      ? '包含作品设定与章节大纲已全量具备。确认企划完成后，可一键放行移交创作室开启写作！'
+                      : `尚需补全：${gate.missing.join('、')}。补全后即可一键放行至创作室。`}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={!gate.ready || studioActionLoading}
+                  onClick={() => void handleStartWriting()}
+                  className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                  title={gate.ready ? '确认企划完成并放行给创作室' : '请先补全缺项'}
+                >
+                  <IconArrowRight size={14} />
+                  {studioActionLoading ? '放行中...' : '确认企划完成 · 提交创作室'}
+                </button>
+              </>
+            )
+          })()}
         </div>
       )}
 
