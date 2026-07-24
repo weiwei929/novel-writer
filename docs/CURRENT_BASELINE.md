@@ -10,8 +10,7 @@
 
 | 项 | 值 |
 |----|-----|
-| **主分支** | `feature/workdetail-p1`（含 PR #7–#15、release gate `43b9c24`） |
-| **工作分支** | `feature/quick-writing-loop`（快速写作逻辑收束 + 后端测试防线） |
+| **主分支** | `feature/workdetail-p1`（含 PR #7–#15、`quick-writing-loop` 合并点 `5bdc507`） |
 | **协作档位** | 轻量战役制 · **小卡快审 / 低风险快合** |
 
 ---
