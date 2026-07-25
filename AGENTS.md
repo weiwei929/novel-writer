@@ -41,16 +41,28 @@ HEAD：见 git log -1
 远端：应与 origin 同步后再开新活
 ```
 
-### VM / MCP bash 同名路径（作废）
+### VM / MCP bash 同名路径（分环境判定，勿一刀切）
 
-Claude 3P、Codex 等工具的 **VM / `mcp__workspace__bash`** 里可能出现**完全相同的路径字符串** `D:\workspace\content\docs\novel-writer`，但那是**另一台机器或沙箱里的独立拷贝**，与本机主战场**不是同一份文件系统**。
+> **2026-07-25 修订**：原文一律判「作废」，已被实测推翻。结论取决于是哪个工具。
 
-| 环境 | 状态 |
-|------|------|
-| **Cursor IDE 本机** | ✅ 主战场 — 唯一可 commit / push 的地方 |
-| **VM / mcp bash 同名路径** | ❌ 作废 — 不要修、不要 commit、不要 push |
+同一个路径字符串 `D:\workspace\content\docs\novel-writer` 在不同工具里含义不同：
 
-**路径字符串相同 ≠ 同一仓库。** 参谋长若未拿到本机 PowerShell 的命令输出，**不得**自行推断 index 损坏、改动文件数、HEAD 等 git 状态。
+| 环境 | 状态 | 依据 |
+|------|------|------|
+| **Cursor IDE 本机** | ✅ 主战场 — 唯一可 commit / push 的地方 | — |
+| **Cowork（Claude 桌面版）挂载目录** | ✅ **是同一份文件系统**，可读、可改文件 | 2026-07-25 实测：HEAD、分支、`nul` 删除状态与本机 PowerShell 完全一致 |
+| **无挂载的沙箱 / 其他 VM 拷贝** | ❌ 作废 — 不要修、不要 commit、不要 push | — |
+
+**判定方法（Agent 开工时自行执行，不要猜）：**
+
+```bash
+git log --oneline -1 && git branch --show-current
+```
+
+输出与司令官本机一致 → 是同一仓库，可直接读写文件。
+不一致或读不到 → 按「作废」处理，只做只读分析。
+
+**仍然成立的红线**：即使挂载是同一份文件系统，参谋长**依然不执行 git write**（commit / push / merge / stash）—— 这些由司令官在本机 PowerShell 执行。原因不是路径不通，而是**同一时刻只有一个角色动版本历史**。
 
 ### 参谋长（Codex / Claude 3P）权限
 
