@@ -12,7 +12,7 @@ import {
   type ChapterPlanningItem as CanonicalChapterPlanningItem,
 } from '../../services/chapterPlanning'
 import { useNotifications } from '../../hooks/useNotifications'
-import { IconArrowDown, IconArrowUp, IconClose, IconCopy, IconDelete, IconPlus } from '../ui/icons'
+import { IconArrowDown, IconArrowUp, IconCopy, IconDelete, IconPlus } from '../ui/icons'
 
 type PlanStatus = 'planned' | 'started' | 'completed'
 
@@ -23,6 +23,8 @@ interface WorkChapterEditorProps {
   onSaved?: (plans: ChapterPlanItem[] | CanonicalChapterPlanningItem[]) => void
   /** 企划课路径：创建 canonical 规划，不写 chapters 表 */
   planningMode?: boolean
+  /** 2.0 内嵌流式文档模式（无遮罩侧滑抽屉），默认为 true */
+  inlineMode?: boolean
 }
 
 const emptyLegacyPlan = (nextOrder: number): ChapterPlanItem => ({
@@ -46,6 +48,7 @@ const WorkChapterEditor: React.FC<WorkChapterEditorProps> = ({
   onClose,
   onSaved,
   planningMode = false,
+  inlineMode = true,
 }) => {
   const { success, error: notifyError, warning } = useNotifications()
   const [legacyPlans, setLegacyPlans] = useState<ChapterPlanItem[]>(() =>
@@ -251,42 +254,49 @@ const WorkChapterEditor: React.FC<WorkChapterEditorProps> = ({
 
   const plans = planningMode ? planningPlans : legacyPlans
 
-  return (
-    <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="absolute right-0 top-0 h-full w-[44rem] bg-white shadow-2xl flex flex-col">
-        <div className="px-4 py-3 border-b flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              {planningMode ? '章节规划' : '作品章节'}
-            </h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {planningMode
-                ? '企划阶段：编辑章节顺序、标题与梗概（不含正文）'
-                : '结构化编辑（顺序、标题、预计字数、梗概、状态）'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={addPlan}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              <IconPlus className="w-4 h-4" /> 新增
-            </button>
-            <button
-              onClick={() => void save()}
-              disabled={saving}
-              className="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-            >
-              {saving ? '保存中...' : '保存'}
-            </button>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded" title="关闭">
-              <IconClose className="w-5 h-5" />
-            </button>
-          </div>
+  const content = (
+    <div className={`space-y-4 font-sans ${inlineMode ? '' : 'flex flex-col h-full'}`}>
+      {/* 头部控制栏 */}
+      <div className="flex items-center justify-between pb-3 border-b border-gray-100 shrink-0">
+        <div>
+          <h3 className="text-base font-bold text-gray-900">
+            {planningMode ? '章节规划大纲' : '作品章节'}
+          </h3>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {planningMode
+              ? '企划阶段：全页面内嵌编辑章节顺序、标题与梗概'
+              : '结构化编辑章节顺序、标题、预计字数、梗概与状态'}
+          </p>
         </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={addPlan}
+            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+          >
+            <IconPlus className="w-3.5 h-3.5" /> 新增章节
+          </button>
+          <button
+            type="button"
+            onClick={() => void save()}
+            disabled={saving}
+            className="px-4 py-1.5 text-xs font-medium bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 rounded-lg shadow-xs transition-all"
+          >
+            {saving ? '保存中…' : '保存章节规划'}
+          </button>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              取消
+            </button>
+          )}
+        </div>
+      </div>
 
-        <div className="flex-1 overflow-auto p-4 space-y-3 bg-gray-50">
+      <div className={`space-y-3 ${inlineMode ? '' : 'flex-1 overflow-auto p-4 bg-gray-50'}`}>
           {!planningMode && chapters.length > 0 && (
             <div className="bg-white rounded border p-3">
               <div className="font-medium text-gray-900 mb-2">现有章节</div>
@@ -439,18 +449,27 @@ const WorkChapterEditor: React.FC<WorkChapterEditorProps> = ({
                       >
                         <IconCopy className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => deletePlan(idx)}
-                        className="p-1 hover:bg-red-50 rounded text-red-600"
-                        title="删除"
-                      >
-                        <IconDelete className="w-4 h-4" />
-                      </button>
                     </div>
                   </div>
                 </div>
               ))}
-        </div>
+      </div>
+    </div>
+  )
+
+  if (inlineMode) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-4 font-sans animate-fade-in">
+        {content}
+      </div>
+    )
+  }
+
+  return (
+    <div className="fixed inset-0 z-50">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute right-0 top-0 h-full w-[44rem] bg-white shadow-2xl flex flex-col p-4">
+        {content}
       </div>
     </div>
   )

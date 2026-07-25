@@ -31,12 +31,8 @@ const EnhancedMonacoEditor = forwardRef<EnhancedMonacoEditorRef, EnhancedMonacoE
   fontSize = 14,
   autoSave = false,
   autoSaveDelay = 3000,
-  showWordCount = true,
   readOnly = false,
 }, ref) => {
-  const [wordCount, setWordCount] = useState(0)
-  const [charCount, setCharCount] = useState(0)
-  const [readingTime, setReadingTime] = useState(0)
   const [showFrontmatter, setShowFrontmatter] = useState(() => {
     // 从 localStorage 读取用户偏好，默认隐藏
     const saved = localStorage.getItem('showFrontmatter')
@@ -101,21 +97,6 @@ const EnhancedMonacoEditor = forwardRef<EnhancedMonacoEditorRef, EnhancedMonacoE
     }
   }
 
-  const updateStatistics = (text: string) => {
-    // ... existing logic ...
-    const chars = text.length
-    const words = text
-      .trim()
-      .split(/\s+/)
-      .filter(word => word.length > 0).length
-    const reading = Math.ceil(words / 200)
-
-    setCharCount(chars)
-    setWordCount(words)
-    setReadingTime(reading)
-  }
-
-  // ... useEffects ...
   // 仅在 value 变化时调度自动保存，使用稳定回调引用避免重复定时
   useEffect(() => {
     if (autoSave && value && onSaveRef.current) {
@@ -187,15 +168,11 @@ const EnhancedMonacoEditor = forwardRef<EnhancedMonacoEditorRef, EnhancedMonacoE
         onSave(editorInstance.getValue())
       }
     })
-    
-    // Initial stats
-    updateStatistics(value)
   }
 
   const handleEditorChange = (newValue: string | undefined) => {
     if (newValue !== undefined) {
       onChange(newValue)
-      updateStatistics(newValue)
     }
   }
 
@@ -237,6 +214,7 @@ const EnhancedMonacoEditor = forwardRef<EnhancedMonacoEditorRef, EnhancedMonacoE
           links: false,
           colorDecorators: false,
           acceptSuggestionOnEnter: 'off',
+          padding: { top: 12, bottom: 40 },
           'semanticHighlighting.enabled': false,  // 禁用语义高亮
           unicodeHighlight: {
             ambiguousCharacters: false,  // 禁用模糊字符高亮
@@ -245,14 +223,6 @@ const EnhancedMonacoEditor = forwardRef<EnhancedMonacoEditorRef, EnhancedMonacoE
           },
         }}
       />
-
-      {showWordCount && (
-        <div className="absolute bottom-2 right-2 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded text-sm text-gray-600 dark:text-gray-300 pointer-events-none opacity-80 z-10 block">
-          <span className="mr-4">字符数: {charCount}</span>
-          <span className="mr-4">词数: {wordCount}</span>
-          <span>预计阅读: {readingTime}分钟</span>
-        </div>
-      )}
     </div>
   )
 })

@@ -12,6 +12,8 @@ import TagInput, { TagFilterBar } from './TagInput'
 import ReferencePicker from './ReferencePicker'
 import { isProposalPendingReview, isProposalSubmittable } from '../../services/filters'
 
+import CreateProposalModal from './CreateProposalModal'
+
 function isPendingDiscussion(p: Proposal): boolean {
   if (!isProposalSubmittable(p)) return false
   const meta = getProposalMetadata(p)
@@ -29,6 +31,7 @@ export default function CreativeDiscussion() {
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [activeTag, setActiveTag] = useState<string | null>(null)
+  const [createModalOpen, setCreateModalOpen] = useState(false)
 
   const [title, setTitle] = useState('')
   const [evaluation, setEvaluation] = useState('')
@@ -91,12 +94,10 @@ export default function CreativeDiscussion() {
     setReferences((p.references as ProposalReference[]) || [])
   }
 
-  const handleNewDiscussion = async () => {
-    const name = window.prompt('作品标题', '新创意作品')
-    if (!name?.trim()) return
+  const handleCreateSubmit = async (name: string) => {
     try {
       const created = await proposalsApi.create({
-        title: name.trim(),
+        title: name,
         metadata: { _evaluation: '', _tags: [], _discussionSubmitted: false },
       })
       await load()
@@ -176,8 +177,8 @@ export default function CreativeDiscussion() {
         <span className="text-sm font-medium">作品构思中</span>
         <button
           type="button"
-          onClick={() => void handleNewDiscussion()}
-          className="text-xs px-2 py-1 bg-amber-600 text-white rounded"
+          onClick={() => setCreateModalOpen(true)}
+          className="text-xs px-2.5 py-1 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-medium transition-colors"
         >
           + 新建
         </button>
@@ -348,6 +349,11 @@ export default function CreativeDiscussion() {
           setPickerOpen(false)
         }}
         onCancel={() => setPickerOpen(false)}
+      />
+      <CreateProposalModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onSubmit={handleCreateSubmit}
       />
     </>
   )

@@ -1,8 +1,6 @@
 import React, { useMemo, useState } from 'react'
-import { readMetadataFieldValue } from '../../utils/metadataField'
 import {
   getWorkSetting,
-  hasAnyWorkSettingContent,
   WORK_SETTING_BLOCKS,
 } from '../../services/workSetting'
 import { IconSettings } from '../ui/icons'
@@ -14,23 +12,9 @@ interface ContentMetadataCardProps {
   onEdit?: () => void
 }
 
-type MetadataField = {
-  key: string
-  label: string
-}
-
-const LEGACY_FIELDS: MetadataField[] = [
-  { key: 'synopsis', label: '作品梗概' },
-  { key: 'characters', label: '人物设定' },
-  { key: 'timeline', label: '时间线' },
-  { key: 'settings', label: '背景设定' },
-  { key: 'relationships', label: '关系网' },
-  { key: 'plotStructure', label: '情节结构' },
-]
-
 /**
  * 内容元数据只读卡片
- * 优先展示 616-B workSetting 四块；否则 fallback legacy 六字段（只读兼容）。
+ * 展示 616-B workSetting 四块。
  */
 const ContentMetadataCard: React.FC<ContentMetadataCardProps> = ({
   metadata,
@@ -38,21 +22,11 @@ const ContentMetadataCard: React.FC<ContentMetadataCardProps> = ({
   onEdit,
 }) => {
   const workSetting = useMemo(() => getWorkSetting(metadata), [metadata])
-  const useWorkSettingView = hasAnyWorkSettingContent(workSetting)
-
-  const fields: MetadataField[] = useWorkSettingView
-    ? WORK_SETTING_BLOCKS.map(b => ({ key: b.key, label: b.label }))
-    : LEGACY_FIELDS
+  const fields = WORK_SETTING_BLOCKS.map(b => ({ key: b.key, label: b.label }))
 
   const [activeTab, setActiveTab] = useState<string>(fields[0]?.key ?? '')
 
-  const activeContent = useWorkSettingView
-    ? workSetting[activeTab as keyof typeof workSetting] ?? ''
-    : readMetadataFieldValue(metadata?.[activeTab])
-
-  if (fields.length === 0) {
-    return null
-  }
+  const activeContent = workSetting[activeTab as keyof typeof workSetting] ?? ''
 
   return (
     <div className={`bg-white rounded-lg border shadow-sm flex flex-col overflow-hidden ${className}`}>
@@ -60,8 +34,7 @@ const ContentMetadataCard: React.FC<ContentMetadataCardProps> = ({
         <div>
           <h3 className="text-sm font-semibold text-gray-900">作品设定</h3>
           <p className="text-xs text-gray-400 mt-0.5">
-            {useWorkSettingView ? '616-B 描述式设定' : onEdit ? '' : '只读参考'}
-            {!useWorkSettingView && !onEdit && ' · legacy 字段'}
+            616-B 描述式设定
           </p>
         </div>
         {onEdit && (

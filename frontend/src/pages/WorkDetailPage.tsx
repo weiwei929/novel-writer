@@ -14,13 +14,10 @@ import { useNotifications } from '../hooks/useNotifications'
 import ProjectStatusBadge from '../components/projects/ProjectStatusBadge'
 import type { PhaseContext } from '../services/statusLabels'
 import WorldBuildingPage from './creative/WorldBuildingPage'
-import ContentMetadataCard from '../components/metadata/ContentMetadataCard'
-import WorkSettingEditor from '../components/metadata/WorkSettingEditor'
+import WorkSettingDocument from '../components/metadata/WorkSettingDocument'
 import ChapterContentModal from '../components/editor/ChapterContentModal'
 import WorkChapterEditor from '../components/editor/WorkChapterEditor'
-import WorkMetadataPanel from '../components/editor/WorkMetadataPanel'
 import { getWorkPermissions } from '../services/workPermissions'
-import { getWorkSynopsis } from '../utils/workSynopsis'
 import { canReleaseToStudio, hasReleasedToStudio } from '../services/releaseHandoff'
 
 // === 作品设定 / 作品章节 / 作品正文 / 遗留资料 ===
@@ -71,7 +68,6 @@ export default function WorkDetailPage() {
   const [isEditing, setIsEditing] = useState(false)
 
   const [showPlanning, setShowPlanning] = useState(false)
-  const [showMetadataEditor, setShowMetadataEditor] = useState(false)
 
   const [collapsedSynopses, setCollapsedSynopses] = useState<Set<string>>(new Set())
 
@@ -120,11 +116,6 @@ export default function WorkDetailPage() {
     [data?.chapters]
   )
 
-  const workSynopsis = useMemo(
-    () => getWorkSynopsis(work?.description, work?.metadata),
-    [work?.description, work?.metadata]
-  )
-
   const chapterPlanning = useMemo(
     () => getChapterPlanning(work?.metadata as Record<string, unknown> | undefined),
     [work?.metadata]
@@ -146,7 +137,6 @@ export default function WorkDetailPage() {
   const [searchParams] = useSearchParams()
   const from = searchParams.get('from')
   const isPlanningContext = from === 'planning'
-  const usePlanningWorkSettingPath = isPlanningContext && work?.status === 'planning'
   const usePlanningChapterPath = isPlanningContext
   const usePlanningChapterEditor = isPlanningContext && work?.status === 'planning'
   const badgePhase: PhaseContext | undefined =
@@ -439,97 +429,33 @@ export default function WorkDetailPage() {
 
       {/* ─── 作品设定 ─── */}
       {activeTab === 'synopsis' && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-lg border shadow-sm p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-gray-900">作品设定</h2>
-              {canEditCurrentTab && (
-                <button
-                  onClick={() => setShowMetadataEditor(true)}
-                  className="text-xs px-3 py-1.5 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
-                >
-                  {usePlanningWorkSettingPath ? '编辑作品梗概' : getEditActionLabel('synopsis')}
-                </button>
-              )}
-            </div>
-
-            <div className="mb-4">
-              <div className="text-xs text-gray-400 mb-1">作品标题</div>
-              <div className="text-base font-bold text-gray-900">{work.title}</div>
-            </div>
-
-            <div className="mb-3">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs text-gray-400">作品梗概</span>
-                {!workSynopsis && (
-                  <span className="text-xs text-amber-500 bg-amber-50 px-1.5 py-0.5 rounded">待填写</span>
-                )}
-              </div>
-              {workSynopsis ? (
-                <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 rounded-lg p-3 border border-gray-100">
-                  {workSynopsis}
-                </div>
-              ) : (
-                <div className="text-sm text-gray-400 italic bg-gray-50 rounded-lg p-3 border border-gray-100">
-                  尚未填写作品梗概。梗概是创作时最重要的参照。
-                  {canEditCurrentTab && ' 点击右上角「编辑作品设定」开始填写。'}
-                </div>
-              )}
-              {work.description && (work.metadata as any)?.synopsis && work.description !== (work.metadata as any).synopsis && (
-                <div className="text-xs text-gray-400 mt-1">
-                  ℹ️ 梗概与项目描述字段可能暂时不同步，将来会统一为单一来源。
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-gray-100">
-              {work.author && (
-                <div>
-                  <div className="text-xs text-gray-400">作者</div>
-                  <div className="text-sm text-gray-700">{work.author}</div>
-                </div>
-              )}
-              {work.tags && work.tags.length > 0 && (
-                <div>
-                  <div className="text-xs text-gray-400">标签</div>
-                  <div className="flex flex-wrap gap-1 mt-0.5">
-                    {work.tags.map((t: string) => (
-                      <span key={t} className="text-xs px-1.5 py-0.5 bg-gray-100 rounded text-gray-600">{t}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div>
-                <div className="text-xs text-gray-400">总字数</div>
-                <div className="text-sm text-gray-700">{work.wordCount.toLocaleString()} 字</div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-400">创建时间</div>
-                <div className="text-sm text-gray-700">{formatDate(work.createdAt)}</div>
-              </div>
-            </div>
-          </div>
-
-          {usePlanningWorkSettingPath && canEditCurrentTab ? (
-            <WorkSettingEditor
-              project={work}
-              onSaved={() => void load()}
-            />
-          ) : (
-            <ContentMetadataCard
-              metadata={work.metadata as Record<string, unknown>}
-              onEdit={
-                !usePlanningWorkSettingPath && canEditCurrentTab
-                  ? () => setShowMetadataEditor(true)
-                  : undefined
-              }
-            />
-          )}
-        </div>
+        <WorkSettingDocument
+          project={work}
+          isEditing={isEditing}
+          onEditToggle={canEverEdit ? () => setIsEditing(prev => !prev) : undefined}
+          onSaved={() => void load()}
+        />
       )}
 
       {/* ─── 作品章节 ─── */}
-      {activeTab === 'chapters' && usePlanningChapterPath ? (
+      {activeTab === 'chapters' && (isEditing || showPlanning) ? (
+        <WorkChapterEditor
+          projectId={work.id}
+          initialPlans={chapterPlanning}
+          planningMode={usePlanningChapterEditor}
+          inlineMode={true}
+          onClose={() => {
+            setIsEditing(false)
+            setShowPlanning(false)
+          }}
+          onSaved={() => {
+            setIsEditing(false)
+            setShowPlanning(false)
+            notifySuccess(usePlanningChapterEditor ? '章节规划已更新' : '作品章节已更新')
+            void load()
+          }}
+        />
+      ) : activeTab === 'chapters' && usePlanningChapterPath ? (
         <div className="bg-white rounded-lg border shadow-sm flex flex-col overflow-hidden">
           <div className="px-4 py-3 border-b flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -913,33 +839,6 @@ export default function WorkDetailPage() {
         wordCount={contentModal?.wordCount ?? 0}
         onClose={() => setContentModal(null)}
       />
-
-      {showPlanning && (
-        <WorkChapterEditor
-          projectId={work.id}
-          initialPlans={chapterPlanning}
-          planningMode={usePlanningChapterEditor}
-          onClose={() => setShowPlanning(false)}
-          onSaved={() => {
-            setShowPlanning(false)
-            notifySuccess(usePlanningChapterEditor ? '章节规划已更新' : '作品章节已更新')
-            void load()
-          }}
-        />
-      )}
-
-      {showMetadataEditor && (
-        <WorkMetadataPanel
-          work={work}
-          planningWorkSettingMode={usePlanningWorkSettingPath}
-          onClose={async () => {
-            setShowMetadataEditor(false)
-            await load()
-          }}
-          initialField="synopsis"
-          initialMode="view_all"
-        />
-      )}
     </div>
   )
 }

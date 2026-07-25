@@ -13,6 +13,8 @@ import { createConceivingProposal, creativeStageLabel, getCreativeStage } from '
 import { useNotifications } from '../../hooks/useNotifications'
 import { IconCreative } from '../ui/icons'
 
+import CreateProposalModal from './CreateProposalModal'
+
 export default function CreativeWorkspace() {
   const navigate = useNavigate()
   const { success, error: notifyError } = useNotifications()
@@ -21,6 +23,7 @@ export default function CreativeWorkspace() {
   const [refs, setRefs] = useState<FileReference[]>([])
   const [loading, setLoading] = useState(true)
   const [refCount, setRefCount] = useState(0)
+  const [createModalOpen, setCreateModalOpen] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -42,15 +45,15 @@ export default function CreativeWorkspace() {
   const pending = useMemo(() => proposals.filter(p => p.status === 'draft'), [proposals])
   const formed = useMemo(() => proposals.filter(p => p.status === 'submitted' || p.status === 'evaluated'), [proposals])
 
-  const handleNew = async () => {
-    const name = window.prompt('作品标题', '新创意作品')
-    if (!name?.trim()) return
+  const handleCreateSubmit = async (name: string) => {
     try {
-      const created = await createConceivingProposal(name.trim())
+      const created = await createConceivingProposal(name)
       await load()
-      success('已创建')
+      success('已创建作品构思')
       navigate(`/creative/proposals/${created.id}`)
-    } catch { notifyError('创建失败') }
+    } catch {
+      notifyError('创建失败')
+    }
   }
 
   if (loading) {
@@ -118,10 +121,10 @@ export default function CreativeWorkspace() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">作品构思中 {pending.length} 部</h2>
             <button
-              onClick={() => void handleNew()}
-              className="text-xs px-2 py-1.5 bg-amber-600 text-white rounded hover:bg-amber-700"
+              onClick={() => setCreateModalOpen(true)}
+              className="text-xs px-2.5 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-medium transition-colors shadow-xs"
             >
-              新作品创意构思
+              + 新作品创意构思
             </button>
           </div>
           {pending.length === 0 ? (
@@ -169,6 +172,12 @@ export default function CreativeWorkspace() {
           )}
         </section>
       </div>
+
+      <CreateProposalModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onSubmit={handleCreateSubmit}
+      />
     </div>
   )
 }

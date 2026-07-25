@@ -24,7 +24,6 @@ const ShelfPage = lazy(() => import('./pages/ShelfPage'))
 const AiSearchPage = lazy(() => import('./pages/creative/AiSearchPage'))
 const ProposalDetailPage = lazy(() => import('./pages/creative/ProposalDetailPage'))
 const CreativeWorkspace = lazy(() => import('./components/creative/CreativeWorkspace'))
-const ProposalEvalPage = lazy(() => import('./pages/planning/ProposalEvalPage'))
 const MetadataListPage = lazy(() => import('./pages/planning/MetadataListPage'))
 const MetadataProjectPage = lazy(() => import('./pages/planning/MetadataProjectPage'))
 const EvaluationPage = lazy(() => import('./pages/planning/EvaluationPage'))
@@ -159,7 +158,7 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <SuspenseWrapper>
-          <ProposalEvalPage />
+          <ProposalDetailPage />
         </SuspenseWrapper>
       </Layout>
     ),

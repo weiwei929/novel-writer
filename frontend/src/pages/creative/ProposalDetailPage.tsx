@@ -1,4 +1,4 @@
-import { IconArrowLeft } from '../../components/ui/icons'
+import { IconArrowLeft, IconCheckCircle } from '../../components/ui/icons'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -143,6 +143,20 @@ export default function ProposalDetailPage() {
     }
   }
 
+  const handleAcceptIntoPlanning = async () => {
+    if (!id || !proposal) return
+    setSaving(true)
+    try {
+      const { projectId } = await proposalsApi.approve(id)
+      success('已成功接收入企划课')
+      navigate(`/work/${projectId}?from=planning`)
+    } catch {
+      notifyError('接收失败', '无法接收入企划课')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (!proposal) {
     return (
       <div className="text-center py-20 text-gray-500">
@@ -159,8 +173,9 @@ export default function ProposalDetailPage() {
   const stageLabel = creativeStageLabel(stage, proposal.status)
   const headingPrefix = creativeStageHeading(stage, proposal.status)
   const canStartConceiving = proposal.status === 'draft' && stage === 'origin'
-  const canSubmitPlanning =
-    proposal.status === 'draft' && stage !== 'origin'
+  const canSubmitPlanning = proposal.status === 'draft' && stage !== 'origin'
+  const canAcceptPlanning =
+    (proposal.status === 'submitted' || proposal.status === 'evaluated') && !proposal.projectId
   const references = (proposal.references as ProposalReference[]) || []
   const inputCls =
     'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-amber-500'
@@ -219,27 +234,6 @@ export default function ProposalDetailPage() {
             value={synopsis}
             onChange={e => setSynopsis(e.target.value)}
           />
-        </div>
-        <div>
-          <label className="text-xs text-gray-500">创新点</label>
-          <textarea
-            className={inputCls}
-            rows={2}
-            value={innovation}
-            onChange={e => setInnovation(e.target.value)}
-          />
-        </div>
-        <div>
-          <label className="text-xs text-gray-500">核心设定</label>
-          <textarea
-            className={inputCls}
-            rows={3}
-            value={coreSetting}
-            onChange={e => setCoreSetting(e.target.value)}
-          />
-          <p className="text-xs text-gray-400 mt-1">
-            旧字段，逐步淡出。立项后企划课优先继承下方「设定雏形」四块，不会自动同步此处内容。
-          </p>
         </div>
         <div>
           <label className="text-xs text-gray-500">标签</label>
@@ -333,6 +327,26 @@ export default function ProposalDetailPage() {
             className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm hover:bg-amber-700 sm:ml-auto"
           >
             提交企划课
+          </button>
+        )}
+        {canAcceptPlanning && (
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => void handleAcceptIntoPlanning()}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 sm:ml-auto flex items-center gap-1.5 shadow-sm font-medium"
+          >
+            <IconCheckCircle size={16} />
+            接收入企划课
+          </button>
+        )}
+        {proposal.projectId && (
+          <button
+            type="button"
+            onClick={() => navigate(`/work/${proposal.projectId}?from=planning`)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 sm:ml-auto flex items-center gap-1.5 shadow-sm font-medium"
+          >
+            前往作品详情 · 0~4 活体设定中枢 →
           </button>
         )}
         {canStartConceiving && (

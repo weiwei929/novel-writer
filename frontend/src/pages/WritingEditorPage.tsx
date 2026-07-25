@@ -249,8 +249,12 @@ const WritingEditorPage: React.FC = () => {
     )
   }
 
+  const charCount = content.length
+  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0
+  const readingTime = Math.ceil(charCount / 500) || 1
+
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
+    <div className="h-full flex flex-col bg-gray-100 overflow-hidden">
       <div className="bg-white border-b px-4 py-2 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <button
@@ -352,7 +356,7 @@ const WritingEditorPage: React.FC = () => {
       )}
 
       {/* 创作室自然三栏经典布局 (Natural Three-Column Layout) */}
-      <div className="flex-1 flex overflow-hidden relative bg-gray-50">
+      <div className="flex-1 min-h-0 flex overflow-hidden relative bg-gray-50">
         {/* 👈 左栏：【章节栏】 (上下布局：上为本章梗概，下为章节列表) */}
         {project && chapter && (
           <div className="w-72 shrink-0 h-full border-r border-gray-200 bg-white flex flex-col overflow-hidden select-none">
@@ -450,6 +454,30 @@ const WritingEditorPage: React.FC = () => {
         )}
       </div>
 
+      {/* 2.0 沉浸式固定状态底栏 (Persistent Footer Status Bar) */}
+      <div className="h-8 bg-gray-100 border-t border-gray-200 px-4 flex items-center justify-between text-xs text-gray-500 shrink-0 select-none z-20 font-sans">
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1.5 font-medium">
+            <span className={`w-2 h-2 rounded-full ${isOffline ? 'bg-amber-500' : saving ? 'bg-indigo-500 animate-pulse' : hasUnsavedChanges ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+            {isOffline
+              ? '离线保存中（已存本地）'
+              : saveError
+                ? saveError
+                : saving
+                  ? '正在保存正文…'
+                  : hasUnsavedChanges
+                    ? '编辑中…'
+                    : '已在线同步'}
+          </span>
+          <span className="text-gray-300">|</span>
+          <span className="text-gray-400">快捷键: Ctrl+S 保存 | Ctrl+P 预览</span>
+        </div>
+        <div className="flex items-center gap-4 text-gray-600 font-medium">
+          <span>字符数: <strong className="text-gray-800 font-bold">{charCount.toLocaleString()}</strong></span>
+          <span>词数: <strong className="text-gray-800 font-bold">{wordCount.toLocaleString()}</strong></span>
+          <span>预计阅读: <strong className="text-gray-800 font-bold">{readingTime}</strong> 分钟</span>
+        </div>
+      </div>
     </div>
   )
 }

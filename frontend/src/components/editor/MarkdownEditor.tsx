@@ -173,9 +173,9 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(({
 
   const containerClasses = isFullscreen
     ? 'fixed inset-0 z-50 bg-white'
-    : 'w-full h-full min-h-[600px]'
+    : 'w-full h-full flex-1 overflow-hidden'
 
-  const editorHeight = isFullscreen ? 'calc(100vh - 60px)' : 'calc(100vh - 112px)'
+  const editorHeight = isFullscreen ? 'calc(100vh - 60px)' : '100%'
 
   return (
     <div className={`flex flex-col ${containerClasses}`}>
