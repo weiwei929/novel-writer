@@ -19,6 +19,7 @@ import ChapterContentModal from '../components/editor/ChapterContentModal'
 import WorkChapterEditor from '../components/editor/WorkChapterEditor'
 import { getWorkPermissions } from '../services/workPermissions'
 import { canReleaseToStudio, hasReleasedToStudio } from '../services/releaseHandoff'
+import { confirmPlanningWithReadiness } from '../services/planningConfirm'
 
 // === 作品设定 / 作品章节 / 作品正文 / 遗留资料 ===
 type WorkTab = 'synopsis' | 'chapters' | 'body' | 'world'
@@ -261,6 +262,22 @@ export default function WorkDetailPage() {
     }
   }, [work, load, openWritingEditor, notifySuccess, notifyError])
 
+  /** 企划放行：confirm-greenlight + release-to-studio（≠ start-writing） */
+  const handleConfirmAndReleaseToStudio = useCallback(async () => {
+    if (!work) return
+    try {
+      setStudioActionLoading(true)
+      await confirmPlanningWithReadiness(work)
+      await projectsApi.releaseToStudio(work.id)
+      notifySuccess('已确认企划并放行至创作室')
+      await load()
+    } catch (e) {
+      notifyError('放行失败', e instanceof Error ? e.message : '请确认设定与章节规划已齐全')
+    } finally {
+      setStudioActionLoading(false)
+    }
+  }, [work, load, notifySuccess, notifyError])
+
   const handleEnterWriting = useCallback(() => {
     openWritingEditor(chapters)
   }, [chapters, openWritingEditor])
@@ -397,7 +414,7 @@ export default function WorkDetailPage() {
                 <button
                   type="button"
                   disabled={!gate.ready || studioActionLoading}
-                  onClick={() => void handleStartWriting()}
+                  onClick={() => void handleConfirmAndReleaseToStudio()}
                   className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
                   title={gate.ready ? '确认企划完成并放行给创作室' : '请先补全缺项'}
                 >
