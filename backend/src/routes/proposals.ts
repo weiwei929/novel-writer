@@ -7,6 +7,11 @@ import { META_KEYS_DAY1 } from '../constants/metadata-keys'
 import { mapProposalStatus } from '../services/status-migration'
 import { synopsisFieldsForCreate } from '../utils/workSynopsis'
 import { seedWorkSettingFromSketch } from '../utils/workSetting'
+import {
+  buildOriginContent,
+  extractTrackedFields,
+  recordWorkNoteDiff,
+} from '../utils/workNote'
 
 const PROPOSAL_STATUSES = ['draft', 'submitted', 'evaluated', 'approved', 'rejected', 'shelved'] as const
 
@@ -90,6 +95,15 @@ export async function acceptIntoPlanningCore(
       submittedToPlanningAt: now,
       metadata: projectMetadata as Prisma.InputJsonValue,
     },
+  })
+
+  // 创作手记：缘起 + 首轮 synopsis / workSetting（kind=edit，真实立项事件）
+  const afterSnap = extractTrackedFields(
+    projectMetadata as Record<string, unknown>,
+    synopsisWrite.description ?? null
+  )
+  await recordWorkNoteDiff(tx, created.id, {}, afterSnap, {
+    extra: { origin: buildOriginContent(proposal) },
   })
 
   await tx.character.updateMany({

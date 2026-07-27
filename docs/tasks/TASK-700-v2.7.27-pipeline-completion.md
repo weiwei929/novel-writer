@@ -290,6 +290,7 @@ model WorkNote {
                       // | eventsAndPlot | narrativeStyle | chapterPlanning | overview
   content    String   // 当时的内容快照（overview 时即作者正文）
   note       String?  // 作者后补的「为什么」，可空、可改
+  kind       String   @default("edit")  // edit | initial —— 见下方说明
   recordedAt DateTime @default(now())
 
   @@index([projectId, recordedAt])
@@ -302,6 +303,24 @@ model WorkNote {
 
 - `field='origin'` —— 立项时把 Proposal 的 `_creativeStage: 'origin'` 内容快照一条，手记有个开头
 - `field='overview'` —— 总述手记，审阅阶段作者自己写，`content` 即正文，全篇仅一条、可反复改
+
+**`kind` 为什么必须有（2026-07-27 补，此前 §4.6 漏写导致与 §4.8 矛盾）**：
+
+它区分的是**时间戳可不可信**。
+
+| kind | `recordedAt` 的含义 | 可信度 |
+|------|---------------------|--------|
+| `edit` | 系统**亲眼看到**内容变化的那一刻 | ✅ 真实 |
+| `initial` | 上线时对存量内容补拍的快照，**不是**作者写下它的时间 | ❌ 仅代表「开始记录的时间」 |
+
+存量作品（如《美丽的一天》）的设定写于数周前，初始快照却会盖上上线当天的时间戳。
+**无 `kind` 标记，这条记录即是谎言** —— 手记会显示「2026-07-27 创建了人物与关系」，而事实不然。
+界面据此打出「初始快照 · 此前历史不可追溯」。
+
+> **不采用「用 `note` 写固定文案」的替代方案**：`note` 是作者写「为什么」的空间，
+> 混入系统文案会使人分不清哪句出自本人 —— 恰好毁掉本功能唯一在乎的区分。
+
+`origin` 不是 kind，是 `field` 取值；立项记缘起属真实事件，`kind` 仍为 `edit`。
 
 ### 4.7 设计推导记录（不作为实现依据）
 

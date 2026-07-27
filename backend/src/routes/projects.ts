@@ -13,6 +13,7 @@ import { META_KEYS_DAY1 } from '../constants/metadata-keys'
 import { PROJECT_STATUS_ALL } from '../constants/statuses'
 import { applySynopsisMetadataWrite, mergeProjectUpdateWithSynopsis } from '../utils/workSynopsis'
 import { mergeWorkSettingInProjectUpdate, getPlanningSettingReadiness } from '../utils/workSetting'
+import { extractTrackedFields, recordWorkNoteDiff } from '../utils/workNote'
 import {
   ChapterPlanningMaterializeError,
   getChapterPlanningReadiness,
@@ -517,9 +518,21 @@ export async function projectRoutes(app: FastifyInstance) {
           updateData.description = project.description
         }
 
-        await prisma.project.update({
-          where: { id },
-          data: updateData as Prisma.ProjectUpdateInput,
+        const beforeSnap = extractTrackedFields(
+          metadata as Record<string, unknown>,
+          project.description
+        )
+        const afterSnap = extractTrackedFields(
+          updateData.metadata,
+          updateData.description ?? project.description
+        )
+
+        await prisma.$transaction(async tx => {
+          await recordWorkNoteDiff(tx, id, beforeSnap, afterSnap)
+          await tx.project.update({
+            where: { id },
+            data: updateData as Prisma.ProjectUpdateInput,
+          })
         })
         req.log.info({ projectId: id }, 'Metadata confirmed and saved')
         return reply.send(ApiResponse.success(null, '元数据已确认并保存'))
@@ -1192,9 +1205,21 @@ export async function projectRoutes(app: FastifyInstance) {
       )
       mergedUpdate = mergeWorkSettingInProjectUpdate(mergedUpdate, existingMetadata)
 
-      const project = await prisma.project.update({
-        where: { id: req.params.id },
-        data: mergedUpdate as Prisma.ProjectUpdateInput,
+      const beforeSnap = extractTrackedFields(existingMetadata, existing.description)
+      const afterMeta =
+        (mergedUpdate.metadata as Record<string, unknown> | undefined) ?? existingMetadata
+      const afterDesc =
+        mergedUpdate.description !== undefined
+          ? (mergedUpdate.description as string | null)
+          : existing.description
+      const afterSnap = extractTrackedFields(afterMeta, afterDesc)
+
+      const project = await prisma.$transaction(async tx => {
+        await recordWorkNoteDiff(tx, req.params.id, beforeSnap, afterSnap)
+        return tx.project.update({
+          where: { id: req.params.id },
+          data: mergedUpdate as Prisma.ProjectUpdateInput,
+        })
       })
       return { success: true, data: withMappedProjectStatus(project) }
     } catch (e) {
@@ -1260,9 +1285,15 @@ export async function projectRoutes(app: FastifyInstance) {
       const canonical = normalizeChapterPlanning(result.data)
       const updatedMetadata = { ...metadata, chapterPlanning: canonical }
 
-      await prisma.project.update({
-        where: { id: req.params.id },
-        data: { metadata: updatedMetadata }
+      const beforeSnap = extractTrackedFields(metadata, null)
+      const afterSnap = extractTrackedFields(updatedMetadata, null)
+
+      await prisma.$transaction(async tx => {
+        await recordWorkNoteDiff(tx, req.params.id, beforeSnap, afterSnap)
+        await tx.project.update({
+          where: { id: req.params.id },
+          data: { metadata: updatedMetadata },
+        })
       })
 
       return ApiResponse.success(canonical, '章节规划已保存')

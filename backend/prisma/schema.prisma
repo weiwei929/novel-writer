@@ -67,11 +67,27 @@ model Project {
   timelineEntries TimelineEntry[]
   creativeFlows   CreativeFlow[]
   proposals       Proposal[]
+  workNotes       WorkNote[]
   proposalId      String?   @unique
   proposal        Proposal? @relation("ProposalPrimaryProject", fields: [proposalId], references: [id], onDelete: SetNull)
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+/** 创作手记时间线（TASK-700-F）—— 只记录内容变更；note 留给作者写「为什么」 */
+model WorkNote {
+  id         String   @id @default(uuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  field      String   // origin | synopsis | charactersAndRelations | timeAndPlace
+                      // | eventsAndPlot | narrativeStyle | chapterPlanning | overview
+  content    String
+  note       String?
+  kind       String   @default("edit") // edit | initial
+  recordedAt DateTime @default(now())
+
+  @@index([projectId, recordedAt])
 }
 
 model Chapter {
