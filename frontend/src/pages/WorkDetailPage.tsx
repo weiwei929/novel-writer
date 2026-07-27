@@ -18,7 +18,7 @@ import WorkSettingDocument from '../components/metadata/WorkSettingDocument'
 import ChapterContentModal from '../components/editor/ChapterContentModal'
 import WorkChapterEditor from '../components/editor/WorkChapterEditor'
 import { getWorkPermissions } from '../services/workPermissions'
-import { canReleaseToStudio, hasReleasedToStudio } from '../services/releaseHandoff'
+import { canReleaseToStudio, hasReleasedToStudio, hasReleasedToEditorial } from '../services/releaseHandoff'
 import { confirmPlanningWithReadiness } from '../services/planningConfirm'
 
 // === 作品设定 / 作品章节 / 作品正文 / 遗留资料 ===
@@ -278,6 +278,21 @@ export default function WorkDetailPage() {
     }
   }, [work, load, notifySuccess, notifyError])
 
+  /** 创作室→编审：仅 release-to-editorial（不改 status，保留待处理缓冲区） */
+  const handleReleaseToEditorial = useCallback(async () => {
+    if (!work) return
+    try {
+      setStudioActionLoading(true)
+      await projectsApi.releaseToEditorial(work.id)
+      notifySuccess('已提交编审部')
+      await load()
+    } catch (e) {
+      notifyError('提交编审失败', e instanceof Error ? e.message : undefined)
+    } finally {
+      setStudioActionLoading(false)
+    }
+  }, [work, load, notifySuccess, notifyError])
+
   const handleEnterWriting = useCallback(() => {
     openWritingEditor(chapters)
   }, [chapters, openWritingEditor])
@@ -381,6 +396,32 @@ export default function WorkDetailPage() {
               进入创作室
             </button>
           ) : null}
+        </div>
+      )}
+
+      {isWritingStudioContext && work.status === 'written' && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-emerald-50 border border-emerald-100 rounded-lg px-4 py-3">
+          {hasReleasedToEditorial(work) ? (
+            <div className="flex items-center gap-2 text-sm text-emerald-900 font-medium">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              已提交编审部（可在编审「待处理」查阅；开审由编审部操作）。
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-emerald-900">
+                写作已完成。提交编审部后进入编审队列「待处理」，不会自动开始审阅。
+              </p>
+              <button
+                type="button"
+                onClick={() => void handleReleaseToEditorial()}
+                disabled={studioActionLoading}
+                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium disabled:opacity-50"
+              >
+                <IconArrowRight size={14} />
+                {studioActionLoading ? '提交中…' : '提交编审部'}
+              </button>
+            </>
+          )}
         </div>
       )}
 
