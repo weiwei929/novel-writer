@@ -4,7 +4,7 @@ export default function CreativePage() {
   const location = useLocation()
 
   if (location.pathname === '/creative' || location.pathname === '/creative/') {
-    return <Navigate to="/creative/chat" replace />
+    return <Navigate to="/creative/workspace" replace />
   }
 
   return <Outlet />

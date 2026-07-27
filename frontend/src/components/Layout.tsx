@@ -21,7 +21,7 @@ const PHASES: Phase[] = [
     id: 'ideation',
     label: '创意组',
     icon: IconCreative,
-    to: '/creative/chat',
+    to: '/creative/workspace',
     match: ['/creative'],
     tab: 'text-amber-800 bg-amber-50/80 hover:bg-amber-100',
     tabActive: 'bg-amber-600 text-white shadow-sm',

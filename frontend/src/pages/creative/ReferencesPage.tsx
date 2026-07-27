@@ -4,7 +4,7 @@ import { IconBookOpen, IconArrowLeft } from '../../components/ui/icons'
 export default function ReferencesPage() {
   return (
     <div className="space-y-6 animate-fade-in">
-      <Link to="/creative/chat" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900">
+      <Link to="/creative/workspace" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900">
         <IconArrowLeft size={16} />返回创意组
       </Link>
       <div className="bg-white border rounded-xl p-12 text-center">

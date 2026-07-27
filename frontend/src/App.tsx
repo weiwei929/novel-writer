@@ -276,7 +276,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: 'chat',
+        path: 'workspace',
         element: (
           <SuspenseWrapper>
             <CreativeWorkspace />
@@ -284,8 +284,12 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: 'chat',
+        element: <Navigate to="/creative/workspace" replace />,
+      },
+      {
         path: 'proposals',
-        element: <Navigate to="/creative/chat" replace />,
+        element: <Navigate to="/creative/workspace" replace />,
       },
       {
         path: 'ai-search',

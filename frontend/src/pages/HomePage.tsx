@@ -54,7 +54,7 @@ const STAGE_META: {
     id: 'creative',
     label: '创意组',
     icon: IconCreative,
-    to: '/creative/chat',
+    to: '/creative/workspace',
     countSuffix: '部创意作品',
     accent: 'text-amber-600 bg-amber-50',
     card: 'border-amber-200 bg-amber-50/70 hover:shadow-md',

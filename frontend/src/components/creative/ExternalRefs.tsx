@@ -461,7 +461,7 @@ export default function ExternalRefs() {
     <ThreeColumnLayout
       header={
         <div className="flex items-center gap-3 px-3">
-          <Link to="/creative/chat" className="text-sm text-gray-500 hover:text-gray-900">
+          <Link to="/creative/workspace" className="text-sm text-gray-500 hover:text-gray-900">
             返回创意组
           </Link>
           <TagFilterBar allTags={allTags} activeTag={activeTag} onSelect={setActiveTag} />

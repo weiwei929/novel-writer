@@ -135,7 +135,7 @@ export default function ProposalDetailPage() {
       })
       await proposalsApi.updateStatus(id, 'submitted')
       success('已提交至企划课')
-      navigate('/creative/chat')
+      navigate('/creative/workspace')
     } catch {
       notifyError('操作失败')
     } finally {
@@ -161,7 +161,7 @@ export default function ProposalDetailPage() {
     return (
       <div className="text-center py-20 text-gray-500">
         <p>未找到该创意作品</p>
-        <Link to="/creative/chat" className="text-blue-600 text-sm mt-2 inline-block">
+        <Link to="/creative/workspace" className="text-blue-600 text-sm mt-2 inline-block">
           返回创意组
         </Link>
       </div>
@@ -184,7 +184,7 @@ export default function ProposalDetailPage() {
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
-          to="/creative/chat"
+          to="/creative/workspace"
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900"
         >
           <IconArrowLeft size={16} />
