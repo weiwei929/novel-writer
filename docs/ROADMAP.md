@@ -88,6 +88,7 @@
 | 字数统计三处对齐，中文按字符计 | 小 | 字数是写作者的核心指标，现在三个数字打架 |
 | 会话文件路径改用系统临时目录 | 一行 | 修掉「一重启就掉登录」 |
 | 验证 Monaco 加载源并定死 | 小 | 决定「离线可用」这句话能不能说 |
+| **修 `backend` 的 `lint` 脚本** —— 改为「client 不存在才 generate」 | 一行 | **已咬三次**（2026-07-25 一次、07-27 两次）。现写死 `npm run generate && tsc --noEmit`，只要 dev 在跑就撞 Windows DLL 锁，类型检查根本跑不到。绕法：`npx tsc --noEmit` |
 | 打开被关掉的代码检查规则 | 中 | 详见下方说明 |
 
 > **关于代码检查规则**：当前 eslint 配置几乎是空的——`no-explicit-any`、`no-unused-vars`、`react-hooks/exhaustive-deps` 全部未启用或关闭，所以检查**永远是绿的**。
