@@ -3,7 +3,7 @@
 > **状态**：现役索引 · 最后核对 2026-07-27  
 > **上游计划**：[TASK-700-v2.7.27-pipeline-completion.md](./TASK-700-v2.7.27-pipeline-completion.md)  
 > **侦察**：[TASK-700-A-cursor-scout.md](./TASK-700-A-cursor-scout.md)（已完成）  
-> **分支 HEAD**：`c2453e9`（与 origin 同步）
+> **分支 HEAD**：`d434392`（与 origin 同步；含备份脚本 chore，与手记卡无关）
 
 审卡四条：不超范围、假设已声明、验证可执行、回滚真能回。
 
@@ -15,8 +15,9 @@
 2. `*Actions` 死组件不以之为现役改点；创作室侧错误样板 `StudioActions` 在 700-D 删除。  
 3. WorkDetail 企划放行错接线必须修（700-B）。  
 4. **拍板 F（缓冲区）**：创作室只 `release-to-editorial`；开审在编审部。原「submit 合一直达 reviewing」方案已驳回。  
-5. 创作手记：`chapterPlanning` **进**；记录层见 700-F。  
-6. **阶段一人工走查暂缓**（2026-07-27）——验收未完成，**不阻塞** 700-F。
+5. 创作手记：`chapterPlanning` **进**；记录层 700-F 已上线（`c52d00c`）。  
+6. **阶段一人工走查暂缓**（2026-07-27）——验收未完成，不阻塞手记卡。  
+7. `kind` 区分时间戳可信度；呈现层必须显著标注 `initial`。
 
 ---
 
@@ -29,16 +30,16 @@
 | [700-C](./TASK-700-C-review-mark-reviewed.md) | ReviewDetail 标记已审 | ✅ 已完成 | `4a5ad52` |
 | [700-D](./TASK-700-D-submit-review-handoff-unify.md) | 详情补提交编审 + 删 StudioActions | ✅ 已完成 | `316350a` |
 | [700-E](./TASK-700-E-creative-entry-cleanup.md) | 路由改名 + 删 ChatPage | ✅ 已完成 | `c2453e9` |
-| [700-F](./TASK-700-F-work-note-recording-layer.md) | 创作手记 · 后端记录层 | ✅ **已完成** | `c52d00c` |
+| [700-F](./TASK-700-F-work-note-recording-layer.md) | 创作手记 · 后端记录层 | ✅ 已完成 | `c52d00c` |
+| [700-G](./TASK-700-G-work-note-presentation.md) | 创作手记 · 编审呈现层 | ✅ **代码完成 · 待 commit**（右栏 360px；验收数据已造 edit） | — |
 
-**合入顺序（已执行）**：B → C → D → E。  
-**下一枪**：授权后执行 F（含 schema；先备份 `dev.db`）。
+**下一枪**：commit 700-G 后 → 文集库 §4.9（**必含**：归档后手记仍可读、可续写；补「标记已审」关入口缺口）。
 
 ---
 
-## 显式未拆（F 之后）
+## 显式未拆（G 之后）
 
-- 创作手记呈现：编审左右分栏、`note` 编辑、文集入口（§4.5 / §4.9）  
+- 创作手记 · 文集库入口与展示（§4.9；含 reviewed/归档后手记可读可续写）  
 - 其余死 `*Actions`、桶内 `transition` 语义化  
 - legacy 三表删除 + `acceptIntoPlanningCore` 解耦  
 - `versionApi` / `EvaluationPage` / `MetadataPage`  
