@@ -1,51 +1,27 @@
 # 设计文档索引
 
-## Day 1（v4.1.1，2026-06-04 定案）— 当前权威（以 VPS `v2-dev` 提交为准）
+> **状态**：现役 · 最后核对 2026-07-27
 
-| 顺序 | 文件 | 用途 |
-|------|------|------|
-| 0 | [day1-handoff-brief.md](./day1-handoff-brief.md) | 5 分钟入门（Cursor 第一句读这个） |
-| 1 | [overall-architecture.md](./overall-architecture.md) | **v4.1.1 权威全文** |
-| 2 | [v2-migration-map.md](./v2-migration-map.md) | 资产迁移表 §2.2 决策子表（TASK-200 前必审） |
-| 3 | [code-conflict-analysis.md](./code-conflict-analysis.md) | C-01~C-18 + M1/M2/M3 |
-| 4 | [day1-vps-code-index.md](./day1-vps-code-index.md) | VPS 代码对照 |
-| — | [../plan/DAY1-DESIGN-REVIEW-v4.1-addendum.md](../plan/DAY1-DESIGN-REVIEW-v4.1-addendum.md) | v4.1 冷评落库说明 |
-| — | [cursor-scout-prompt.md](./cursor-scout-prompt.md) | 侦察任务书 |
+本目录仅保留**仍在指导实现**的设计。历史设计稿见 [`archive/`](./archive/)，设计推导过程见 [`../journal/`](../journal/)。
 
-**Cursor 入门口令**：`读 docs/design/day1-handoff-brief.md 入门`
-
-## 历史 / 参考
-
-| 文件 | 说明 |
+| 文件 | 用途 |
 |------|------|
-| [day1-design.md](./day1-design.md) | 2026-06-03 快照；冲突时以 overall-architecture v4.1 为准 |
-| [creation-workflow-redesign.md](./creation-workflow-redesign.md) | 早期流程讨论 |
-| [ai-integration-design.md](./ai-integration-design.md) | AI（Day 3 再动） |
-| [../plan/DAY1-DESIGN-REVIEW-2026-06-03.md](../plan/DAY1-DESIGN-REVIEW-2026-06-03.md) | 06-03 审阅（已被 v4.1 addendum 补充） |
+| [616-content-asset-constitution-v0.2.1.md](./616-content-asset-constitution-v0.2.1.md) | 内容资产模型 —— 当前实现的主要依据 |
+| [616-B-work-setting-minimal-model-draft.md](./616-B-work-setting-minimal-model-draft.md) | 作品设定最小模型 |
+| [0608-616-coordination-draft.md](./0608-616-coordination-draft.md) | 0608 五部门骨架与 616 内容链的衔接 |
+| [design-P1-entry-architecture.md](./design-P1-entry-architecture.md) | 入口架构（已收束，保留作依据） |
+| [quick-writing-entry-2026-07-07.md](./quick-writing-entry-2026-07-07.md) | 「继续写作」入口（已实施） |
+| [design-mode-trial-2026-06-20.md](./design-mode-trial-2026-06-20.md) | Design Mode 视觉试验；代码在分支 `ui/design-mode-trial` |
 
-## 快速开始写作设计（2026-07-07，待审阅）
+---
 
-| 文件 | 说明 |
-|------|------|
-| [quick-writing-entry-2026-07-07.md](./quick-writing-entry-2026-07-07.md) | 原「新建作品直达写作页」方案已被会诊证伪（状态映射/权限冲突）；已更正为「继续写作＝恢复最近创作中作品与章节，不新建对象」，已实施（`feature/quick-writing-loop`） |
+## 已搬走的内容（2026-07-27 治理）
 
-基于 2026-07-07 只读侦察报告；继承 Design Mode 视觉体系与 616 主链路由/权限，不新增业务状态。审阅通过后交 Codex 拆分实施任务卡。
+| 原内容 | 现位置 |
+|--------|--------|
+| 0608 立宪期 26 份 | [`../journal/0608-constitutional-guidance/`](../journal/0608-constitutional-guidance/) |
+| Day-1 设计稿、迁移表、冲突分析、v2 各部门设计 | [`./archive/`](./archive/) |
+| 设计期讨论 / 会诊记录 | [`../journal/`](../journal/) |
 
-## Design Mode 试验（2026-06-20，活跃）
-
-| 文件 | 说明 |
-|------|------|
-| [design-mode-trial-2026-06-20.md](./design-mode-trial-2026-06-20.md) | Cursor Design Mode 视觉抛光试验记录 |
-| 分支 `ui/design-mode-trial` | 代码提交：`ee2d55d`（换行符归一化）+ `9b07129`（HomePage / Layout / icons） |
-| `handoffs/opendesign-ui-audit-2026-06-18/` | Open Design 冻结战役材料（工作区未入库） |
-
-约束：仅改视觉，不动 state / 路由 / 保存逻辑。详见试验记录 §2.1。
-
-## 0608 立宪指导
-
-- [0608-constitutional-guidance/](./0608-constitutional-guidance/) — workspace 模型、release protocol、legacy freeze 等
-
-## 协作
-
-- [../plan/ALIGNMENT-2026-06-02.md](../plan/ALIGNMENT-2026-06-02.md) — Claude ↔ Cursor 对齐
-- [../tasks/CURSOR_REFERENCE.md](../tasks/CURSOR_REFERENCE.md) — 实现规范 + VPS §十一
+> 原索引曾把 Day-1 材料标为「当前权威（以 VPS `v2-dev` 提交为准）」。
+> `v2-dev` 分支已于 2026-06-08 停更，该表述已失效，故本次一并归档。

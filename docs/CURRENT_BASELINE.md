@@ -20,21 +20,21 @@
 
 | 战役 | 摘要 |
 |------|------|
-| **616-B** | 设定侧闭环 — [TASK-616-B-closure.md](./tasks/TASK-616-B-closure.md) |
+| **616-B** | 设定侧闭环 — [TASK-616-B-closure.md](./tasks/archive/TASK-616-B-closure.md) |
 | **P1 入口治理** | **暂收束**（不做 P1-c） |
 | ↳ P1-a | PR [#7](https://github.com/weiwei929/novel-writer/pull/7) 创意组裸链 → 企划课承接 |
 | ↳ P1-b | PR [#8](https://github.com/weiwei929/novel-writer/pull/8) ShelfPage / ProjectCard `?from=` 治理 |
 | **616-C** | 章节规划侧闭环（企划课） |
-| ↳ C-A | PR [#9](https://github.com/weiwei929/novel-writer/pull/9) · [TASK-616-C-A.md](./tasks/TASK-616-C-A.md) |
-| ↳ C-A2 | PR [#10](https://github.com/weiwei929/novel-writer/pull/10) · [TASK-616-C-A2.md](./tasks/TASK-616-C-A2.md) |
+| ↳ C-A | PR [#9](https://github.com/weiwei929/novel-writer/pull/9) · [TASK-616-C-A.md](./tasks/archive/TASK-616-C-A.md) |
+| ↳ C-A2 | PR [#10](https://github.com/weiwei929/novel-writer/pull/10) · [TASK-616-C-A2.md](./tasks/archive/TASK-616-C-A2.md) |
 | **616-D** | 企划 → 创作室交接（**主链已贯通**） |
-| ↳ D-A | PR [#11](https://github.com/weiwei929/novel-writer/pull/11) · [TASK-616-D-A.md](./tasks/TASK-616-D-A.md) start-writing materialize |
-| ↳ D-B | PR [#12](https://github.com/weiwei929/novel-writer/pull/12) · [TASK-616-D-B.md](./tasks/TASK-616-D-B.md) 创作室只读参考（设定 / 本章） |
+| ↳ D-A | PR [#11](https://github.com/weiwei929/novel-writer/pull/11) · [TASK-616-D-A.md](./tasks/archive/TASK-616-D-A.md) start-writing materialize |
+| ↳ D-B | PR [#12](https://github.com/weiwei929/novel-writer/pull/12) · [TASK-616-D-B.md](./tasks/archive/TASK-616-D-B.md) 创作室只读参考（设定 / 本章） |
 | ↳ D-C | PR [#13](https://github.com/weiwei929/novel-writer/pull/13) 写作器入口可用性（作品详情 + 创作室列表 → 自动进写作器） |
 | ↳ D-D | PR [#14](https://github.com/weiwei929/novel-writer/pull/14) 写作参考侧栏 legacy 降噪（一级 Tab 仅设定 / 本章） |
-| **quick-writing** | [TASK-618-quick-writing-loop.md](./tasks/TASK-618-quick-writing-loop.md) · HomePage「继续写作」入口与保存可靠性解耦 |
-| **draft-recovery** | [TASK-619-draft-recovery-offline-guard.md](./tasks/TASK-619-draft-recovery-offline-guard.md) · 创作室本地草稿自动镜像与一键恢复横幅 |
-| **chapter-origin-flow** | [TASK-620-chapter-origin-flow-alignment.md](./tasks/TASK-620-chapter-origin-flow-alignment.md) · 三大第一起点全盘对齐与 616 战役封版 |
+| **quick-writing** | [TASK-618-quick-writing-loop.md](./tasks/archive/TASK-618-quick-writing-loop.md) · HomePage「继续写作」入口与保存可靠性解耦 |
+| **draft-recovery** | [TASK-619-draft-recovery-offline-guard.md](./tasks/archive/TASK-619-draft-recovery-offline-guard.md) · 创作室本地草稿自动镜像与一键恢复横幅 |
+| **chapter-origin-flow** | [TASK-620-chapter-origin-flow-alignment.md](./tasks/archive/TASK-620-chapter-origin-flow-alignment.md) · 三大第一起点全盘对齐与 616 战役封版 |
 | **release gate** | commit `43b9c24` — `backend` `build` / `lint` 前置 `prisma generate` |
 | **studio-layout** | commit `0e99c14` — `WorkMetadataPanel` → `WorkSettingDocument`；抽出 `CreateProposalModal`；删除 `ProposalEvalPage`；**修复写作器底部状态栏缺失**（+562 / −693） |
 
@@ -162,5 +162,5 @@ _settingSketch → workSetting + chapterPlanning
 - `docs/design/616-content-asset-constitution-v0.2.1.md`
 - `docs/design/616-B-work-setting-minimal-model-draft.md`
 - `docs/design/0608-616-coordination-draft.md`
-- `docs/tasks/TASK-616-D-consultation.md`（616-D 会诊 · 已结案）
+- `docs/tasks/archive/TASK-616-D-consultation.md`（616-D 会诊 · 已结案）
 - `docs/design/design-P1-entry-architecture.md`（P1 已收束）

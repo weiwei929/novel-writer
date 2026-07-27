@@ -77,21 +77,21 @@ cd frontend && npm run dev
 创建 `backend/.env` 文件（可选）:
 
 ```env
+# 数据库（路径相对 backend/prisma/ 目录）
+DATABASE_URL="file:./dev.db"
+
+# 应用密码 —— 必须设置
+# 不设置时代码会回落到硬编码默认值 novel2024，
+# 而该默认值印在公开 README 中，等于无密码。
+APP_PASSWORD=改成你自己的密码
+
 # 服务器端口
 PORT=5000
-
-# 数据存储路径
-DATA_PATH=./data
-
-# JWT 密钥（用于认证）
-JWT_SECRET=your-secret-key-here
-
-# Grok API 密钥（用于 AI 功能）
-GROK_API_KEY=your-grok-api-key-here
-
-# 环境
-NODE_ENV=development
 ```
+
+> **关于 AI 配置**：当前版本 **AI 功能已冻结**（`frontend/src/config/aiFreeze.ts` 中 `AI_UI_FROZEN = true`），
+> 前端入口统一显示「AI 集成开发中」。**无需配置任何 AI provider 的 API key。**
+> 后端 AI 代码保留未删，待解冻时再行配置。
 
 ### 前端环境变量
 

@@ -72,10 +72,12 @@ cp .env.example .env
 vim .env
 
 # 编辑关键配置：
-# GROK_API_KEY=your_actual_grok_api_key
+# APP_PASSWORD=<必须设置，否则回落到硬编码默认值>
 # DOMAIN=novel-writer.example.com
 # HTTPS_EMAIL=your-email@example.com
 # NODE_ENV=production
+#
+# 注意：AI 功能当前已冻结，无需配置 provider API key
 
 # 3. 创建数据目录
 sudo mkdir -p /opt/novel-writer/data/{collections,projects,backups,media}

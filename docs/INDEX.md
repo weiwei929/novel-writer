@@ -1,179 +1,107 @@
 # 文档索引
 
-欢迎来到 Novel Writer 文档中心。
-
-> **Agent 入口**：[AGENTS.md](../AGENTS.md) — 先读 `CURRENT_BASELINE` → `CURSOR_REFERENCE` → `ARCHITECTURE`
->
-> **本索引最后更新**：2026-07-07（补全 2026 年 thinklog / 设计 / 任务卡索引）
+> **状态**：现役 · 最后核对 2026-07-27
 
 ---
 
-## 单一真相源（SSOT）
+## 先读这三份
 
-协作状态、已合并战役、暂不做项，以这些文件为准：
+| 文件 | 回答什么问题 |
+|------|-------------|
+| **[ROADMAP.md](./ROADMAP.md)** | 项目现在是什么、能做什么、往哪走 |
+| **[CURRENT_BASELINE.md](./CURRENT_BASELINE.md)** | 当前分支、已合并内容、暂不做清单（单一真相源） |
+| **[../AGENTS.md](../AGENTS.md)** | 多工具协作的角色分工与红线 |
+
+**AI 工具开工，读这三份即可上手。**
+
+---
+
+## 现役文档全集
+
+三份之外，现役区只有这些。**列表之外的一切，都在 `journal/` 或 `archive/` 里，不作为操作依据。**
+
+### 顶层
 
 | 文件 | 用途 |
 |------|------|
-| [AGENTS.md](../AGENTS.md) | 多 Agent 协作总纲（角色、主战场、worktree、冻结分支） |
-| [CURRENT_BASELINE.md](./CURRENT_BASELINE.md) | 当前基线、主分支、616-D 主链、暂不做清单 |
-| [BASELINE_E2E_V01.md](./BASELINE_E2E_V01.md) | 核心流程 E2E 验证清单（历史基线记录） |
-| [tasks/CURSOR_REFERENCE.md](./tasks/CURSOR_REFERENCE.md) | Cursor 编码规范与实现约束 |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | 系统架构、技术栈、设计决策 |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | 系统架构与技术栈 |
+| [DEVELOPMENT.md](./DEVELOPMENT.md) | 开发环境与工作流程 |
+| [README.md](./README.md) | 文档区说明 |
 
----
+### 操作指南 `guides/`
 
-## 核心文档
-
-- **[项目概述](./README.md)** — 项目简介、功能特性、快速开始
-- **[开发指南](./DEVELOPMENT.md)** — 开发环境、工作流程、最佳实践
-
----
-
-## 任务卡
-
-- **[任务卡说明](./tasks/README.md)** — 生命周期、格式、目录约定
-- **[任务卡模板](./tasks/TEMPLATE.md)**
-
-### 活跃 / 参考任务卡
-
-| 类别 | 文件 | 说明 |
-|------|------|------|
-| 工作区治理 | [TASK-617-A](./tasks/TASK-617-A-cursor-self-optimize.md) | Cursor 规则、根目录大扫除（已执行） |
-| 616 战役 | [616-B 收束](./tasks/TASK-616-B-closure.md)、[616-C-A](./tasks/TASK-616-C-A.md)、[616-C-A2](./tasks/TASK-616-C-A2.md)、[616-D-A](./tasks/TASK-616-D-A.md)、[616-D-B](./tasks/TASK-616-D-B.md) | 已合并战役的结案/参考卡 |
-| P1 入口 | [P1-a](./tasks/TASK-P1-a-entry-governance.md)、[P1-b](./tasks/TASK-P1-b-entry-governance.md) | 入口治理（已收束） |
-| 历史编号 | [TASK-001](./tasks/TASK-001.md)～[TASK-016](./tasks/TASK-016.md)、[TASK-200](./tasks/TASK-200.md)～[TASK-204](./tasks/TASK-204.md) | 早期运维/迁移任务 |
-
-### 已归档任务卡
-
-- **[docs/tasks/archive/](./tasks/archive/)** — 30 份已结案 TASK（`TASK-p0-*`、`TASK-p1-*`、`TASK-616-A*` 等；2026-06-18 TASK-617-A 归档）
-
----
-
-## 设计文档
-
-- **[设计文档索引](./design/README.md)** — Day 1 权威链、历史参考、协作入口
-
-### 当前活跃
-
-| 文件 / 目录 | 说明 |
-|-------------|------|
-| [quick-writing-entry-2026-07-07.md](./design/quick-writing-entry-2026-07-07.md) | HomePage 快速入口设计；原「新建作品直达写作页」方案已证伪，更正为「继续写作」（恢复最近创作中作品/章节，不新建对象），已实施 |
-| [design-mode-trial-2026-06-20.md](./design/design-mode-trial-2026-06-20.md) | Design Mode 视觉试验记录；代码在分支 `ui/design-mode-trial` |
-| [0608-constitutional-guidance/](./design/0608-constitutional-guidance/) | 0608 立宪指导与 workspace 模型 |
-| [616-content-asset-constitution-v0.2.1.md](./design/616-content-asset-constitution-v0.2.1.md) | 616 内容资产宪法 |
-
-### 历史 / 参考
-
-- [design/archive/](./design/archive/) — 早期流程讨论、侦察任务书等
-- [plan/](./plan/) — Day 1 审阅、Claude ↔ Cursor 对齐记录
-
----
-
-## 详细指南
-
-- **[部署指南](./guides/DEPLOYMENT.md)** — 生产环境部署、配置、维护
-- **[编码规范](./guides/CODING_STANDARDS.md)** — 代码风格、命名约定
-- **[快速开始](./guides/QUICK_START.md)** — 5 分钟快速上手
-- **[测试设置](./guides/TESTING_SETUP.md)** — 测试环境、测试策略
-
----
-
-## 规格说明
-
-- **[AI 功能规格](./specs/AI_FEATURES_SPECIFICATION.md)**
-- **[元数据字段约定](./specs/METADATA_FIELD_CONVENTION.md)**
-
----
-
-## Thinklogs（开发随笔）
-
-- **[Thinklog 说明](./thinklogs/README.md)** — 什么是 Thinklog、编写模板
-
-### 2025
-
-- [2025-11-04: 文档重构报告](./thinklogs/2025-11-04_Documentation_Restructure_Report.md)
-- [2025-11-04: UX 改进报告](./thinklogs/2025-11-04_UX_Improvements_Report.md)
-- [2025-12-08: 技术栈评估](./thinklogs/2025-12-08_Tech_Stack_Evaluation.md)
-- [2025-12-11: 对齐与粒度](./thinklogs/2025-12-11_Thinklog_Alignment_and_Granularity.md)
-- [2025-12-13: 注入灵魂与系统稳定性](./thinklogs/2025-12-13_Thinklog_Injecting_Soul_and_System_Stability.md)
-- [2025-12-15: 架构的自我校准](./thinklogs/2025-12-15_Thinklog_Architecture_Calibration.md)
-- [2025-12-24: 从审查到重生](./thinklogs/2025-12-24_Thinklog_From_Review_to_Rebirth.md)
-
-### 2026 — 项目治理（TASK-617-A）
-
-- [2026-06-18: 项目文件治理通报](./thinklogs/2026-06-18-project-governance-update.md)
-- [Ponytail 适用性评估](./thinklogs/ponytail-evaluation.md)
-
-### 2026 — 入口 / 战役 A+B / Pipeline
-
-- [入口交互治理 — 修正版审计](./thinklogs/audit-entry-corrected.md)
-- [三方讨论：命名规范 + 战役 A + B](./thinklogs/discussion-three-way-campaign-ab.md)
-- [战役 A + B 执行指令](./thinklogs/campaign-ab-execution.md)
-- [Pipeline 审计](./thinklogs/cursor-pipeline-audit.md)
-- [Pipeline 断裂修复（P0 × 3）](./thinklogs/cursor-pipeline-fix.md)
-
-### 2026 — 三问题修复
-
-- [三问题讨论纲要](./thinklogs/cursor-discussion-three-issues.md)
-- [三问题执行指令](./thinklogs/cursor-execution-three-issues.md)
-- [WorkDetailPage 语义返回修复](./thinklogs/cursor-backnav-fix.md)
-
-### 2026 — Git / 分支卫生
-
-- [2026-07-06: 分支回溯 + 换行符/视觉改动分离提交](./thinklogs/2026-07-06_Thinklog_Git_Branch_Audit_and_Hygiene.md)
-
----
-
-## 归档文档
-
-历史文档、评估报告、计划文档等，便于查阅但不干扰当前开发：
-
-- **[归档说明](./archive/ARCHIVE_README.md)**
-- **[评估报告](./archive/evaluations/)**
-- **[计划文档](./archive/plans/)**
-- **[演示文档](./archive/presentations/)**
-- **[其他归档](./archive/)** — 含 `2025_12_11logs/`、`code-snapshots/` 等
-
----
-
-## 工作区外材料（未入库）
-
-以下目录存在于工作区但**尚未纳入 git**，查阅时注意与 SSOT 区分：
-
-| 路径 | 说明 |
+| 文件 | 用途 |
 |------|------|
-| `handoffs/opendesign-ui-audit-2026-06-18/` | Open Design 冻结战役的历史会诊材料 |
-| `reports/` | 杂项验证报告 |
-| `nul` | Windows 保留名误生成文件，可删 |
+| [QUICK_START.md](./guides/QUICK_START.md) | 5 分钟跑起来 |
+| [DEPLOYMENT.md](./guides/DEPLOYMENT.md) | 生产部署 |
+| [CODING_STANDARDS.md](./guides/CODING_STANDARDS.md) | 代码风格 |
+| [TESTING_SETUP.md](./guides/TESTING_SETUP.md) | 测试环境 |
+
+### 规格 `specs/`
+
+| 文件 | 用途 |
+|------|------|
+| [METADATA_FIELD_CONVENTION.md](./specs/METADATA_FIELD_CONVENTION.md) | 元数据字段约定 |
+| [AI_FEATURES_SPECIFICATION.md](./specs/AI_FEATURES_SPECIFICATION.md) | ⛔ **已冻结 · 设计留档**，不代表当前能力 |
+
+### 任务卡 `tasks/`
+
+| 文件 | 用途 |
+|------|------|
+| [README.md](./tasks/README.md) | 任务卡生命周期与约定 |
+| [TEMPLATE.md](./tasks/TEMPLATE.md) | 模板 |
+| [CURSOR_REFERENCE.md](./tasks/CURSOR_REFERENCE.md) | Cursor 编码约束 |
+| [TASK-621-docs-governance.md](./tasks/TASK-621-docs-governance.md) | 🔄 进行中：文档治理 |
+
+已结案任务卡 → [`tasks/archive/`](./tasks/archive/)
+
+### 设计 `design/`
+
+仅保留**仍在指导实现**的设计。
+
+| 文件 | 用途 |
+|------|------|
+| [616-content-asset-constitution-v0.2.1.md](./design/616-content-asset-constitution-v0.2.1.md) | 内容资产模型（现行依据） |
+| [616-B-work-setting-minimal-model-draft.md](./design/616-B-work-setting-minimal-model-draft.md) | 作品设定最小模型 |
+| [0608-616-coordination-draft.md](./design/0608-616-coordination-draft.md) | 0608 与 616 的衔接 |
+| [design-P1-entry-architecture.md](./design/design-P1-entry-architecture.md) | 入口架构（已收束） |
+| [quick-writing-entry-2026-07-07.md](./design/quick-writing-entry-2026-07-07.md) | 快速写作入口（已实施） |
+| [design-mode-trial-2026-06-20.md](./design/design-mode-trial-2026-06-20.md) | Design Mode 视觉试验（分支 `ui/design-mode-trial`） |
+
+已实施 / 已过期设计稿 → [`design/archive/`](./design/archive/)
 
 ---
 
-## 快速导航
+## 非现役区
 
-### 新手入门
+| 位置 | 装什么 | 能否作为依据 |
+|------|--------|-------------|
+| **[journal/](./journal/)** | 学习档案：思考、讨论、会诊、复盘、随笔（**59 份，一份未删**） | ❌ 只作参考 |
+| **[archive/](./archive/)** | 历史归档：已完成的任务卡、里程碑、旧规格 | ❌ 只作溯源 |
 
-1. [项目概述](./README.md)
-2. [快速开始](./guides/QUICK_START.md)
-3. [开发指南](./DEVELOPMENT.md)
-
-### Agent / Cursor 开工
-
-1. [CURRENT_BASELINE.md](./CURRENT_BASELINE.md) — 当前阶段与暂不做
-2. [CURSOR_REFERENCE.md](./tasks/CURSOR_REFERENCE.md) — 编码约束
-3. [ARCHITECTURE.md](./ARCHITECTURE.md) — 系统结构
-
-### 深入了解
-
-1. [设计文档索引](./design/README.md)
-2. [AI 功能规格](./specs/AI_FEATURES_SPECIFICATION.md)
-3. [Thinklogs](./thinklogs/)
+学习档案有独立索引：**[journal/INDEX.md](./journal/INDEX.md)** —— 按主题 / 时间 / **结论是否仍成立** 三维检索。
 
 ---
 
-## 索引维护约定
+## 状态行规则
 
-新增或移动文档时，同步更新：
+每份文档标题下应有一行状态标记：
 
-1. **本文件** `docs/INDEX.md` — 顶层入口
-2. **子目录 README** — `thinklogs/README.md`、`design/README.md`、`tasks/README.md`
-3. **SSOT** — 若影响协作状态，更新 `CURRENT_BASELINE.md`
+```markdown
+> **状态**：现役 · 最后核对 YYYY-MM-DD
+> **状态**：学习记录 · 不作为操作依据
+> **状态**：⛔ 已冻结 · 设计留档
+> **状态**：历史 · 已由 XXX 取代
+```
+
+**无状态行的文档，不得作为操作依据。**
+
+理由：状态标记跟着文件走。文件被移动、被搜索命中、被另一个 AI 读到时，标记都在；而集中式索引必须靠人同步——本仓库已经证明它会掉队（本文件曾滞后 17 天，并遗漏整整 26 份文件）。
+
+---
+
+## 维护约定
+
+- 新增现役文档 → 加状态行 + 在本文件登记
+- 文档失效 → **改状态行**，而不是等着谁来更新索引
+- 过程性记录 → 直接放 `journal/`，不进现役区

@@ -15,9 +15,9 @@
       "章节管理 (拖拽排序、状态管理) ✅ 已完成",
       "元数据系统 (项目 + 章节) ✅ 已完成",
       "Markdown 导入导出 ✅ 已完成",
-      "AI 多 Provider 架构 (DeepSeek/OpenAI/Ollama) ✅ 已完成",
-      "AI 写作助手 (续写/润色/扩写) ✅ 已完成",
-      "AI 审阅功能 (章节 + 全书) ✅ 已完成",
+      "AI 多 Provider 架构 (openai/ollama/deepseek/gemini/mock) ⛔ 后端代码在，前端入口已冻结",
+      "AI 写作助手 (续写/润色/扩写) ⛔ 已冻结",
+      "AI 审阅功能 (章节 + 全书) ⛔ 已冻结",
       "灵感碎片模块 (Scraps) ✅ 已完成",
       "设置管理系统 ✅ 已完成",
       "认证系统 (Session Token) ✅ 已完成"
@@ -46,7 +46,7 @@
       "orm": "Prisma 6.19.0",
       "database": "SQLite",
       "validation": "Zod 4.1.13",
-      "ai": "DeepSeek / OpenAI / Ollama (多 Provider)"
+      "ai": "多 Provider 抽象已实现 (openai/ollama/deepseek/gemini/mock)，当前整体冻结"
     }
   },
   "endpoints": {

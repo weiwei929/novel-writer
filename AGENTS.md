@@ -6,10 +6,42 @@
 
 ## 先读这些
 
-1. [CURRENT_BASELINE.md](docs/CURRENT_BASELINE.md) — 当前做到哪了、暂不做
-2. [CURSOR_REFERENCE.md](docs/tasks/CURSOR_REFERENCE.md) — 编码规范
-3. [ARCHITECTURE.md](docs/ARCHITECTURE.md) — 系统架构
-4. [docs/INDEX.md](docs/INDEX.md) — 文档总索引
+1. [ROADMAP.md](docs/ROADMAP.md) — **项目现在是什么、能做什么、往哪走**
+2. [CURRENT_BASELINE.md](docs/CURRENT_BASELINE.md) — 当前做到哪了、暂不做
+3. [CURSOR_REFERENCE.md](docs/tasks/CURSOR_REFERENCE.md) — 编码规范
+4. [docs/INDEX.md](docs/INDEX.md) — 现役文档全集
+
+---
+
+## 文档采信规则（2026-07-27 起）
+
+**无状态行的文档，不得作为操作依据。**
+
+每份现役文档标题下应有一行状态标记：
+
+```markdown
+> **状态**：现役 · 最后核对 YYYY-MM-DD
+> **状态**：学习记录 · 不作为操作依据
+> **状态**：⛔ 已冻结 · 设计留档
+> **状态**：历史 · 已由 XXX 取代
+```
+
+| 位置 | 性质 | 能否照做 |
+|------|------|---------|
+| `docs/` 顶层 + `guides/` `specs/` `tasks/` `design/` | 现役 | ✅ |
+| `docs/journal/` | 学习档案（思考过程） | ❌ 只作参考 |
+| `docs/archive/` | 历史归档（已完成事项） | ❌ 只作溯源 |
+
+读到无状态行、或位于 `journal/` `archive/` 的文档时，**不得据此下判断或改代码**，需向司令官确认。
+
+> **为什么用状态行而不是索引**：标记跟着文件走——文件被移动、被搜索命中、被另一个工具读到时，状态都在。
+> 集中式索引必须靠人同步，本仓库已证明它会掉队（`docs/INDEX.md` 曾滞后 17 天并遗漏 26 份文件）。
+
+### ⚠️ 特别提醒：AI 功能已冻结
+
+仓库内多份历史文档写着「AI 95% 完成」「状态：已实现」，指的是**代码写完了**，不是**能用**。
+实际状态：`frontend/src/config/aiFreeze.ts` 中 `AI_UI_FROZEN = true`，前端入口全部关闭。
+**对外可用的 AI 能力为 0。** 判断进度以 `docs/ROADMAP.md` 为准。
 
 ---
 
@@ -95,7 +127,7 @@ D:/workspace/content/docs/novel-writer.worktrees/*
 C:/Users/Admin/.copilot/repos/copilot-worktrees/novel-writer/*
 ```
 
-- 完整分支/worktree 盘点见 [2026-07-06 thinklog](docs/thinklogs/2026-07-06_Thinklog_Git_Branch_Audit_and_Hygiene.md)。
+- 完整分支/worktree 盘点见 [2026-07-06 thinklog](docs/journal/2026-07-06_Thinklog_Git_Branch_Audit_and_Hygiene.md)。
 
 ---
 
