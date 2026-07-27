@@ -29,7 +29,7 @@
 | [700-C](./TASK-700-C-review-mark-reviewed.md) | ReviewDetail 标记已审 | ✅ 已完成 | `4a5ad52` |
 | [700-D](./TASK-700-D-submit-review-handoff-unify.md) | 详情补提交编审 + 删 StudioActions | ✅ 已完成 | `316350a` |
 | [700-E](./TASK-700-E-creative-entry-cleanup.md) | 路由改名 + 删 ChatPage | ✅ 已完成 | `c2453e9` |
-| [700-F](./TASK-700-F-work-note-recording-layer.md) | 创作手记 · 后端记录层 | ✅ **已完成** | 见回报 / 待填 commit |
+| [700-F](./TASK-700-F-work-note-recording-layer.md) | 创作手记 · 后端记录层 | ✅ **已完成** | `c52d00c` |
 
 **合入顺序（已执行）**：B → C → D → E。  
 **下一枪**：授权后执行 F（含 schema；先备份 `dev.db`）。
