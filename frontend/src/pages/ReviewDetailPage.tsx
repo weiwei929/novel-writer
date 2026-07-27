@@ -9,19 +9,12 @@ import {
 import { useNotifications } from '../hooks/useNotifications'
 import ProjectStatusBadge from '../components/projects/ProjectStatusBadge'
 import FileStagingConfirmModal from '../components/projects/FileStagingConfirmModal'
-import { AI_FROZEN_HINT, AI_FROZEN_LABEL, AI_UI_FROZEN } from '../config/aiFreeze'
+import WorkNoteTimeline from '../components/editorial/WorkNoteTimeline'
+import { AI_FROZEN_LABEL, AI_UI_FROZEN } from '../config/aiFreeze'
 import ThreeColumnLayout from '../components/creative/ThreeColumnLayout'
-import { IconArrowLeft, IconSparkles } from '../components/ui/icons'
+import { IconArrowLeft } from '../components/ui/icons'
 
 const EDITORIAL_QUEUE_STATUSES = ['written', 'reviewing'] as const
-
-const REVIEW_DIMENSIONS = [
-  { key: 'plot', label: '情节', hint: '故事架构、节奏、张力' },
-  { key: 'character', label: '人物', hint: '塑造、动机、关系' },
-  { key: 'dialogue', label: '对话', hint: '性格化、推进剧情' },
-  { key: 'logic', label: '逻辑', hint: '因果链、设定一致性' },
-  { key: 'style', label: '写作风格', hint: '文笔、调性统一' },
-] as const
 
 export default function ReviewDetailPage() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -214,30 +207,13 @@ export default function ReviewDetailPage() {
     </div>
   )
 
-  const rightPanel = (
-    <div className="flex flex-col h-full">
-      <div className="px-3 py-3 border-b shrink-0">
-        <div className="flex items-center gap-2 mb-1">
-          <IconSparkles className="w-4 h-4 text-amber-600" />
-          <h3 className="text-sm font-semibold text-gray-900">AI 审阅报告</h3>
-        </div>
-        <p className="text-xs text-amber-700">{AI_FROZEN_LABEL}</p>
-        <p className="text-xs text-gray-500 mt-1">{AI_FROZEN_HINT}</p>
-      </div>
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
-        {REVIEW_DIMENSIONS.map(dim => (
-          <div
-            key={dim.key}
-            className="rounded-lg border border-dashed border-gray-200 bg-gray-50/80 p-3"
-          >
-            <div className="text-sm font-medium text-gray-800">{dim.label}</div>
-            <div className="text-xs text-gray-500 mt-0.5">{dim.hint}</div>
-            <div className="text-xs text-gray-400 mt-2">{AI_FROZEN_LABEL}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
+  const rightPanel = projectId ? (
+    <WorkNoteTimeline
+      projectId={projectId}
+      onError={notifyError}
+      onSuccess={notifySuccess}
+    />
+  ) : null
 
   const header = (
     <div className="space-y-3">
@@ -294,7 +270,7 @@ export default function ReviewDetailPage() {
         middle={middlePanel}
         right={rightPanel}
         leftWidth="220px"
-        rightWidth="260px"
+        rightWidth="360px"
       />
       <FileStagingConfirmModal
         open={showFileStaging}

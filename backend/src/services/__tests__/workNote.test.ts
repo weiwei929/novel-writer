@@ -137,4 +137,43 @@ describe('workNote record + initial seed (sqlite)', () => {
     })
     expect(initials).toBe(a)
   })
+
+  it('overview upsert keeps a single row; patch note does not touch content', async () => {
+    const created = await prisma.workNote.create({
+      data: {
+        projectId,
+        field: 'synopsis',
+        content: '梗概正文',
+        kind: 'edit',
+      },
+    })
+
+    const first = await prisma.workNote.create({
+      data: {
+        projectId,
+        field: 'overview',
+        content: '总述一',
+        kind: 'edit',
+      },
+    })
+    await prisma.workNote.update({
+      where: { id: first.id },
+      data: { content: '总述二' },
+    })
+    const overviewCount = await prisma.workNote.count({
+      where: { projectId, field: 'overview' },
+    })
+    expect(overviewCount).toBe(1)
+    const overview = await prisma.workNote.findFirst({
+      where: { projectId, field: 'overview' },
+    })
+    expect(overview?.content).toBe('总述二')
+
+    const patched = await prisma.workNote.update({
+      where: { id: created.id },
+      data: { note: '因为节奏' },
+    })
+    expect(patched.note).toBe('因为节奏')
+    expect(patched.content).toBe('梗概正文')
+  })
 })

@@ -330,7 +330,16 @@ const ChapterPlanningInputItemSchema = z
 
 const UpdateChapterPlanningSchema = z.array(ChapterPlanningInputItemSchema)
 
+const UpsertWorkNoteOverviewSchema = z.object({
+  content: z.string(),
+})
+
+const PatchWorkNoteNoteSchema = z.object({
+  note: z.string().nullable(),
+})
+
 type GetByIdParams = { Params: { id: string } }
+type WorkNoteByIdParams = { Params: { id: string; noteId: string } }
 type CreateProjectBody = { Body: z.infer<typeof CreateProjectSchema> }
 type UpdateProjectBody = { Params: { id: string }, Body: z.infer<typeof UpdateProjectSchema> }
 type ImportProjectBody = { Body: z.infer<typeof ImportProjectSchema> }
@@ -1302,4 +1311,125 @@ export async function projectRoutes(app: FastifyInstance) {
       return reply.status(500).send(ApiResponse.error(e.message, 500))
     }
   })
+
+  // GET /projects/:id/work-notes — 创作手记列表（recordedAt 降序）
+  app.get('/:id/work-notes', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    try {
+      const project = await prisma.project.findUnique({
+        where: { id: req.params.id },
+        select: { id: true },
+      })
+      if (!project) {
+        return reply.status(404).send(ApiResponse.error('Project not found', 404))
+      }
+
+      const notes = await prisma.workNote.findMany({
+        where: { projectId: req.params.id },
+        orderBy: { recordedAt: 'desc' },
+        select: {
+          id: true,
+          field: true,
+          content: true,
+          note: true,
+          kind: true,
+          recordedAt: true,
+        },
+      })
+      return ApiResponse.success(notes)
+    } catch (e: any) {
+      req.log.error(e)
+      return reply.status(500).send(ApiResponse.error(e.message, 500))
+    }
+  })
+
+  // PUT /projects/:id/work-notes/overview — 总述 upsert（不走静默记录钩子）
+  app.put('/:id/work-notes/overview', async (req: FastifyRequest<GetByIdParams>, reply) => {
+    const result = UpsertWorkNoteOverviewSchema.safeParse(req.body)
+    if (!result.success) {
+      return reply.status(400).send({
+        success: false,
+        error: { code: 400, message: 'Invalid overview payload', details: result.error.format() },
+      })
+    }
+
+    try {
+      const project = await prisma.project.findUnique({
+        where: { id: req.params.id },
+        select: { id: true },
+      })
+      if (!project) {
+        return reply.status(404).send(ApiResponse.error('Project not found', 404))
+      }
+
+      const existing = await prisma.workNote.findFirst({
+        where: { projectId: req.params.id, field: 'overview' },
+      })
+
+      const row = existing
+        ? await prisma.workNote.update({
+            where: { id: existing.id },
+            data: { content: result.data.content },
+          })
+        : await prisma.workNote.create({
+            data: {
+              projectId: req.params.id,
+              field: 'overview',
+              content: result.data.content,
+              kind: 'edit',
+            },
+          })
+
+      return ApiResponse.success({
+        id: row.id,
+        field: row.field,
+        content: row.content,
+        note: row.note,
+        kind: row.kind,
+        recordedAt: row.recordedAt,
+      })
+    } catch (e: any) {
+      req.log.error(e)
+      return reply.status(500).send(ApiResponse.error(e.message, 500))
+    }
+  })
+
+  // PATCH /projects/:id/work-notes/:noteId — 只更新 note
+  app.patch(
+    '/:id/work-notes/:noteId',
+    async (req: FastifyRequest<WorkNoteByIdParams>, reply) => {
+      const result = PatchWorkNoteNoteSchema.safeParse(req.body)
+      if (!result.success) {
+        return reply.status(400).send({
+          success: false,
+          error: { code: 400, message: 'Invalid note payload', details: result.error.format() },
+        })
+      }
+
+      try {
+        const row = await prisma.workNote.findFirst({
+          where: { id: req.params.noteId, projectId: req.params.id },
+        })
+        if (!row) {
+          return reply.status(404).send(ApiResponse.error('Work note not found', 404))
+        }
+
+        const updated = await prisma.workNote.update({
+          where: { id: row.id },
+          data: { note: result.data.note },
+        })
+
+        return ApiResponse.success({
+          id: updated.id,
+          field: updated.field,
+          content: updated.content,
+          note: updated.note,
+          kind: updated.kind,
+          recordedAt: updated.recordedAt,
+        })
+      } catch (e: any) {
+        req.log.error(e)
+        return reply.status(500).send(ApiResponse.error(e.message, 500))
+      }
+    }
+  )
 }

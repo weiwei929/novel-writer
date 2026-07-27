@@ -181,6 +181,16 @@ export interface ChapterPlanningItem {
   summary: string
 }
 
+/** 创作手记（TASK-700-G 呈现层） */
+export interface WorkNote {
+  id: string
+  field: string
+  content: string
+  note: string | null
+  kind: 'edit' | 'initial' | string
+  recordedAt: string
+}
+
 export interface ChapterPlanItem {
   id: string
   order: number
@@ -642,6 +652,25 @@ export const projectsApi = {
 
   async releaseToLibrary(id: string): Promise<Project> {
     const response = await api.post(`/projects/${id}/release-to-library`)
+    return response.data
+  },
+
+  async listWorkNotes(projectId: string): Promise<WorkNote[]> {
+    const response = await api.get(`/projects/${projectId}/work-notes`)
+    return response.data || []
+  },
+
+  async updateWorkNoteNote(
+    projectId: string,
+    noteId: string,
+    note: string | null
+  ): Promise<WorkNote> {
+    const response = await api.patch(`/projects/${projectId}/work-notes/${noteId}`, { note })
+    return response.data
+  },
+
+  async upsertWorkNoteOverview(projectId: string, content: string): Promise<WorkNote> {
+    const response = await api.put(`/projects/${projectId}/work-notes/overview`, { content })
     return response.data
   },
 
