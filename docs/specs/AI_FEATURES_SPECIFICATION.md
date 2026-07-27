@@ -324,9 +324,9 @@ frontend/src/components/
 
 ## 📚 相关文档
 
-- [AI 功能完成情况复盘](./AI_FEATURES_STATUS_REVIEW.md)
-- [Cursor 审查总结](./archive/CURSOR_REVIEW_SUMMARY.md)
-- [开发随笔：从审查到重生](./thinklogs/2025-12-24_Thinklog_From_Review_to_Rebirth.md)
+- [AI 功能完成情况复盘](../archive/evaluations/AI_FEATURES_STATUS_REVIEW.md)（历史归档）
+- [Cursor 审查总结](../archive/CURSOR_REVIEW_SUMMARY.md)（历史归档）
+- [开发随笔：从审查到重生](../journal/2025-12-24_Thinklog_From_Review_to_Rebirth.md)（学习档案）
 
 ---
 
