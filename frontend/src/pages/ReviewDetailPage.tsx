@@ -35,6 +35,7 @@ export default function ReviewDetailPage() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [showFileStaging, setShowFileStaging] = useState(false)
   const [stagingLoading, setStagingLoading] = useState(false)
+  const [markReviewedLoading, setMarkReviewedLoading] = useState(false)
 
   const load = useCallback(async () => {
     if (!projectId) return
@@ -77,8 +78,18 @@ export default function ReviewDetailPage() {
       project.status as (typeof EDITORIAL_QUEUE_STATUSES)[number]
     )
 
-  const handleMarkReviewed = () => {
-    notifyInfo('标记已审', '审阅状态流转将在后续版本接入。')
+  const handleMarkReviewed = async () => {
+    if (!project || project.status !== 'reviewing') return
+    setMarkReviewedLoading(true)
+    try {
+      await projectsApi.transition(project.id, 'reviewed')
+      notifySuccess('已标记为审阅完成')
+      navigate('/editorial')
+    } catch (e: unknown) {
+      notifyError('标记已审失败', e instanceof Error ? e.message : undefined)
+    } finally {
+      setMarkReviewedLoading(false)
+    }
   }
 
   const handleGenerateReport = () => {
@@ -257,10 +268,11 @@ export default function ReviewDetailPage() {
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={handleMarkReviewed}
-          className="px-3 py-1.5 text-sm border border-amber-200 text-amber-800 rounded-lg hover:bg-amber-50"
+          onClick={() => void handleMarkReviewed()}
+          disabled={project.status !== 'reviewing' || markReviewedLoading}
+          className="px-3 py-1.5 text-sm border border-amber-200 text-amber-800 rounded-lg hover:bg-amber-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          标记已审
+          {markReviewedLoading ? '处理中…' : '标记已审'}
         </button>
         <button
           type="button"
