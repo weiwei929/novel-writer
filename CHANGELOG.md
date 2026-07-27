@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
+> **状态**：现役 · 最后核对 2026-07-27
+
+---
+
+## [未发布] — 2026-06 ~ 2026-07
+
+### Added
+
+- **616 内容链贯通** — 企划课设定 / 章节规划 → 确认 → 交接创作室 → 正文写作，主链已实测跑通
+- **创作室只读参阅侧栏** — 写作时对照作品设定与本章梗概
+- **「继续写作」入口** — 首页恢复最近创作中的作品与章节
+- **本地草稿镜像与一键恢复** — 断网 / 异常时保护未保存正文
+- **后端测试防线** — Jest 4 个 suite / 16 个用例（此前为占位）
+- **发布门槛校验** — 企划课设定完整度与章节最低要求
+- **`docs/ROADMAP.md`** — 面向未来的唯一说明（现状、冻结项、三期路线）
+
+### Changed
+
+- **写作器重构** — 三栏布局降噪；`WorkMetadataPanel` → `WorkSettingDocument`；抽出 `CreateProposalModal`；`WorkDetailPage` 产物体积 −20%
+- **文档体系治理（TASK-621）** — 217 份文档按功能三分：现役 25 / 学习档案 `journal/` 60 / 历史归档 `archive/` 137。全部现役文档加状态行，并写入 `AGENTS.md` 硬规则：**无状态行的文档不得作为操作依据**
+- **构建门禁** — `backend` 的 `build` / `lint` 前置 `prisma generate`
+
+### Deprecated / Frozen
+
+- **AI 全部功能已冻结** — `frontend/src/config/aiFreeze.ts` 中 `AI_UI_FROZEN = true`，前端入口统一关闭；后端代码保留未删。**对外可用 AI 能力为 0**
+- **旧版世界观 / 人物 / 故事线数据线** — 仅折叠展示，不再扩展
+
+### Fixed
+
+- 修正文档中早已废弃的 Grok provider 配置说明（`QUICK_START.md` / `DEPLOYMENT.md`）
+- 修正 `README.md` / `VERSION.json` / AI 规格文档中「AI 95% 完成」「状态：已实现」等与现状矛盾的表述
+- `WorkDetailPage` 返回按钮改为语义导航
+
+### Known Issues
+
+- 前端无自动化测试（2.3 万行零覆盖）
+- 服务默认监听 `0.0.0.0`，`APP_PASSWORD` 未设时回落到硬编码默认值
+- 字数统计三处取值不一致，中文按空格分词无意义
+- 会话文件路径写死 POSIX `/tmp`，Windows 下静默失败，后端重启即掉登录
+
 ---
 
 ## [2.0.0] — 2026-06-02

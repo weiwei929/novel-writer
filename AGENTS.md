@@ -1,6 +1,8 @@
 # AGENTS.md — Agent 入口
 
-> 所有 AI 工具（Codex、Claude、Cursor 等）开工前先读本文。
+> **状态**：现役 · 最后核对 2026-07-27
+>
+> 所有 AI 工具（Codex、Claude、Cursor、Antigravity 等）开工前先读本文。
 
 ---
 

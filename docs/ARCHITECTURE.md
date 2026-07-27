@@ -1,5 +1,8 @@
 # 系统架构与业务逻辑流程 (System Architecture)
 
+> **状态**：现役 · 最后核对 2026-07-27
+> ⚠️ 文中 AI 相关部分为设计留档，该功能当前已冻结，见 [ROADMAP.md](./ROADMAP.md)。
+
 本文档详细说明了 **Novel Writer** 小说创作应用的系统技术架构及核心业务流程。
 
 ## 1. 高层系统架构 (High-Level Architecture)

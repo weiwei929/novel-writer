@@ -1,6 +1,8 @@
-# Novel Writer - AI 辅助小说创作平台
+# Novel Writer — 本地优先的中文小说创作工具
 
-> 基于 React + Fastify + Prisma 的本地优先小说创作工具，集成 AI 辅助功能，让创作更高效、更专业。
+> **状态**：现役 · 最后核对 2026-07-27
+>
+> 基于 React + Fastify + Prisma 的本地优先小说创作工具。**AI 辅助功能当前已冻结**，详见 [docs/ROADMAP.md](./docs/ROADMAP.md)。
 
 **当前版本**: 2.0  
 **最后更新**: 2026-07-27
