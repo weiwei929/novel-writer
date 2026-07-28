@@ -39,20 +39,6 @@ type UpdateParams = { Params: { id: string }; Body: z.infer<typeof UpdateProposa
 type StatusParams = { Params: { id: string }; Body: z.infer<typeof UpdateStatusSchema> }
 type EvaluateParams = { Params: { id: string }; Body: z.infer<typeof EvaluateSchema> }
 
-function splitParagraphs(content: string): string[] {
-  return content
-    .split(/\n\n+|(?=^## )/m)
-    .map(p => p.trim())
-    .filter(Boolean)
-}
-
-function paragraphTitle(paragraph: string, index: number): string {
-  const first = paragraph.split('\n')[0]?.trim() ?? ''
-  if (first.startsWith('## ')) return first.replace(/^##+\s*/, '').trim()
-  if (first.startsWith('# ')) return first.replace(/^#+\s*/, '').trim()
-  return `第 ${index + 1} 节`
-}
-
 type ProposalForPlanning = {
   id: string
   title: string
@@ -67,7 +53,6 @@ export async function acceptIntoPlanningCore(
   proposal: ProposalForPlanning
 ) {
   const metadata = (proposal.metadata as Record<string, unknown>) || {}
-  const refs = Array.isArray(proposal.references) ? proposal.references : []
   const now = new Date()
   const synopsisWrite = synopsisFieldsForCreate(proposal.synopsis)
   const workSettingFromSketch = seedWorkSettingFromSketch(metadata._settingSketch)
@@ -119,36 +104,8 @@ export async function acceptIntoPlanningCore(
     data: { projectId: created.id, proposalId: null },
   })
 
-  const sourceRef = refs.find(
-    (r: { type?: string; processingType?: string }) =>
-      r.type === 'file_ref' && r.processingType === 'complete'
-  ) as { id?: string } | undefined
-
-  const metaSource = metadata._sourceRef as { type?: string; id?: string } | undefined
-  const fileRefId =
-    sourceRef?.id ?? (metaSource?.type === 'file_ref' ? metaSource.id : undefined)
-
-  if (fileRefId) {
-    const fileRef = await tx.fileReference.findUnique({ where: { id: fileRefId } })
-    if (fileRef?.fileContent) {
-      const meta = (fileRef.metadata as { paragraphs?: string[] }) || {}
-      const paragraphs =
-        meta.paragraphs?.length ? meta.paragraphs : splitParagraphs(fileRef.fileContent)
-
-      if (paragraphs.length > 0) {
-        await tx.chapter.createMany({
-          data: paragraphs.map((p, i) => ({
-            projectId: created.id,
-            title: paragraphTitle(p, i),
-            content: p,
-            order: i + 1,
-            status: 'draft',
-            wordCount: p.replace(/\s/g, '').length,
-          })),
-        })
-      }
-    }
-  }
+  // ponytail: 710-A 已拆除立项时按外来参考全文物化章节的暗链（含 _sourceRef fallback）
+  // 素材附件跟随是 710-C；此处只止血，不治「带不进素材」
 
   const updatedProposal = await tx.proposal.update({
     where: { id: proposal.id },
