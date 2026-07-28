@@ -65,7 +65,7 @@ server.register(shelfRoutes, { prefix: '/api/v2/shelf' })
 // Run Server
 const start = async () => {
   try {
-    await server.listen({ port: 5000, host: '0.0.0.0' })
+    await server.listen({ port: 5000, host: '127.0.0.1' })
     console.log('Server running on http://localhost:5000')
   } catch (err) {
     server.log.error(err)
