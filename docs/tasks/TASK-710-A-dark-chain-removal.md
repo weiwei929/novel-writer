@@ -7,6 +7,40 @@
 > **上游**：[TASK-710 创意组种子链补齐](./TASK-710-creative-seed-chain.md) · 侦察 [TASK-710-S](./TASK-710-S-cursor-scout.md)（✅ 已回报）
 > **基线**：`feature/workdetail-p1` @ `a0f9947`（与 origin 同步后再开工）
 > **前置**：无。本卡为 710 战役第一枪
+>
+> ---
+>
+> ## ✅ 已完成 · 2026-07-28
+>
+> | commit | 内容 |
+> |---|---|
+> | `a336f6d` | 拆暗链 · `proposals.ts` −45 / +2 |
+> | `9110066` | `host` → `127.0.0.1` |
+> | `24bfbef` | **卡外必要补丁** · `import 'dotenv/config'`（见「执行修正」） |
+>
+> **验收（参谋长逐项复核代码）**：物化整段与 `splitParagraphs` / `paragraphTitle` 零残留；`refs` 一并清除；`_sourceRef` 字段与 `processingType` 列未动；approve 其余七项动作原样在位。路径 A 6→0 章、路径 B 2→0 章。探针残留 0；《美丽的一天》WorkNote 8 未变。
+>
+> ### 执行修正一：卡漏了 dotenv（参谋长的错）
+>
+> 卡里假定「改 `host` + 写 `.env`」两行即可。**实际不成立**——`index.ts` 从未加载 dotenv，`auth.ts` 在 import 时就固化了兜底值，写进 `.env` 的 `APP_PASSWORD` 是死的（启动日志持续报 `APP_PASSWORD not set`）。Cursor 补 `import 'dotenv/config'` 属**必要越界**，正确。
+>
+> **副作用备查**：`backend/.env` 现在会被完整载入 `process.env`，其中包含 `GEMINI_API_KEY`——此前它不进环境变量。后端 AI 路由在全局鉴权之后，UI 层仍冻结。仅作记录。
+>
+> ### 执行修正二：密码维持 `novel2024`（司令官 2026-07-28 拍板）
+>
+> 执行中一度改为随机密码。**已驳回：过度保护。**开发阶段沿用 `novel2024`，正式上线前再议。
+>
+> **收尾动作**：从 `backend/.env` 中**删除 `APP_PASSWORD` 键**，让 `auth.ts` 的兜底重新生效。`24bfbef` 与 `9110066` 均**保留**（dotenv 加载对其他键仍必要；`host` 收紧不影响本机使用）。
+>
+> 参谋长曾建议追加「缺 `APP_PASSWORD` 则拒绝启动」小卡，**同步撤回**。见 [ROADMAP §八 第 9 条](../ROADMAP.md)。
+>
+> ### 卡本身的错
+>
+> 门禁段写「预期 4 suites / 16 tests」，实际 **5 suites / 22 tests**——数字抄自 07-25 的 `CURRENT_BASELINE.md`，早已过时。Cursor 未被绊住，但这是卡在制造假警报。
+>
+> ### 未了
+>
+> 路径 B 走的是与 UI 同序的 API 调用，**未做浏览器肉眼点击**。并入待办的「阶段一人工走查」，与 710-B / D 合并后一次性点完。
 
 ---
 

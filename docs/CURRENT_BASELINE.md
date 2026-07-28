@@ -1,11 +1,11 @@
 # Novel Writer — 当前基线
 
-> **状态**：现役 · 单一真相源（SSOT）· 最后核对 2026-07-27
+> **状态**：现役 · 单一真相源（SSOT）· 最后核对 **2026-07-28**
 >
 > **单一真相源**：协作状态、已合并战役、下一战、暂不做项，以此文件为准。
-> 项目整体方向与去向见 [ROADMAP.md](./ROADMAP.md)。
+> 项目整体方向与去向见 [ROADMAP.md](./ROADMAP.md)（含 **§八 0728 共识速查**，防漂移条款）。
 
-**最后更新**：2026-07-25（创作室布局修复合并 + 全链路运行时实测）
+**最后更新**：2026-07-28（补录 700-B~G 与 710-A；本文件此前滞后 3 天，HEAD 停在 `0e99c14`）
 
 ---
 
@@ -13,9 +13,13 @@
 
 | 项 | 值 |
 |----|-----|
-| **主分支** | `feature/workdetail-p1`（含 PR #7–#15；当前 HEAD `0e99c14`，已 push 到 origin） |
-| **新起点** | commit `0e99c14` — 创作室布局修复已验收，**后续完善以此为基线** |
+| **主分支** | `feature/workdetail-p1` |
+| **HEAD** | `24bfbef`（2026-07-28）· **`ahead 4`，尚未 push** |
+| **上一实测基线** | `0e99c14`（2026-07-25 司令官本机全链路实测通过） |
 | **协作档位** | 轻量战役制 · **小卡快审 / 低风险快合** |
+| **协作模式** | 司令官拍板 → **参谋长出卡/审卡** → Cursor 侦察与实施 → 参谋长核验收 |
+
+> ⚠️ **未 push**：`a336f6d` / `9110066` / `6ca4cc6` / `24bfbef` 四个提交仅在本地。
 
 ---
 
@@ -40,8 +44,26 @@
 | **chapter-origin-flow** | [TASK-620-chapter-origin-flow-alignment.md](./tasks/archive/TASK-620-chapter-origin-flow-alignment.md) · 三大第一起点全盘对齐与 616 战役封版 |
 | **release gate** | commit `43b9c24` — `backend` `build` / `lint` 前置 `prisma generate` |
 | **studio-layout** | commit `0e99c14` — `WorkMetadataPanel` → `WorkSettingDocument`；抽出 `CreateProposalModal`；删除 `ProposalEvalPage`；**修复写作器底部状态栏缺失**（+562 / −693） |
+| **TASK-700 阶段一** | v2.7.27 管线打通 · 队列见 [TASK-700-EXEC-queue.md](./tasks/TASK-700-EXEC-queue.md) |
+| ↳ 700-B | `d9cc4ad` WorkDetail 企划放行错接线 |
+| ↳ 700-C | `4a5ad52` ReviewDetail「标记已审」假提示 |
+| ↳ 700-D | `316350a` 详情补提交编审 + 删 `StudioActions` |
+| ↳ 700-E | `c2453e9` 路由 `/creative/chat` → `/creative/workspace`，删 `ChatPage`（12 行占位） |
+| ↳ 700-F | `c52d00c` **创作手记 · 后端记录层**（`WorkNote` 表 + `recordWorkNoteDiff`） |
+| ↳ 700-G | `66d7415` 创作手记 · 编审部右栏呈现层 |
+| ↳ 700-H | **已作废**——三栏与防撞车部分否决，保留部分转入 710-D（见 [TASK-710](./tasks/TASK-710-creative-seed-chain.md) §三） |
+| **TASK-710 种子链** | 创意组补断链 · 计划见 [TASK-710](./tasks/TASK-710-creative-seed-chain.md) · 侦察 [710-S](./tasks/TASK-710-S-cursor-scout.md) ✅ |
+| ↳ 710-A | `a336f6d` **拆暗链**（立项时按外来参考全文物化章节，两条触发路径）· `9110066` `host` → `127.0.0.1` · `24bfbef` `import 'dotenv/config'` |
 
 0608 五部门骨架、616-A 命名/梗概等见历史封版记录。
+
+### 新增数据模型（700-F）
+
+| 表 | 用途 |
+|---|---|
+| `WorkNote` | **创作手记**。`projectId / field / content / note / kind / recordedAt`。tracked 七字段：`origin` `synopsis` 四块设定 `chapterPlanning`。`kind`：`edit` = 真实变更时刻，`initial` = 上线补拍（`recordedAt` 不可信） |
+
+**呈现位置**：目前**仅** `ReviewDetailPage` 右栏。作品详情页无入口——归位待办。
 
 **企划 → 创作室主链（已贯通）：**
 
@@ -102,8 +124,9 @@ _settingSketch → workSetting + chapterPlanning
 
 | 风险 | 严重度 | 说明 |
 |------|--------|------|
-| **服务暴露在局域网** | 高 | `index.ts` 写死 `host: '0.0.0.0'`，启动日志实测监听 `192.168.50.159:5000`。同 WiFi 下任意设备可访问 |
-| **默认密码硬编码** | 高 | `APP_PASSWORD` 未设 → 兜底 `novel2024`（`routes/auth.ts`），且该密码印在公开 README 中；`/auth/login` 无限流 |
+| ~~服务暴露在局域网~~ | ✅ **已修** | 2026-07-28 `9110066` 改 `127.0.0.1`。实测外部设备连接被拒 |
+| ~~默认密码硬编码~~ | — | **不是风险，是有意选择。**司令官 2026-07-28 拍板：开发阶段沿用 `novel2024`，上线前再议。**后来的 Agent 不要自作主张加固**，见 [ROADMAP §八 第 9 条](./ROADMAP.md) |
+| **两份 `.env` 并存** | 低 | 仓库根与 `backend/` 各一份，仅后者含 `APP_PASSWORD`（现已按上条移除）。`24bfbef` 起 `backend/.env` 会被完整载入 `process.env`（含 `GEMINI_API_KEY`）。运行时 cwd 在 `backend/`，以该份为准 |
 | **前端零测试** | 高 | 16 个用例全在 `backend/src/services/`。`0e99c14` 改了 15 个文件、其中 14 个是前端，**四条绿灯没有一条在验它**，只能肉眼验收 |
 | **eslint 规则集近乎空** | 中 | `eslint.config.js` 未启用 `@typescript-eslint` 推荐集；`no-explicit-any` 未启用（前端 55 处 `: any` 不可见）；`no-unused-vars`、`react-hooks/exhaustive-deps` 均为 `off`。`--max-warnings 0` 因此恒绿，形同摆设 |
 | ↳ `exhaustive-deps` 关闭 | 中 | 该规则专抓 stale closure，正是 autosave / 草稿恢复的高发缺陷区（618/619 两战的战场），目前无自动防线 |
@@ -122,23 +145,37 @@ _settingSketch → workSetting + chapterPlanning
 
 ## 当前推荐下一战
 
-**以 `0e99c14` 为基线做后续完善**（司令官 2026-07-25 拍板）。
+**TASK-710 种子链，卡序已按 710-S 侦察重排**（司令官 2026-07-28 拍板：先侦察后执行）。
 
-按「改动小 / 收益大 / 不碰主链」排序的候选，均未授权，需开 TASK 卡：
+| 序 | 卡 | 状态 |
+|---|---|---|
+| 1 | 710-A 拆暗链 + 地基 | ✅ 已完成 |
+| 2 | **[710-B](./tasks/TASK-710-B-conceiving-note.md)** 构思笔记 + 清理无消费者字段 | 📋 卡已出 · **待授权** |
+| 2 | **[710-D](./tasks/TASK-710-D-source-realign.md)** 来源归位 + 手记文案分岔 | 📋 卡已出 · **待授权** |
+| 3 | 710-C 素材明链（引用可写与跟随） | 计划中 |
+| 4 | 710-E 接收动作归企划课 | 计划中 |
+| 5 | 710-F 总览分段 | 计划中 |
+
+**B / D 无文件重叠，可并行。**
+
+### 旁路候选（未授权，需开卡）
 
 | 优先级 | 事项 | 规模 |
 |--------|------|------|
-| P0 | `host` 改 `127.0.0.1` + `backend/.env` 补真 `APP_PASSWORD` | 两行 |
+| **P0** | **阶段一人工走查**——700-B/C/D 三处修复 + 710-A 路径 B 均只验了代码，**没人点着走过**。建议 B/D 合完后一次性点完 | 走查 |
 | P0 | 删死依赖 `better-sqlite3` / `sqlite3` | 改 `package.json` |
 | P1 | 字数统计对齐（三值统一，中文按字符计） | 单点，用户可感 |
-| P1 | 验证并定死 Monaco 加载源（配 `loader.config` 用本地包，或修正 README 表述） | 小 |
-| P1 | eslint 启用 `@typescript-eslint` 推荐集 + `exhaustive-deps`，分批消化存量告警 | 中 |
+| P1 | 验证并定死 Monaco 加载源 | 小 |
+| P1 | eslint 启用 `@typescript-eslint` 推荐集 + `exhaustive-deps` | 中 |
+| P1 | 修 `backend` 的 `lint` 脚本（改为「client 不存在才 generate」）——已咬三次 | 一行 |
 | P2 | 前端最小测试防线，只覆盖保存 / 草稿恢复链路 | 中 |
 | P2 | `sessionStore` 路径改用 `os.tmpdir()` | 一行 |
 | P2 | Prisma 双配置收敛为 `prisma.config.ts` 单份 | 小 |
+| P2 | **创意组孤儿定性**：`CreativeDiscussion` / `PlanningProposal` / `ProposalsPage` / `ProposalReviewPage` / `ReferencesPage` / `AiSearchPage` / `filters.ts#isProposalSubmittable` —— **不删，先判「废弃 / 入口丢失 / 被取代但功能有缺」** | 侦察 |
+| P2 | 创作手记归位到作品详情页（现仅编审右栏） | 中 |
 | P3 | README / VERSION.json 与本文件三套叙事收敛为一套 | 文档 |
-| P3 | `master` 落后 149 个提交，GitHub 默认分支仍指向 5 月死代码 | 仓库治理 |
-| P3 | 20 个 6 月僵尸分支 + 2 个跨月 stash 清理 | 仓库治理 |
+| P3 | `CURSOR_REFERENCE.md` 仍写 `/creative/chat` + L2 占位旧叙事 | 文档 |
+| P3 | `master` 落后 149 个提交；20 个 6 月僵尸分支 + 2 个跨月 stash | 仓库治理 |
 | — | legacy 数据层后续清理（不删表，逐步降级） | 大 |
 | — | `release-to-studio` 门槛改造 | 大 |
 
