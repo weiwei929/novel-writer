@@ -10,6 +10,7 @@ import {
   type FileReference,
 } from '../../services/api'
 import { createConceivingProposal, creativeStageLabel, getCreativeStage } from '../../services/creativeOrigin'
+import { AI_FROZEN_LABEL } from '../../config/aiFreeze'
 import { useNotifications } from '../../hooks/useNotifications'
 import { IconCreative } from '../ui/icons'
 
@@ -78,10 +79,14 @@ export default function CreativeWorkspace() {
         <section className="space-y-4 min-w-0">
           <h2 className="text-lg font-semibold text-gray-900">创意来源</h2>
 
-          <div className="bg-white border rounded-xl p-4">
-            <Link to="/creative/scraps" className="text-sm font-semibold text-gray-900 hover:text-amber-700">
-              灵感碎片 {scrapCount} 条
-            </Link>
+          <Link
+            to="/creative/scraps"
+            className="block bg-white border rounded-xl p-4 hover:border-amber-200 cursor-pointer transition-colors"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-semibold text-amber-700">灵感碎片 {scrapCount} 条</span>
+              <span className="text-xs text-amber-600 shrink-0">进入 →</span>
+            </div>
             {scraps.length === 0 ? (
               <p className="text-xs text-gray-400 mt-2">暂无碎片</p>
             ) : (
@@ -92,12 +97,16 @@ export default function CreativeWorkspace() {
                 {scraps.length > 5 && <li className="text-xs text-gray-400">…还有 {scraps.length - 5} 条</li>}
               </ul>
             )}
-          </div>
+          </Link>
 
-          <div className="bg-white border rounded-xl p-4">
-            <Link to="/creative/external-refs" className="text-sm font-semibold text-gray-900 hover:text-amber-700">
-              外来参考 {refCount} 条
-            </Link>
+          <Link
+            to="/creative/external-refs"
+            className="block bg-white border rounded-xl p-4 hover:border-amber-200 cursor-pointer transition-colors"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-semibold text-amber-700">外来参考 {refCount} 条</span>
+              <span className="text-xs text-amber-600 shrink-0">进入 →</span>
+            </div>
             {refs.length === 0 ? (
               <p className="text-xs text-gray-400 mt-2">暂无引用</p>
             ) : (
@@ -108,11 +117,11 @@ export default function CreativeWorkspace() {
                 {refCount > 5 && <li className="text-xs text-gray-400">…还有 {refCount - 5} 条</li>}
               </ul>
             )}
-          </div>
+          </Link>
 
           <div className="bg-white border rounded-xl p-4 opacity-60">
-            <span className="text-sm font-semibold text-gray-400">AI 搜索</span>
-            <p className="text-xs text-gray-400 mt-2">功能正在开发中</p>
+            <span className="text-sm font-semibold text-gray-400">AI 讨论</span>
+            <p className="text-xs text-gray-400 mt-2">{AI_FROZEN_LABEL}</p>
           </div>
         </section>
 

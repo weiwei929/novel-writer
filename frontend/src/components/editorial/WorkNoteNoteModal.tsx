@@ -29,6 +29,16 @@ export default function WorkNoteNoteModal({
 
   const trimmed = draft.trim()
   const payload = trimmed.length === 0 ? null : trimmed
+  const copy =
+    entry.kind === 'initial'
+      ? {
+          title: '这块设定当初是怎么想的',
+          placeholder: '写下当时的构思（可留空）',
+        }
+      : {
+          title: '当时为什么这么改',
+          placeholder: '写下改动的理由（可留空）',
+        }
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -38,7 +48,7 @@ export default function WorkNoteNoteModal({
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div className="min-w-0">
-            <h2 className="text-lg font-semibold text-gray-900">当时为什么这么改</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{copy.title}</h2>
             <p className="text-xs text-gray-500 mt-0.5 truncate">{fieldLabel}</p>
           </div>
           <button
@@ -57,7 +67,7 @@ export default function WorkNoteNoteModal({
             onChange={e => setDraft(e.target.value)}
             rows={5}
             disabled={loading}
-            placeholder="写下改动的理由（可留空）"
+            placeholder={copy.placeholder}
             className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 resize-y min-h-[120px] focus:outline-none focus:ring-2 focus:ring-amber-200"
           />
         </div>
