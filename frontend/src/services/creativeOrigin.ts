@@ -54,9 +54,7 @@ export async function advanceOriginToConceiving(
   fields: {
     title: string
     synopsis: string
-    innovation: string
-    coreSetting: string
-    tags: string[]
+    evaluation: string
     settingSketch: WorkSetting
   }
 ): Promise<Proposal> {
@@ -67,12 +65,10 @@ export async function advanceOriginToConceiving(
   return proposalsApi.update(id, {
     title: fields.title.trim() || '未命名提案',
     synopsis: fields.synopsis,
-    innovation: fields.innovation,
-    coreSetting: fields.coreSetting,
     metadata: {
       ...meta,
       _creativeStage: 'conceiving',
-      _tags: fields.tags,
+      _evaluation: fields.evaluation,
       _settingSketch: normalizeWorkSetting(fields.settingSketch),
     },
   })
@@ -83,7 +79,6 @@ export async function createConceivingProposal(title: string): Promise<Proposal>
     title: title.trim(),
     metadata: {
       _creativeStage: 'conceiving',
-      _tags: [],
     },
   })
 }

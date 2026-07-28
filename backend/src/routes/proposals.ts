@@ -62,7 +62,9 @@ export async function acceptIntoPlanningCore(
     [META_KEYS_DAY1.PROPOSAL_ID_LEGACY]: proposal.id,
     [META_KEYS_DAY1.FROM_EVALUATE]: true,
     [META_KEYS_DAY1.PLANNING_PHASE]: 'evaluating',
-    ...(metadata._evaluation !== undefined ? { _evaluation: metadata._evaluation } : {}),
+    ...(typeof metadata._evaluation === 'string' && metadata._evaluation.trim()
+      ? { _evaluation: metadata._evaluation }
+      : {}),
     ...(synopsisWrite.metadataSynopsis !== undefined
       ? { synopsis: synopsisWrite.metadataSynopsis }
       : {}),

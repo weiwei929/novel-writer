@@ -16,7 +16,6 @@ import {
 } from '../../services/workSetting'
 import { useNotifications } from '../../hooks/useNotifications'
 import ProposalStatusBadge from '../../components/proposals/ProposalStatusBadge'
-import TagInput from '../../components/creative/TagInput'
 import TypeLabel from '../../components/creative/TypeLabel'
 
 export default function ProposalDetailPage() {
@@ -30,9 +29,7 @@ export default function ProposalDetailPage() {
 
   const [title, setTitle] = useState('')
   const [synopsis, setSynopsis] = useState('')
-  const [innovation, setInnovation] = useState('')
-  const [coreSetting, setCoreSetting] = useState('')
-  const [tags, setTags] = useState<string[]>([])
+  const [evaluation, setEvaluation] = useState('')
   const [settingSketch, setSettingSketch] = useState<WorkSetting>(() => normalizeWorkSetting())
 
   const buildProposalPayload = useCallback(
@@ -41,16 +38,14 @@ export default function ProposalDetailPage() {
       return {
         title: title.trim() || '未命名提案',
         synopsis,
-        innovation,
-        coreSetting,
         metadata: {
           ...meta,
-          _tags: tags,
+          _evaluation: evaluation,
           _settingSketch: normalizeWorkSetting(settingSketch),
         },
       }
     },
-    [title, synopsis, innovation, coreSetting, tags, settingSketch]
+    [title, synopsis, evaluation, settingSketch]
   )
 
   const load = useCallback(async () => {
@@ -62,9 +57,7 @@ export default function ProposalDetailPage() {
       const meta = getProposalMetadata(p)
       setTitle(p.title ?? '')
       setSynopsis(p.synopsis ?? '')
-      setInnovation(p.innovation ?? '')
-      setCoreSetting(p.coreSetting ?? '')
-      setTags(meta._tags || [])
+      setEvaluation(meta._evaluation ?? '')
       setSettingSketch(getSettingSketch(meta as Record<string, unknown>))
     } catch {
       notifyError('加载失败')
@@ -98,9 +91,7 @@ export default function ProposalDetailPage() {
       const updated = await advanceOriginToConceiving(id, proposal, {
         title,
         synopsis,
-        innovation,
-        coreSetting,
-        tags,
+        evaluation,
         settingSketch,
       })
       setProposal(updated)
@@ -235,10 +226,23 @@ export default function ProposalDetailPage() {
             onChange={e => setSynopsis(e.target.value)}
           />
         </div>
+      </section>
+
+      <section className="bg-white border rounded-xl p-5 space-y-2">
         <div>
-          <label className="text-xs text-gray-500">标签</label>
-          <TagInput tags={tags} onChange={setTags} />
+          <h2 className="text-sm font-semibold text-gray-800">构思笔记</h2>
+          <p className="text-xs text-gray-500 mt-1">
+            为什么想写这个、主角大概是谁、参考了什么——写给自己看的幕后记录。
+            立项后会随作品一起带进企划课。
+          </p>
         </div>
+        <textarea
+          className={inputCls}
+          rows={8}
+          value={evaluation}
+          onChange={e => setEvaluation(e.target.value)}
+          placeholder="记录构思过程…（可留空）"
+        />
       </section>
 
       <section className="bg-white border rounded-xl p-5 space-y-4">
@@ -290,13 +294,6 @@ export default function ProposalDetailPage() {
             ))}
           </ul>
         )}
-      </section>
-
-      <section className="bg-white border rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-gray-800 mb-2">构思评估记录</h2>
-        <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed bg-gray-50 rounded-lg p-4 min-h-[120px]">
-          {meta._evaluation || '（无评估记录）'}
-        </div>
       </section>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
