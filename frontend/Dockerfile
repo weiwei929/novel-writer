@@ -2,6 +2,11 @@
 FROM node:18-slim AS builder
 WORKDIR /app
 
+ARG BUILD_COMMIT=unknown
+ARG BUILD_BRANCH=unknown
+ENV BUILD_COMMIT=$BUILD_COMMIT
+ENV BUILD_BRANCH=$BUILD_BRANCH
+
 COPY package*.json ./
 RUN npm ci
 COPY . .

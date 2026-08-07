@@ -6,6 +6,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
+        BUILD_BRANCH: ${BUILD_BRANCH:-unknown}
     container_name: novel-writer-frontend
     expose:
       - "3000"
