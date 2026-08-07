@@ -1,52 +1,7 @@
-# Caddy配置文件
-# 将 novel-writer.example.com 替换为您的实际域名
-
-{$DOMAIN:localhost} {
-    # 自动HTTPS
-    tls {$EMAIL}
-    
-    # 压缩
-    encode gzip
-    
-    # 安全头
-    header {
-        # XSS保护
-        X-Content-Type-Options nosniff
-        X-Frame-Options DENY
-        X-XSS-Protection "1; mode=block"
-        
-        # HSTS
-        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-        
-        # CSP (根据需要调整)
-        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
-    }
-    
-    # API代理到后端
-    handle /api/* {
-        reverse_proxy backend:5000
-    }
-    
-    # 媒体文件代理
-    handle /media/* {
-        reverse_proxy backend:5000
-    }
-    
-    # 健康检查代理
-    handle /health {
-        reverse_proxy backend:5000
-    }
-    
-    # 前端静态文件
-    handle /* {
-        reverse_proxy frontend:3000
-    }
-    
-    # 日志
-    log {
-        output file /data/access.log {
-            roll_size 10MB
-            roll_keep 5
-        }
-    }
-}
+# 已拆分为两种部署模式，请通过 .env 的 CADDYFILE 选择挂载文件：
+#
+#   CADDYFILE=Caddyfile.http   — 私人 HTTP 手测（默认，http:// 前缀，无 TLS）
+#   CADDYFILE=Caddyfile.https  — 公网 HTTPS（全局 email + 自动证书）
+#
+# docker-compose 将 ${CADDYFILE} 挂载为本文件路径 /etc/caddy/Caddyfile
+# 详见 docs/guides/PRIVATE_DEPLOYMENT.md

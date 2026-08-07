@@ -9,10 +9,11 @@ import axios, {
   InternalAxiosRequestConfig,
   AxiosResponse,
 } from 'axios'
+import { API_BASE_URL } from '../config/apiBase'
 
-// 创建axios实例
+// Create axios instance — paths are under /api/v2
 const api: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:5000',
+  baseURL: API_BASE_URL,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',

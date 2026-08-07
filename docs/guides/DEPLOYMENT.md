@@ -1,7 +1,9 @@
 # Novel-Writer 部署指南
 
-> **状态**：现役 · 最后核对 2026-07-27
-> ⚠️ 部署前务必设置 `APP_PASSWORD`，并确认监听地址。默认配置监听 `0.0.0.0` 且密码有硬编码兜底。
+> **状态**：现役 · 最后核对 2026-08-06
+> ⚠️ 部署前务必设置 `APP_PASSWORD`。本地开发后端默认 `HOST=127.0.0.1`；Docker 生产由 compose 注入 `HOST=0.0.0.0`。
+>
+> **私人服务器快速路径** → [PRIVATE_DEPLOYMENT.md](./PRIVATE_DEPLOYMENT.md)
 
 ## 🌐 生产环境部署
 
@@ -117,34 +119,24 @@ pm2 startup
 pm2 save
 ```
 
-### 4. Caddy配置
+### 4. Caddy 配置
 
-编辑 `deployment/caddy/Caddyfile`：
+私人部署请优先阅读 [PRIVATE_DEPLOYMENT.md](./PRIVATE_DEPLOYMENT.md)。Caddy 配置已拆为两种模式（通过 `.env` 的 `CADDYFILE` 切换）：
 
-```caddy
-novel-writer.example.com {
-    # 自动HTTPS
-    tls your-email@example.com
-    
-    # 安全头
-    header {
-        X-Content-Type-Options nosniff
-        X-Frame-Options DENY
-        X-XSS-Protection "1; mode=block"
-        Strict-Transport-Security "max-age=31536000"
-    }
-    
-    # API路由
-    handle /api/* {
-        reverse_proxy localhost:5000
-    }
-    
-    # 静态文件
-    handle /* {
-        reverse_proxy localhost:3000
-    }
-}
+| 文件 | 用途 |
+|------|------|
+| `deployment/caddy/Caddyfile.http` | 私人 HTTP 手测（`http://` 站点块，无 TLS） |
+| `deployment/caddy/Caddyfile.https` | 公网 HTTPS（全局 `email` + 自动证书，无 `tls` 站点指令） |
+
+HTTPS 模式 `.env` 示例：
+
+```env
+DOMAIN=novel-writer.example.com
+CADDYFILE=Caddyfile.https
+HTTPS_EMAIL=your-email@example.com
 ```
+
+切换后执行 `docker compose up -d caddy`。backend 经 Docker 内网 `backend:5000` 反代，不映射宿主机 5000。
 
 ### 5. 数据库初始化
 

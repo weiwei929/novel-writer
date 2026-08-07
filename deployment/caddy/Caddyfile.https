@@ -1,0 +1,42 @@
+# HTTPS 公网部署
+# 用法：.env 中 CADDYFILE=Caddyfile.https，DOMAIN=你的公网域名，HTTPS_EMAIL=有效邮箱
+# ACME 邮箱写在全局块；站点块依赖 Caddy 自动 HTTPS，无需 tls 指令
+
+{
+    email {$EMAIL}
+}
+
+{$DOMAIN} {
+    encode gzip
+
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        X-XSS-Protection "1; mode=block"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+    }
+
+    handle /api/* {
+        reverse_proxy backend:5000
+    }
+
+    handle /media/* {
+        reverse_proxy backend:5000
+    }
+
+    handle /health {
+        reverse_proxy backend:5000
+    }
+
+    handle /* {
+        reverse_proxy frontend:3000
+    }
+
+    log {
+        output file /data/access.log {
+            roll_size 10MB
+            roll_keep 5
+        }
+    }
+}

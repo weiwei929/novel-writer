@@ -63,11 +63,15 @@ server.register(fileReferenceRoutes, { prefix: '/api/v2/external-refs' })
 server.register(graveyardRoutes, { prefix: '/api/v2/graveyard' })
 server.register(shelfRoutes, { prefix: '/api/v2/shelf' })
 
-// Run Server
+// Run Server — default 127.0.0.1 for local dev; set HOST=0.0.0.0 in Docker/production
+const port = Number(process.env.PORT) || 5000
+const host = process.env.HOST || '127.0.0.1'
+
 const start = async () => {
   try {
-    await server.listen({ port: 5000, host: '127.0.0.1' })
-    console.log('Server running on http://localhost:5000')
+    await server.listen({ port, host })
+    const displayHost = host === '0.0.0.0' ? 'localhost' : host
+    console.log(`Server running on http://${displayHost}:${port}`)
   } catch (err) {
     server.log.error(err)
     process.exit(1)

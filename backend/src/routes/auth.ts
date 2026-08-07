@@ -6,11 +6,22 @@ const LoginSchema = z.object({
   password: z.string(),
 })
 
-const APP_PASSWORD = process.env.APP_PASSWORD || 'novel2024'
+/** Resolves login password; production requires explicit APP_PASSWORD. */
+export function resolveAppPassword(env: NodeJS.ProcessEnv = process.env): string {
+  const configured = env.APP_PASSWORD?.trim()
+  if (configured) return configured
 
-if (!process.env.APP_PASSWORD) {
+  if (env.NODE_ENV === 'production') {
+    throw new Error(
+      'APP_PASSWORD is required when NODE_ENV=production. Set APP_PASSWORD in the environment.'
+    )
+  }
+
   console.warn('⚠️  WARNING: APP_PASSWORD not set. Using default insecure password.')
+  return 'novel2024'
 }
+
+const APP_PASSWORD = resolveAppPassword()
 
 export async function authRoutes(app: FastifyInstance) {
   // GET /auth/status

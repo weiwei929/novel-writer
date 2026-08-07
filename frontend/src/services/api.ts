@@ -1,7 +1,6 @@
 import axios from 'axios'
 import { handleApiResponse, handleApiError } from '../types/api'
-
-const API_BASE_URL = '/api/v2'
+import { API_BASE_URL } from '../config/apiBase'
 
 // Create Axios Instance
 const api = axios.create({

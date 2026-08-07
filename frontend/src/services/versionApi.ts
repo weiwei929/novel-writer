@@ -10,10 +10,9 @@ import {
   VersionStatus,
   ProjectSnapshot,
 } from '../types/version'
+import { API_BASE_URL } from '../config/apiBase'
 
-const API_BASE_URL = 'http://localhost:5000/api/v2'
-
-// 创建 axios 实例用于版本管理
+// Create axios instance for version management
 const versionApi = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000, // 版本操作可能比较耗时
