@@ -2,6 +2,11 @@
 FROM node:18-slim AS builder
 WORKDIR /app
 
+# Match runtime OpenSSL so prisma generate picks linux-*-openssl-3.0.x engine
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY package*.json ./
 COPY prisma ./prisma
 COPY tsconfig.json ./
