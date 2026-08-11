@@ -2,7 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
-> **状态**：现役 · 最后核对 2026-07-27
+> **状态**：现役 · 最后核对 2026-08-11
+
+---
+
+## [未发布] — 2026-08-11 主线对齐
+
+### Added
+
+- **正式主线确认** — `feature/workdetail-p1@b60eaf8` 晋升为 `master` 正式主线；标签 `baseline-2026-08-07`
+- **在研分支收拢** — TASK-710/720 未提交内容独立收束至 `task-710-720-followup`
+- **私有化部署候选** — Docker / Caddy / PM2 配置与 Prisma 引擎适配已进入主线
+
+### Changed
+
+- **基线文档对齐** — `AGENTS.md`、`docs/CURRENT_BASELINE.md` 更新为 `master@b60eaf8` 新基线
+- **数据库迁移** — Project 工作流时间戳、软删除、`proposalId` 主关联迁移已并入主线
 
 ---
 
