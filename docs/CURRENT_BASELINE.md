@@ -1,11 +1,11 @@
 # Novel Writer — 当前基线
 
-> **状态**：现役 · 单一真相源（SSOT）· 最后核对 **2026-07-28**
+> **状态**：现役 · 单一真相源（SSOT）· 最后核对 **2026-08-11**
 >
 > **单一真相源**：协作状态、已合并战役、下一战、暂不做项，以此文件为准。
 > 项目整体方向与去向见 [ROADMAP.md](./ROADMAP.md)（含 **§八 0728 共识速查**，防漂移条款）。
 
-**最后更新**：2026-07-28（补录 700-B~G 与 710-A；本文件此前滞后 3 天，HEAD 停在 `0e99c14`）
+**最后更新**：2026-08-11（将 `feature/workdetail-p1@b60eaf8` 正式晋升为 `master` 主线；标签 `baseline-2026-08-07`；TASK-710/720 在研内容收束至分支 `task-710-720-followup`）
 
 ---
 
@@ -13,13 +13,14 @@
 
 | 项 | 值 |
 |----|-----|
-| **主分支** | `feature/workdetail-p1` |
-| **HEAD** | `24bfbef`（2026-07-28）· **`ahead 4`，尚未 push** |
+| **主分支** | `master` |
+| **HEAD** | `b60eaf8`（2026-08-07） |
+| **基线标签** | `baseline-2026-08-07` |
 | **上一实测基线** | `0e99c14`（2026-07-25 司令官本机全链路实测通过） |
 | **协作档位** | 轻量战役制 · **小卡快审 / 低风险快合** |
 | **协作模式** | 司令官拍板 → **参谋长出卡/审卡** → Cursor 侦察与实施 → 参谋长核验收 |
 
-> ⚠️ **未 push**：`a336f6d` / `9110066` / `6ca4cc6` / `24bfbef` 四个提交仅在本地。
+> 2026-08-11 正式主线确认：`feature/workdetail-p1` 已快进合并为 `master`。TASK-710/720 在研内容独立收束在 `task-710-720-followup`，不在 `master` 基线内。
 
 ---
 
@@ -52,8 +53,8 @@
 | ↳ 700-F | `c52d00c` **创作手记 · 后端记录层**（`WorkNote` 表 + `recordWorkNoteDiff`） |
 | ↳ 700-G | `66d7415` 创作手记 · 编审部右栏呈现层 |
 | ↳ 700-H | **已作废**——三栏与防撞车部分否决，保留部分转入 710-D（见 [TASK-710](./tasks/TASK-710-creative-seed-chain.md) §三） |
-| **TASK-710 种子链** | 创意组补断链 · 计划见 [TASK-710](./tasks/TASK-710-creative-seed-chain.md) · 侦察 [710-S](./tasks/TASK-710-S-cursor-scout.md) ✅ |
-| ↳ 710-A | `a336f6d` **拆暗链**（立项时按外来参考全文物化章节，两条触发路径）· `9110066` `host` → `127.0.0.1` · `24bfbef` `import 'dotenv/config'` |
+| **TASK-710 种子链** | 创意组补断链 · 计划见 [TASK-710](./tasks/TASK-710-creative-seed-chain.md)。710-A 已完成并入主线；710-C/E/F 在 `task-710-720-followup` 继续 |
+| **TASK-720 部门对齐** | **四大生产部门流转与权责对齐** · [TASK-720](./tasks/TASK-720-four-dept-handoff-alignment.md)。方案与实现收束在 `task-710-720-followup`，尚未并入 `master` |
 
 0608 五部门骨架、616-A 命名/梗概等见历史封版记录。
 
@@ -175,7 +176,7 @@ _settingSketch → workSetting + chapterPlanning
 | P2 | 创作手记归位到作品详情页（现仅编审右栏） | 中 |
 | P3 | README / VERSION.json 与本文件三套叙事收敛为一套 | 文档 |
 | P3 | `CURSOR_REFERENCE.md` 仍写 `/creative/chat` + L2 占位旧叙事 | 文档 |
-| P3 | `master` 落后 149 个提交；20 个 6 月僵尸分支 + 2 个跨月 stash | 仓库治理 |
+| P3 | 20 个 6 月僵尸分支 + 2 个跨月 stash 仍未清理 | 仓库治理 |
 | — | legacy 数据层后续清理（不删表，逐步降级） | 大 |
 | — | `release-to-studio` 门槛改造 | 大 |
 

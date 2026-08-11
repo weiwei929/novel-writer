@@ -1,6 +1,6 @@
 # AGENTS.md — Agent 入口
 
-> **状态**：现役 · 最后核对 2026-07-27
+> **状态**：现役 · 最后核对 2026-08-11
 >
 > 所有 AI 工具（Codex、Claude、Cursor、Antigravity 等）开工前先读本文。
 
@@ -70,8 +70,9 @@ D:/workspace/content/docs/novel-writer
 当前已知基线（以本机 `git` 输出为准，会随开发推进变化）：
 
 ```text
-分支：ui/design-mode-trial
-HEAD：见 git log -1
+分支：master
+HEAD：b60eaf8
+正式基线标签：baseline-2026-08-07
 远端：应与 origin 同步后再开新活
 ```
 
@@ -139,7 +140,7 @@ C:/Users/Admin/.copilot/repos/copilot-worktrees/novel-writer/*
 
 ```text
 主战场：D:/workspace/content/docs/novel-writer
-当前分支：<填 git branch 输出>
+当前分支：master
 SSOT：docs/CURRENT_BASELINE.md
 本次任务：<TASK 卡路径 或 一句话目标>
 禁止：新建 worktree / 动冻结分支（见下）
@@ -154,7 +155,7 @@ SSOT：docs/CURRENT_BASELINE.md
 | `feature/writing-editor-ui-slice-1-4` | Open Design 战役已冻结；触及写作器保存架构债 | @ `a5ff728`，stash **勿 apply** |
 | `ui/design-mode-trial` | Design Mode 视觉试验，独立 visual 分支 | 见 [design-mode-trial-2026-06-20.md](docs/design/design-mode-trial-2026-06-20.md) |
 
-**主干基线**：`feature/workdetail-p1`（616-D 已收束，见 CURRENT_BASELINE）。
+**主干基线**：`master@b60eaf8`（标签 `baseline-2026-08-07`；TASK-710/720 在研内容在 `task-710-720-followup`，见 CURRENT_BASELINE）。
 
 ---
 
