@@ -5,6 +5,7 @@ import { hasReleasedToEditorial, hasReleasedToLibrary } from '../services/releas
 import { useUIStore } from '../stores/uiStore'
 import ProjectStatusBadge from '../components/projects/ProjectStatusBadge'
 import { IconReview } from '../components/ui/icons'
+import HandoffConfirmModal from '../components/ui/HandoffConfirmModal'
 
 type EditorialAction = 'start-review' | 'confirm-review' | 'back-to-reviewing' | 'soft-delete' | 'submit-to-library'
 
@@ -13,7 +14,7 @@ const ACTIONS: Record<EditorialAction, string> = {
   'confirm-review': '确认审阅完成',
   'back-to-reviewing': '退回审阅中',
   'soft-delete': '放入文件暂存',
-  'submit-to-library': '提交文集库',
+  'submit-to-library': '提交至文集库',
 }
 
 function getActions(status: string): EditorialAction[] {
@@ -31,13 +32,13 @@ function getActions(status: string): EditorialAction[] {
 
 function actionButtonClass(action: EditorialAction): string {
   if (action === 'start-review' || action === 'confirm-review') {
-    return 'bg-blue-600 text-white hover:bg-blue-700'
+    return 'bg-blue-600 text-white hover:bg-blue-700 font-medium'
   }
   if (action === 'soft-delete') {
     return 'text-gray-400 hover:text-amber-600 hover:bg-amber-50'
   }
   if (action === 'submit-to-library') {
-    return 'border border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+    return 'bg-emerald-600 text-white hover:bg-emerald-700 font-medium shadow-xs'
   }
   return 'border border-gray-200 text-gray-600 hover:bg-gray-50'
 }
@@ -74,7 +75,7 @@ function WorkCard({
                 e.stopPropagation()
                 onAction(p.id, a)
               }}
-              className={`text-xs px-2 py-1 rounded transition-colors ${actionButtonClass(a)}`}
+              className={`text-xs px-2.5 py-1 rounded transition-colors ${actionButtonClass(a)}`}
             >
               {ACTIONS[a]}
             </button>
@@ -92,6 +93,8 @@ export default function EditorialPage() {
   const navigate = useNavigate()
   const { addNotification } = useUIStore()
   const [projects, setProjects] = useState<Project[]>([])
+  const [submittingProject, setSubmittingProject] = useState<Project | null>(null)
+  const [actionLoading, setActionLoading] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -109,19 +112,27 @@ export default function EditorialPage() {
     [projects],
   )
   const active = useMemo(() => projects.filter(p => p.status === 'reviewing'), [projects])
-  const completed = useMemo(
+  const completedActive = useMemo(
     () => projects.filter(p => p.status === 'reviewed' && !hasReleasedToLibrary(p)),
+    [projects],
+  )
+  const completedReleased = useMemo(
+    () => projects.filter(p => hasReleasedToLibrary(p)),
     [projects],
   )
 
   const handleAction = useCallback(
     async (id: string, a: EditorialAction) => {
       try {
+        if (a === 'submit-to-library') {
+          const p = projects.find(item => item.id === id)
+          if (p) setSubmittingProject(p)
+          return
+        }
         if (a === 'start-review') await projectsApi.submitReview(id)
         else if (a === 'confirm-review') await projectsApi.transition(id, 'reviewed')
         else if (a === 'back-to-reviewing') await projectsApi.transition(id, 'reviewing')
         else if (a === 'soft-delete') await projectsApi.softDelete(id)
-        else if (a === 'submit-to-library') await projectsApi.releaseToLibrary(id)
         addNotification({
           type: 'success',
           title: {
@@ -129,7 +140,7 @@ export default function EditorialPage() {
             'confirm-review': '审阅已完成',
             'back-to-reviewing': '已退回',
             'soft-delete': '已放入文件暂存',
-            'submit-to-library': '已提交文集库',
+            'submit-to-library': '已提交至文集库',
           }[a],
         })
         await load()
@@ -137,10 +148,25 @@ export default function EditorialPage() {
         addNotification({ type: 'error', title: '操作失败', message: (e as Error).message })
       }
     },
-    [load, addNotification],
+    [load, addNotification, projects],
   )
 
-  const total = pending.length + active.length + completed.length
+  const handleConfirmSubmitToLibrary = useCallback(async () => {
+    if (!submittingProject) return
+    setActionLoading(true)
+    try {
+      await projectsApi.releaseToLibrary(submittingProject.id)
+      addNotification({ type: 'success', title: '已提交至文集库' })
+      setSubmittingProject(null)
+      await load()
+    } catch (e: unknown) {
+      addNotification({ type: 'error', title: '提交失败', message: (e as Error).message })
+    } finally {
+      setActionLoading(false)
+    }
+  }, [submittingProject, load, addNotification])
+
+  const total = pending.length + active.length + completedActive.length
 
   return (
     <div className="w-full min-w-0 max-w-full space-y-6 animate-fade-in overflow-x-hidden">
@@ -191,21 +217,50 @@ export default function EditorialPage() {
           )}
         </section>
         <section className="space-y-3 min-w-0">
-          <h2 className="text-lg font-semibold text-gray-900">已完成审阅 {completed.length} 部</h2>
-          {completed.length === 0 ? (
+          <h2 className="text-lg font-semibold text-gray-900">
+            已完成审阅 {completedActive.length} 部
+            {completedReleased.length > 0 && (
+              <span className="text-xs font-normal text-gray-400 ml-1.5">· 已提交 {completedReleased.length} 部</span>
+            )}
+          </h2>
+          {completedActive.length === 0 && completedReleased.length === 0 ? (
             <p className={EMPTY_CLASS}>暂无已完成审阅作品</p>
           ) : (
-            completed.map(p => (
-              <WorkCard
-                key={p.id}
-                p={p}
-                onOpen={id => navigate(`/editorial/${id}`)}
-                onAction={handleAction}
-              />
-            ))
+            <div className="space-y-3">
+              {completedActive.map(p => (
+                <WorkCard
+                  key={p.id}
+                  p={p}
+                  onOpen={id => navigate(`/editorial/${id}`)}
+                  onAction={handleAction}
+                />
+              ))}
+              {completedReleased.map(p => (
+                <div key={p.id} className="bg-gray-50/80 border border-gray-200 rounded-xl p-4 min-w-0 text-gray-400">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-medium text-sm text-gray-400 truncate flex-1">{p.title}</h3>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-600 shrink-0 font-medium">已提交文集库</span>
+                  </div>
+                  <div className="text-xs text-gray-400 mt-2 flex items-center justify-between">
+                    <span>{p.wordCount.toLocaleString()} 字</span>
+                    <span>已提交 · {new Date(p.updatedAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </section>
       </div>
+
+      <HandoffConfirmModal
+        open={Boolean(submittingProject)}
+        targetDepartmentName="文集库"
+        workTitle={submittingProject?.title || ''}
+        confirmText="确认提交"
+        loading={actionLoading}
+        onConfirm={() => void handleConfirmSubmitToLibrary()}
+        onCancel={() => setSubmittingProject(null)}
+      />
     </div>
   )
 }

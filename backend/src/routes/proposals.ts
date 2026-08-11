@@ -13,7 +13,7 @@ import {
   recordWorkNoteDiff,
 } from '../utils/workNote'
 
-const PROPOSAL_STATUSES = ['draft', 'submitted', 'evaluated', 'approved', 'rejected', 'shelved'] as const
+const PROPOSAL_STATUSES = ['draft', 'submitted', 'evaluated', 'approved', 'rejected', 'shelved', 'formed'] as const
 
 const CreateProposalSchema = z.object({
   title: z.string().min(1),
@@ -62,6 +62,7 @@ export async function acceptIntoPlanningCore(
     [META_KEYS_DAY1.PROPOSAL_ID_LEGACY]: proposal.id,
     [META_KEYS_DAY1.FROM_EVALUATE]: true,
     [META_KEYS_DAY1.PLANNING_PHASE]: 'evaluating',
+    ...(proposal.references ? { attachedReferences: proposal.references } : {}),
     ...(typeof metadata._evaluation === 'string' && metadata._evaluation.trim()
       ? { _evaluation: metadata._evaluation }
       : {}),

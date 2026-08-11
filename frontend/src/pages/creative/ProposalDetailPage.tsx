@@ -1,13 +1,19 @@
 import { IconArrowLeft, IconCheckCircle } from '../../components/ui/icons'
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   getProposalMetadata,
   proposalsApi,
   type Proposal,
   type ProposalReference,
 } from '../../services/api'
-import { advanceOriginToConceiving, creativeStageHeading, creativeStageLabel, getCreativeStage } from '../../services/creativeOrigin'
+import {
+  advanceConceivingToFormed,
+  advanceOriginToConceiving,
+  creativeStageHeading,
+  creativeStageLabel,
+  getCreativeStage,
+} from '../../services/creativeOrigin'
 import {
   getSettingSketch,
   normalizeWorkSetting,
@@ -17,19 +23,29 @@ import {
 import { useNotifications } from '../../hooks/useNotifications'
 import ProposalStatusBadge from '../../components/proposals/ProposalStatusBadge'
 import TypeLabel from '../../components/creative/TypeLabel'
+import ReferencePicker from '../../components/creative/ReferencePicker'
+import HandoffConfirmModal from '../../components/ui/HandoffConfirmModal'
 
 export default function ProposalDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const { success, error: notifyError } = useNotifications()
+
+  const isPlanningRoute =
+    location.pathname.startsWith('/planning') ||
+    new URLSearchParams(location.search).get('from') === 'planning'
 
   const [proposal, setProposal] = useState<Proposal | null>(null)
   const [_loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [showPicker, setShowPicker] = useState(false)
+  const [showHandoffModal, setShowHandoffModal] = useState(false)
 
   const [title, setTitle] = useState('')
   const [synopsis, setSynopsis] = useState('')
   const [evaluation, setEvaluation] = useState('')
+  const [references, setReferences] = useState<ProposalReference[]>([])
   const [settingSketch, setSettingSketch] = useState<WorkSetting>(() => normalizeWorkSetting())
 
   const buildProposalPayload = useCallback(
@@ -38,6 +54,7 @@ export default function ProposalDetailPage() {
       return {
         title: title.trim() || '未命名提案',
         synopsis,
+        references,
         metadata: {
           ...meta,
           _evaluation: evaluation,
@@ -45,7 +62,7 @@ export default function ProposalDetailPage() {
         },
       }
     },
-    [title, synopsis, evaluation, settingSketch]
+    [title, synopsis, evaluation, references, settingSketch]
   )
 
   const load = useCallback(async () => {
@@ -58,6 +75,7 @@ export default function ProposalDetailPage() {
       setTitle(p.title ?? '')
       setSynopsis(p.synopsis ?? '')
       setEvaluation(meta._evaluation ?? '')
+      setReferences((p.references as ProposalReference[]) || [])
       setSettingSketch(getSettingSketch(meta as Record<string, unknown>))
     } catch {
       notifyError('加载失败')
@@ -103,14 +121,35 @@ export default function ProposalDetailPage() {
     }
   }
 
-  const handleEnterPlanning = async () => {
+  const handleFinishConceiving = async () => {
     if (!id || !proposal) return
-    const meta = getProposalMetadata(proposal)
-    const currentStage = getCreativeStage(meta)
-    if (currentStage === 'origin') {
-      notifyError('提交失败', '请先点击「开始创意构思」，再提交企划课')
+    const trimmedTitle = title.trim()
+    const trimmedSynopsis = synopsis.trim()
+    if (!trimmedTitle || !trimmedSynopsis) {
+      notifyError('无法完成构思', '请填写标题和故事梗概')
       return
     }
+    setSaving(true)
+    try {
+      const updated = await advanceConceivingToFormed(id, proposal, {
+        title: trimmedTitle,
+        synopsis: trimmedSynopsis,
+        evaluation,
+        references,
+        settingSketch,
+      })
+      setProposal(updated)
+      success('已完成构思', '作品已归入《已完成创意作品》')
+    } catch {
+      notifyError('操作失败')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleConfirmSubmitPlanning = async () => {
+    if (!id || !proposal) return
+    setShowHandoffModal(false)
     const trimmedTitle = title.trim()
     const trimmedSynopsis = synopsis.trim()
     if (!trimmedTitle || !trimmedSynopsis) {
@@ -152,8 +191,11 @@ export default function ProposalDetailPage() {
     return (
       <div className="text-center py-20 text-gray-500">
         <p>未找到该创意作品</p>
-        <Link to="/creative/workspace" className="text-blue-600 text-sm mt-2 inline-block">
-          返回创意组
+        <Link
+          to={isPlanningRoute ? '/planning/proposals' : '/creative/workspace'}
+          className="text-blue-600 text-sm mt-2 inline-block"
+        >
+          {isPlanningRoute ? '返回企划课列表' : '返回创意组'}
         </Link>
       </div>
     )
@@ -164,10 +206,14 @@ export default function ProposalDetailPage() {
   const stageLabel = creativeStageLabel(stage, proposal.status)
   const headingPrefix = creativeStageHeading(stage, proposal.status)
   const canStartConceiving = proposal.status === 'draft' && stage === 'origin'
-  const canSubmitPlanning = proposal.status === 'draft' && stage !== 'origin'
+  const canFinishConceiving = proposal.status === 'draft' && (stage === 'conceiving' || !stage)
+  const canSubmitPlanning =
+    !isPlanningRoute &&
+    (proposal.status === 'formed' || stage === 'formed')
   const canAcceptPlanning =
-    (proposal.status === 'submitted' || proposal.status === 'evaluated') && !proposal.projectId
-  const references = (proposal.references as ProposalReference[]) || []
+    isPlanningRoute &&
+    (proposal.status === 'submitted' || proposal.status === 'evaluated') &&
+    !proposal.projectId
   const inputCls =
     'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-amber-500'
 
@@ -175,11 +221,11 @@ export default function ProposalDetailPage() {
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
-          to="/creative/workspace"
+          to={isPlanningRoute ? '/planning/proposals' : '/creative/workspace'}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900"
         >
           <IconArrowLeft size={16} />
-          返回创意组
+          {isPlanningRoute ? '返回企划课列表' : '返回创意组'}
         </Link>
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-100">
@@ -275,26 +321,68 @@ export default function ProposalDetailPage() {
         ))}
       </section>
 
-      <section className="bg-white border rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-gray-800 mb-3">历史引用材料（只读）</h2>
+      <section className="bg-white border rounded-xl p-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-gray-800">引用素材</h2>
+            <p className="text-xs text-gray-500 mt-1">
+              关联灵感碎片或外来参考文件。立项后将作为只读附件跟随作品。
+            </p>
+          </div>
+          {proposal.status === 'draft' && (
+            <button
+              type="button"
+              onClick={() => setShowPicker(true)}
+              className="px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg text-xs font-medium hover:bg-amber-100 transition-colors"
+            >
+              + 引用素材
+            </button>
+          )}
+        </div>
         {references.length === 0 ? (
-          <p className="text-sm text-gray-400">无引用材料</p>
+          <p className="text-sm text-gray-400">暂无引用素材</p>
         ) : (
           <ul className="space-y-2 text-sm">
             {references.map(r => (
-              <li key={`${r.type}-${r.id}`} className="flex items-center gap-2">
-                <span className="text-gray-400 shrink-0">
-                  [{r.type === 'scrap' ? '灵感碎片' : '外来参考'}]
-                </span>
-                <span className="font-medium">{r.title}</span>
-                {r.processingType && r.processingType !== 'none' && (
-                  <TypeLabel type={r.processingType} compact />
+              <li
+                key={`${r.type}-${r.id}`}
+                className="flex items-center justify-between gap-2 p-2 bg-gray-50 rounded-lg border border-gray-100"
+              >
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <span className="text-xs font-medium px-2 py-0.5 rounded bg-gray-200 text-gray-700 shrink-0">
+                    {r.type === 'scrap' ? '灵感碎片' : '外来参考'}
+                  </span>
+                  <span className="font-medium text-gray-800 truncate">{r.title}</span>
+                  {r.processingType && r.processingType !== 'none' && (
+                    <TypeLabel type={r.processingType} compact />
+                  )}
+                </div>
+                {proposal.status === 'draft' && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setReferences(references.filter(p => !(p.type === r.type && p.id === r.id)))
+                    }
+                    className="text-xs text-red-500 hover:text-red-700 px-2 py-1"
+                  >
+                    移除
+                  </button>
                 )}
               </li>
             ))}
           </ul>
         )}
       </section>
+
+      <ReferencePicker
+        open={showPicker}
+        selected={references}
+        onConfirm={refs => {
+          setReferences(refs)
+          setShowPicker(false)
+        }}
+        onCancel={() => setShowPicker(false)}
+      />
 
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <button
@@ -311,19 +399,30 @@ export default function ProposalDetailPage() {
             type="button"
             disabled={saving}
             onClick={() => void handleStartConceiving()}
-            className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm hover:bg-amber-700 sm:ml-auto"
+            className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm hover:bg-amber-700 sm:ml-auto font-medium"
           >
             开始创意构思
+          </button>
+        )}
+        {canFinishConceiving && (
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => void handleFinishConceiving()}
+            className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm hover:bg-amber-700 sm:ml-auto font-medium shadow-xs"
+          >
+            完成构思
           </button>
         )}
         {canSubmitPlanning && (
           <button
             type="button"
             disabled={saving}
-            onClick={() => void handleEnterPlanning()}
-            className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm hover:bg-amber-700 sm:ml-auto"
+            onClick={() => setShowHandoffModal(true)}
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium flex items-center gap-1.5 shadow-sm sm:ml-auto transition-colors"
           >
-            提交企划课
+            <IconCheckCircle size={16} />
+            提交至企划课
           </button>
         )}
         {canAcceptPlanning && (
@@ -336,6 +435,11 @@ export default function ProposalDetailPage() {
             <IconCheckCircle size={16} />
             接收入企划课
           </button>
+        )}
+        {!isPlanningRoute && (proposal.status === 'submitted' || proposal.status === 'evaluated') && !proposal.projectId && (
+          <p className="text-xs text-blue-800 bg-blue-50 border border-blue-100 rounded-lg p-2.5 w-full">
+            💡 提案已提交至企划课。审核与接收入企划课操作请在「企划课 - 待评估」列表中执行。
+          </p>
         )}
         {proposal.projectId && (
           <button
@@ -351,8 +455,17 @@ export default function ProposalDetailPage() {
             确认缘起内容后，点击「开始创意构思」进入下一阶段。
           </p>
         )}
-        {/* 0608 P2-2b: shelve 用户路径已屏蔽 */}
       </div>
+
+      <HandoffConfirmModal
+        open={showHandoffModal}
+        targetDepartmentName="企划课"
+        workTitle={proposal.title}
+        confirmText="确认提交"
+        loading={saving}
+        onConfirm={() => void handleConfirmSubmitPlanning()}
+        onCancel={() => setShowHandoffModal(false)}
+      />
     </div>
   )
 }

@@ -204,6 +204,25 @@ export default function WorkSettingDocument({
               </div>
             )
           })}
+
+          {Array.isArray((project.metadata as Record<string, unknown>)?.attachedReferences) &&
+            ((project.metadata as Record<string, unknown>).attachedReferences as Array<{ type: string; title: string }>).length > 0 && (
+              <div className="pt-4 border-t border-gray-100">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                  随同关联素材（立项附件只读）
+                </h3>
+                <ul className="space-y-1.5 text-xs text-gray-600">
+                  {((project.metadata as Record<string, unknown>).attachedReferences as Array<{ type: string; title: string }>).map((ref, idx) => (
+                    <li key={idx} className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-100">
+                      <span className="text-gray-400 font-medium shrink-0">
+                        [{ref.type === 'scrap' ? '灵感碎片' : '外来参考'}]
+                      </span>
+                      <span className="font-medium text-gray-800">{ref.title}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
         </section>
       </div>
 
