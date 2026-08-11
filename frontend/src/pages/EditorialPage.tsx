@@ -166,7 +166,7 @@ export default function EditorialPage() {
     }
   }, [submittingProject, load, addNotification])
 
-  const total = pending.length + active.length + completedActive.length
+  const total = pending.length + active.length + completedActive.length + completedReleased.length
 
   return (
     <div className="w-full min-w-0 max-w-full space-y-6 animate-fade-in overflow-x-hidden">
@@ -218,7 +218,7 @@ export default function EditorialPage() {
         </section>
         <section className="space-y-3 min-w-0">
           <h2 className="text-lg font-semibold text-gray-900">
-            已完成审阅 {completedActive.length} 部
+            已完成审阅 {completedActive.length + completedReleased.length} 部
             {completedReleased.length > 0 && (
               <span className="text-xs font-normal text-gray-400 ml-1.5">· 已提交 {completedReleased.length} 部</span>
             )}

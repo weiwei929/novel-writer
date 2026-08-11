@@ -51,7 +51,6 @@ export default function CreativeWorkspace() {
     () => proposals.filter(p => ['formed', 'submitted', 'evaluated', 'approved'].includes(p.status)),
     [proposals]
   )
-  const formedActive = useMemo(() => formed.filter(p => p.status === 'formed'), [formed])
   const formedReleased = useMemo(() => formed.filter(p => p.status !== 'formed'), [formed])
 
   const originList = useMemo(
@@ -102,7 +101,7 @@ export default function CreativeWorkspace() {
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold text-gray-900">创意组</h1>
           <p className="text-sm text-gray-500 mt-1">从作品构思开始，沉淀标题、梗概和初步创意材料，形成创意作品。</p>
-          <p className="text-xs text-gray-400 mt-1">{scrapCount + refCount} 条素材 · {pending.length} 部构思中 · {formedActive.length} 部已完成创意</p>
+          <p className="text-xs text-gray-400 mt-1">{scrapCount + refCount} 条素材 · {pending.length} 部构思中 · {formed.length} 部已完成创意</p>
         </div>
       </div>
 
@@ -232,7 +231,7 @@ export default function CreativeWorkspace() {
         {/* 右列：已完成创意作品 */}
         <section className="space-y-3 min-w-0">
           <h2 className="text-lg font-semibold text-gray-900">
-            已完成创意作品 {formedActive.length} 部
+            已完成创意作品 {formed.length} 部
             {formedReleased.length > 0 && (
               <span className="text-xs font-normal text-gray-400 ml-1.5">· 已提交 {formedReleased.length} 部</span>
             )}

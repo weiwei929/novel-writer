@@ -90,7 +90,7 @@ export default function PlanningPage() {
     }
   }, [releasingProject, load, addNotification])
 
-  const total = planningProposals.length + planning.length + plannedActive.length
+  const total = planningProposals.length + planning.length + plannedActive.length + plannedReleased.length
 
   const EMPTY_CLASS =
     'text-sm text-gray-400 py-6 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200'
@@ -150,7 +150,7 @@ export default function PlanningPage() {
         {/* 已完成企划 */}
         <section className="space-y-3 min-w-0">
           <h2 className="text-lg font-semibold text-gray-900">
-            已完成企划 {plannedActive.length} 部
+            已完成企划 {plannedActive.length + plannedReleased.length} 部
             {plannedReleased.length > 0 && (
               <span className="text-xs font-normal text-gray-400 ml-1.5">· 已提交 {plannedReleased.length} 部</span>
             )}

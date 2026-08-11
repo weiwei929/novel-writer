@@ -123,7 +123,7 @@ export default function WritingProjectsPage() {
     }
   }, [submittingProject, load, addNotification])
 
-  const total = planned.length + writing.length + writtenActive.length
+  const total = planned.length + writing.length + writtenActive.length + writtenReleased.length
 
   return (
     <div className="w-full min-w-0 max-w-full space-y-6 animate-fade-in overflow-x-hidden">
@@ -149,7 +149,7 @@ export default function WritingProjectsPage() {
         </section>
         <section className="space-y-3 min-w-0">
           <h2 className="text-lg font-semibold text-gray-900">
-            已完成创作 {writtenActive.length} 部
+            已完成创作 {writtenActive.length + writtenReleased.length} 部
             {writtenReleased.length > 0 && (
               <span className="text-xs font-normal text-gray-400 ml-1.5">· 已提交 {writtenReleased.length} 部</span>
             )}
