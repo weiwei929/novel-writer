@@ -1,6 +1,6 @@
 # 文档索引
 
-> **状态**：现役 · 最后核对 2026-07-27
+> **状态**：现役 · 最后核对 2026-08-11
 
 ---
 
@@ -52,6 +52,9 @@
 | [TEMPLATE.md](./tasks/TEMPLATE.md) | 模板 |
 | [CURSOR_REFERENCE.md](./tasks/CURSOR_REFERENCE.md) | Cursor 编码约束 |
 | [TASK-621-docs-governance.md](./tasks/TASK-621-docs-governance.md) | 🔄 进行中：文档治理 |
+| [TASK-700-v2.7.27-pipeline-completion.md](./tasks/TASK-700-v2.7.27-pipeline-completion.md) | v2.7.27 全链路打通计划 |
+| [TASK-710-creative-seed-chain.md](./tasks/TASK-710-creative-seed-chain.md) | 创意组种子链补齐 |
+| [TASK-720-four-dept-handoff-alignment.md](./tasks/TASK-720-four-dept-handoff-alignment.md) | 四大生产部门流转与权责对齐 |
 
 已结案任务卡 → [`tasks/archive/`](./tasks/archive/)
 
