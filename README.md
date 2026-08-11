@@ -4,7 +4,7 @@
 >
 > 基于 React + Fastify + Prisma 的本地优先小说创作工具。**AI 辅助功能当前已冻结**，详见 [docs/ROADMAP.md](./docs/ROADMAP.md)。
 
-**当前版本**: 2.0  
+**当前版本**: v2.08.11  
 **最后更新**: 2026-08-11  
 **正式主线**: `master`（2026-08-11 已验证产品集成点 `ac9a3af`，PR #16；开工以当前 `origin/master` 为准）
 **上一工程基线**: 标签 `baseline-2026-08-07` → `b60eaf8`
