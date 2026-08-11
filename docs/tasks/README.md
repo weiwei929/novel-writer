@@ -1,6 +1,6 @@
 # 任务卡
 
-> **状态**：现役 · 最后核对 2026-07-27
+> **状态**：现役 · 最后核对 2026-08-11
 > 已结案任务卡见 [`archive/`](./archive/)。
 
 > **协作总纲**：[AGENTS.md](../../AGENTS.md) — 角色分工、主战场、worktree 纪律、工具切换交接条。
@@ -23,7 +23,7 @@
                                              通过 ✅ 或 出修正卡 🔄
 ```
 
-战役收尾时同步：更新 `CURRENT_BASELINE`、相关 INDEX、push 分支、清理 worktree（见 AGENTS.md checklist）。
+战役收尾时同步：更新 `CURRENT_BASELINE`、相关 INDEX、push 分支、清理 worktree（见 AGENTS.md checklist）。已结案任务卡应移入 `archive/`（待办登记）。
 
 ## 目录结构
 

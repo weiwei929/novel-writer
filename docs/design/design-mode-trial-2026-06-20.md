@@ -1,9 +1,10 @@
 # Cursor Design Mode 试验记录
 
+> **状态**：⛔ 已冻结 · 历史视觉试验 · 最后核对 2026-08-11
 > **日期**：2026-06-20  
 > **执行**：用户 + Cursor（Design Mode / Browser 点选迭代）  
 > **用途**：与 Codex / 司令部对齐；个人尝试记录  
-> **状态**：已提交至分支 `ui/design-mode-trial`（`ee2d55d` 换行符归一化 + `9b07129` 视觉改动）；**尚未 push 远端**
+> 分支 `ui/design-mode-trial` 已转为 archive tag；文中旧 branch/SHA 描述**当时**执行环境，**不是当前操作指令**。
 
 ---
 

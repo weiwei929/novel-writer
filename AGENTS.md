@@ -71,8 +71,8 @@ D:/workspace/content/docs/novel-writer
 
 ```text
 分支：master
-HEAD：b60eaf8
-正式基线标签：baseline-2026-08-07
+已验证产品集成点：ac9a3af（2026-08-11，PR #16）；开工以当前 origin/master 为准
+上一工程基线标签：baseline-2026-08-07 → b60eaf8
 远端：应与 origin 同步后再开新活
 ```
 
@@ -155,7 +155,7 @@ SSOT：docs/CURRENT_BASELINE.md
 | `feature/writing-editor-ui-slice-1-4` | Open Design 战役已冻结；触及写作器保存架构债 | @ `a5ff728`，stash **勿 apply** |
 | `ui/design-mode-trial` | Design Mode 视觉试验，独立 visual 分支 | 见 [design-mode-trial-2026-06-20.md](docs/design/design-mode-trial-2026-06-20.md) |
 
-**主干基线**：`master@b60eaf8`（标签 `baseline-2026-08-07`；TASK-710/720 在研内容在 `task-710-720-followup`，见 CURRENT_BASELINE）。
+**主干基线**：正式分支 `master`；2026-08-11 已验证产品集成点 `ac9a3af`（PR #16）。上一工程基线标签 `baseline-2026-08-07` → `b60eaf8`。详见 [CURRENT_BASELINE.md](docs/CURRENT_BASELINE.md)。
 
 ---
 

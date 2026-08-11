@@ -69,7 +69,8 @@
 | [0608-616-coordination-draft.md](./design/0608-616-coordination-draft.md) | 0608 与 616 的衔接 |
 | [design-P1-entry-architecture.md](./design/design-P1-entry-architecture.md) | 入口架构（已收束） |
 | [quick-writing-entry-2026-07-07.md](./design/quick-writing-entry-2026-07-07.md) | 快速写作入口（已实施） |
-| [design-mode-trial-2026-06-20.md](./design/design-mode-trial-2026-06-20.md) | Design Mode 视觉试验（分支 `ui/design-mode-trial`） |
+| [design-mode-trial-2026-06-20.md](./design/design-mode-trial-2026-06-20.md) | ⛔ 历史视觉试验（分支已转 archive tag；见文件状态行） |
+| [creative-v2-constitution-draft.md](./design/creative-v2-constitution-draft.md) | 历史 · 阶段性设计输入，不作为当前基线 |
 
 已实施 / 已过期设计稿 → [`design/archive/`](./design/archive/)
 
@@ -108,3 +109,5 @@
 - 新增现役文档 → 加状态行 + 在本文件登记
 - 文档失效 → **改状态行**，而不是等着谁来更新索引
 - 过程性记录 → 直接放 `journal/`，不进现役区
+- **历史文档中的旧 branch / SHA** 描述当时执行环境，**不是当前操作指令**；开工以 `origin/master` 为准
+- 已结案任务卡 → 移入 [`tasks/archive/`](./tasks/archive/)（待办登记，本 Wave 不批量搬迁）
