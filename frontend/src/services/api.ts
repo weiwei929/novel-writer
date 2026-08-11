@@ -64,6 +64,7 @@ export const PROPOSAL_STATUSES = [
   'approved',
   'rejected',
   'shelved',
+  'formed',
 ] as const
 
 export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number]

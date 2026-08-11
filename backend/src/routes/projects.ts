@@ -234,11 +234,10 @@ const CreateProjectSchema = z.object({
   author: z.string().optional(),
 })
 
-const UpdateProjectSchema = z.object({
+export const UpdateProjectSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
   author: z.string().optional(),
-  status: z.enum(PROJECT_STATUSES).optional(),
   collectionId: z.string().nullable().optional(),
   coverImage: z.string().optional(),
   metadata: z.any().optional(), // Allow any JSON object/value
@@ -1195,9 +1194,6 @@ export async function projectRoutes(app: FastifyInstance) {
     }
 
     const updateData = { ...result.data }
-    if (updateData.status) {
-      updateData.status = mapProjectStatus(updateData.status) as typeof updateData.status
-    }
 
     try {
       const existing = await prisma.project.findFirst({

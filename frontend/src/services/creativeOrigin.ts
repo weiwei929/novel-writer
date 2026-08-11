@@ -74,6 +74,32 @@ export async function advanceOriginToConceiving(
   })
 }
 
+export async function advanceConceivingToFormed(
+  id: string,
+  proposal: Proposal,
+  fields: {
+    title: string
+    synopsis: string
+    evaluation: string
+    references?: Proposal['references']
+    settingSketch: WorkSetting
+  }
+): Promise<Proposal> {
+  const meta = getProposalMetadata(proposal) as ProposalMetadata
+  return proposalsApi.update(id, {
+    title: fields.title.trim() || '未命名提案',
+    synopsis: fields.synopsis,
+    ...(fields.references ? { references: fields.references } : {}),
+    status: 'formed',
+    metadata: {
+      ...meta,
+      _creativeStage: 'formed',
+      _evaluation: fields.evaluation,
+      _settingSketch: normalizeWorkSetting(fields.settingSketch),
+    },
+  })
+}
+
 export async function createConceivingProposal(title: string): Promise<Proposal> {
   return proposalsApi.create({
     title: title.trim(),

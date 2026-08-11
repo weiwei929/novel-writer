@@ -6,6 +6,7 @@ import { hasReleasedToStudio } from '../../services/releaseHandoff'
 import { useUIStore } from '../../stores/uiStore'
 import ProjectPickerView, { type PlanningAction } from '../../components/projects/ProjectPickerView'
 import { IconPlanning } from '../../components/ui/icons'
+import HandoffConfirmModal from '../../components/ui/HandoffConfirmModal'
 
 // ---- 企划课 consolidated page ----
 
@@ -32,10 +33,17 @@ export default function PlanningPage() {
   )
 
   const planning = useMemo(() => projects.filter(p => p.status === 'planning'), [projects])
-  const planned = useMemo(
+  const plannedActive = useMemo(
     () => projects.filter(p => p.status === 'planned' && !hasReleasedToStudio(p)),
     [projects],
   )
+  const plannedReleased = useMemo(
+    () => projects.filter(p => hasReleasedToStudio(p)),
+    [projects],
+  )
+
+  const [releasingProject, setReleasingProject] = useState<Project | null>(null)
+  const [actionLoading, setActionLoading] = useState(false)
 
   const handleAction = useCallback(async (id: string, action: PlanningAction) => {
     try {
@@ -55,16 +63,34 @@ export default function PlanningPage() {
           await projectsApi.softDelete(id)
           addNotification({ type: 'success', title: '已放入文件暂存' })
           break
-        case 'release-to-studio':
-          await projectsApi.releaseToStudio(id)
-          addNotification({ type: 'success', title: '已提交创作室' })
-          break
+        case 'release-to-studio': {
+          const project = projects.find(p => p.id === id)
+          if (project) {
+            setReleasingProject(project)
+          }
+          return
+        }
       }
       await load()
     } catch (e: unknown) { addNotification({ type: 'error', title: '操作失败', message: (e as Error).message }) }
   }, [load, addNotification, projects])
 
-  const total = planningProposals.length + planning.length + planned.length
+  const handleConfirmReleaseToStudio = useCallback(async () => {
+    if (!releasingProject) return
+    setActionLoading(true)
+    try {
+      await projectsApi.releaseToStudio(releasingProject.id)
+      addNotification({ type: 'success', title: '已提交至创作室' })
+      setReleasingProject(null)
+      await load()
+    } catch (e: unknown) {
+      addNotification({ type: 'error', title: '放行失败', message: (e as Error).message })
+    } finally {
+      setActionLoading(false)
+    }
+  }, [releasingProject, load, addNotification])
+
+  const total = planningProposals.length + planning.length + plannedActive.length + plannedReleased.length
 
   const EMPTY_CLASS =
     'text-sm text-gray-400 py-6 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200'
@@ -122,18 +148,56 @@ export default function PlanningPage() {
         />
 
         {/* 已完成企划 */}
-        <ProjectPickerView
-          title={`已完成企划 ${planned.length} 部`}
-          subtitle={`${planned.length} 部已完成企划作品`}
-          projects={planned}
-          loading={false}
-          emptyText="暂无已完成企划作品。确认企划完成后将出现在此。"
-          phase="planning"
-          onOpen={id => navigate(`/work/${id}?from=planning`)}
-          onAction={handleAction}
-          compact
-        />
+        <section className="space-y-3 min-w-0">
+          <h2 className="text-lg font-semibold text-gray-900">
+            已完成企划 {plannedActive.length + plannedReleased.length} 部
+            {plannedReleased.length > 0 && (
+              <span className="text-xs font-normal text-gray-400 ml-1.5">· 已提交 {plannedReleased.length} 部</span>
+            )}
+          </h2>
+          {plannedActive.length === 0 && plannedReleased.length === 0 ? (
+            <p className={EMPTY_CLASS}>暂无已完成企划作品</p>
+          ) : (
+            <div className="space-y-3">
+              {plannedActive.map(p => (
+                <ProjectPickerView
+                  key={p.id}
+                  title=""
+                  projects={[p]}
+                  loading={false}
+                  emptyText=""
+                  phase="planning"
+                  onOpen={id => navigate(`/work/${id}?from=planning`)}
+                  onAction={handleAction}
+                  compact
+                />
+              ))}
+              {plannedReleased.map(p => (
+                <div key={p.id} className="bg-gray-50/80 border border-gray-200 rounded-xl p-4 min-w-0 text-gray-400">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-medium text-sm text-gray-400 truncate flex-1">{p.title}</h3>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-600 shrink-0 font-medium">已提交创作室</span>
+                  </div>
+                  <div className="text-xs text-gray-400 mt-2 flex items-center justify-between">
+                    <span>{p.wordCount.toLocaleString()} 字</span>
+                    <span>已提交 · {new Date(p.updatedAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
+
+      <HandoffConfirmModal
+        open={Boolean(releasingProject)}
+        targetDepartmentName="创作室"
+        workTitle={releasingProject?.title || ''}
+        confirmText="确认提交"
+        loading={actionLoading}
+        onConfirm={() => void handleConfirmReleaseToStudio()}
+        onCancel={() => setReleasingProject(null)}
+      />
     </div>
   )
 }

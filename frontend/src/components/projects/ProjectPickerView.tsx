@@ -9,7 +9,7 @@ const ACTION_LABELS: Record<PlanningAction, string> = {
   'confirm-planning': '确认企划完成',
   'back-to-planning': '退回企划中',
   'soft-delete': '放入文件暂存',
-  'release-to-studio': '提交创作室',
+  'release-to-studio': '提交至创作室',
 }
 
 function getActionsForStatus(status: string): PlanningAction[] {
@@ -51,8 +51,8 @@ export default function ProjectPickerView({
   if (compact) {
     return (
       <section className="space-y-3 min-w-0">
-        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-        <p className="text-sm text-gray-500">{subtitle}</p>
+        {title && <h2 className="text-lg font-semibold text-gray-900">{title}</h2>}
+        {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
         {projects.length === 0 ? (
           <p className="text-sm text-gray-400 py-6 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">{emptyText}</p>
         ) : (
@@ -71,10 +71,10 @@ export default function ProjectPickerView({
                     <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-gray-100">
                       {actions.map(action => (
                         <button key={action} type="button" onClick={e => { e.stopPropagation(); onAction?.(p.id, action) }}
-                          className={`text-xs px-2 py-1 rounded transition-colors ${
+                          className={`text-xs px-2.5 py-1 rounded font-medium transition-colors ${
                             action === 'confirm-planning' ? 'bg-blue-600 text-white hover:bg-blue-700'
                             : action === 'soft-delete' ? 'text-gray-400 hover:text-amber-600 hover:bg-amber-50'
-                            : action === 'release-to-studio' ? 'border border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                            : action === 'release-to-studio' ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs'
                             : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
                           }`}
                         >{ACTION_LABELS[action]}</button>

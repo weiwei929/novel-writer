@@ -13,7 +13,7 @@ import {
   recordWorkNoteDiff,
 } from '../utils/workNote'
 
-const PROPOSAL_STATUSES = ['draft', 'submitted', 'evaluated', 'approved', 'rejected', 'shelved'] as const
+const PROPOSAL_STATUSES = ['draft', 'submitted', 'evaluated', 'approved', 'rejected', 'shelved', 'formed'] as const
 
 const CreateProposalSchema = z.object({
   title: z.string().min(1),
@@ -62,6 +62,7 @@ export async function acceptIntoPlanningCore(
     [META_KEYS_DAY1.PROPOSAL_ID_LEGACY]: proposal.id,
     [META_KEYS_DAY1.FROM_EVALUATE]: true,
     [META_KEYS_DAY1.PLANNING_PHASE]: 'evaluating',
+    ...(proposal.references ? { attachedReferences: proposal.references } : {}),
     ...(typeof metadata._evaluation === 'string' && metadata._evaluation.trim()
       ? { _evaluation: metadata._evaluation }
       : {}),
@@ -141,6 +142,20 @@ async function rejectProposal(id: string, note?: string) {
       } as Prisma.InputJsonValue,
     },
   })
+}
+
+/** 720 handoff: only formed proposals may enter planning via status=submitted */
+export function validateProposalStatusUpdate(
+  currentStatus: string,
+  nextStatus: string
+): { ok: true } | { ok: false; message: string } {
+  if (nextStatus === 'submitted' && currentStatus !== 'formed') {
+    return {
+      ok: false,
+      message: '仅已完成构思（formed）的提案可提交至企划课',
+    }
+  }
+  return { ok: true }
 }
 
 function setEvaluateDeprecation(reply: FastifyReply, proposalId: string, rel: string) {
@@ -224,6 +239,18 @@ export async function proposalRoutes(app: FastifyInstance) {
     const result = UpdateStatusSchema.safeParse(req.body)
     if (!result.success) {
       return reply.status(400).send({ success: false, error: result.error.format() })
+    }
+
+    const existing = await prisma.proposal.findFirst({
+      where: { id: req.params.id, deletedAt: null },
+    })
+    if (!existing) {
+      return reply.status(404).send({ success: false, error: 'Proposal not found' })
+    }
+
+    const gate = validateProposalStatusUpdate(existing.status, result.data.status)
+    if (!gate.ok) {
+      return reply.status(422).send(ApiResponse.error(gate.message, 422))
     }
 
     try {
