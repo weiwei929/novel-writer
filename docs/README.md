@@ -24,9 +24,9 @@
 
 | 位置 | 装什么 | 能否照做 |
 |------|--------|---------|
-| `docs/` 顶层 + `guides/` `specs/` `tasks/` `design/` | 现役（23 份） | ✅ |
-| [`journal/`](./journal/) | 学习档案：思考、讨论、会诊、复盘、随笔（60 份） | ❌ 只作参考 |
-| [`archive/`](./archive/) | 历史归档：已完成事项（137 份） | ❌ 只作溯源 |
+| `docs/` 顶层 + `guides/` `specs/` `tasks/` `design/` | 现役 | ✅ |
+| [`journal/`](./journal/) | 学习档案：思考、讨论、会诊、复盘、随笔 | ❌ 只作参考 |
+| [`archive/`](./archive/) | 历史归档：已完成事项 | ❌ 只作溯源 |
 
 学习档案有独立索引 → **[journal/INDEX.md](./journal/INDEX.md)**（按主题 / 时间 / 结论是否仍成立三维检索）
 

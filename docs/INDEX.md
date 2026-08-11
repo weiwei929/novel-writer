@@ -69,10 +69,17 @@
 | [0608-616-coordination-draft.md](./design/0608-616-coordination-draft.md) | 0608 与 616 的衔接 |
 | [design-P1-entry-architecture.md](./design/design-P1-entry-architecture.md) | 入口架构（已收束） |
 | [quick-writing-entry-2026-07-07.md](./design/quick-writing-entry-2026-07-07.md) | 快速写作入口（已实施） |
-| [design-mode-trial-2026-06-20.md](./design/design-mode-trial-2026-06-20.md) | ⛔ 历史视觉试验（分支已转 archive tag；见文件状态行） |
-| [creative-v2-constitution-draft.md](./design/creative-v2-constitution-draft.md) | 历史 · 阶段性设计输入，不作为当前基线 |
 
 已实施 / 已过期设计稿 → [`design/archive/`](./design/archive/)
+
+### 暂留 `design/`、待后续迁移（冻结 / 历史）
+
+以下文件仍在 `design/` 路径，**不可作为当前操作依据**：
+
+| 文件 | 用途 |
+|------|------|
+| [design-mode-trial-2026-06-20.md](./design/design-mode-trial-2026-06-20.md) | ⛔ 冻结历史视觉试验；远端分支 2026-08-11 已删，提交可从 `master` 追溯 |
+| [creative-v2-constitution-draft.md](./design/creative-v2-constitution-draft.md) | 历史 · 阶段性设计输入，不作为当前基线 |
 
 ---
 
@@ -80,7 +87,7 @@
 
 | 位置 | 装什么 | 能否作为依据 |
 |------|--------|-------------|
-| **[journal/](./journal/)** | 学习档案：思考、讨论、会诊、复盘、随笔（**59 份，一份未删**） | ❌ 只作参考 |
+| **[journal/](./journal/)** | 学习档案：思考、讨论、会诊、复盘、随笔 | ❌ 只作参考 |
 | **[archive/](./archive/)** | 历史归档：已完成的任务卡、里程碑、旧规格 | ❌ 只作溯源 |
 
 学习档案有独立索引：**[journal/INDEX.md](./journal/INDEX.md)** —— 按主题 / 时间 / **结论是否仍成立** 三维检索。

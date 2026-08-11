@@ -54,7 +54,7 @@
 | ↳ 700-G | `66d7415` 创作手记 · 编审部右栏呈现层 |
 | ↳ 700-H | **已作废**——三栏与防撞车部分否决，保留部分转入 710-D（见 [TASK-710](./tasks/TASK-710-creative-seed-chain.md) §三） |
 | **Wave6 / PR #16** | PR [#16](https://github.com/weiwei929/novel-writer/pull/16) @ `ac9a3af` · formed 服务端门禁、五处 HandoffConfirmModal 接线、attachedReferences、阶段「已完成」统计含 released |
-| **TASK-710 种子链** | 创意组补断链 · 计划见 [TASK-710](./tasks/TASK-710-creative-seed-chain.md)。710-A 及 Wave6 获准范围已并入 master（PR #16）；710-B/C/E/F 按任务文档另行治理 |
+| **TASK-710 种子链** | 创意组补断链 · 计划见 [TASK-710](./tasks/TASK-710-creative-seed-chain.md)。**710-A 在 PR #16 前已并入 master**；Wave6 获准范围经 PR #16 合入；710-B/C/E/F 按任务文档另行治理 |
 | **TASK-720 部门对齐** | **四大生产部门流转与权责对齐** · [TASK-720](./tasks/TASK-720-four-dept-handoff-alignment.md)。Wave6 获准范围已并入 master（PR #16）；完整方案见任务文档，剩余事项另行治理 |
 
 0608 五部门骨架、616-A 命名/梗概等见历史封版记录。
@@ -153,7 +153,7 @@ TASK-710/720 **未全部完成**；本次 PR #16 仅合入 Wave6 获准范围。
 
 | 序 | 卡 | 状态 |
 |---|---|---|
-| 1 | 710-A 拆暗链 + 地基 | ✅ 已并入 master（PR #16） |
+| 1 | 710-A 拆暗链 + 地基 | ✅ PR #16 前已并入 master |
 | 2 | **[710-B](./tasks/TASK-710-B-conceiving-note.md)** 构思笔记 + 清理无消费者字段 | 📋 待授权 |
 | 2 | **[710-D](./tasks/TASK-710-D-source-realign.md)** 来源归位 + 手记文案分岔 | 📋 待授权 |
 | 3 | 710-C 素材明链（引用可写与跟随） | 计划中 |
