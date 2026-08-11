@@ -5,7 +5,7 @@
 > 用途：Cursor 开发 2.0 时的编码规范、架构约定、数据模型参考
 > 本文件不是任务卡，是所有任务卡的基础参考
 >
-> **当前正式主线**：`master@b60eaf8`（标签 `baseline-2026-08-07`）。历史基线如 `v2-dev`、`feature/workdetail-p1` 已不再作为当前开发依据，仅保留在历史文档中。
+> **当前正式主线**：`master`。2026-08-11 已验证产品集成点 `ac9a3af`（PR #16）；**开工以当前 `origin/master` 为准**，勿依赖文档中永久硬编码 HEAD。上一工程基线标签 `baseline-2026-08-07` → `b60eaf8`。历史基线如 `v2-dev`、`feature/workdetail-p1` 仅保留在历史文档中。
 
 ---
 
@@ -16,16 +16,17 @@
 | 栈 | Vite + React 18 + TypeScript + Tailwind CSS + Zustand + Monaco Editor |
 | 后端 | Fastify 5 + Prisma 6 + SQLite + Zod + TypeScript |
 | 包管理 | npm（两套：`frontend/package.json` + `backend/package.json`） |
-| 正式主线 | `master@b60eaf8`（标签 `baseline-2026-08-07`） |
+| 正式主线 | `master`（已验证集成点 `ac9a3af`；开工查 `origin/master`） |
+| 上一工程基线 | 标签 `baseline-2026-08-07` → `b60eaf8` |
 | 端口 | 开发 3000，生产待定 |
 
 ---
 
 ## 二、分支策略
 
-- `master` — 当前正式主线，基线 `b60eaf8`（标签 `baseline-2026-08-07`）
-- `task-710-720-followup` — TASK-710/720 在研内容，尚未并入主线
+- `master` — 当前正式主线；2026-08-11 已验证产品集成点 `ac9a3af`（PR #16）
 - 新任务分支应从 `master` 切出；完成后通过 PR 或司令官指定方式合入
+- 远端正式分支当前仅保留 `master`
 
 ### Day 1 设计文档（2026-06-03 定案）
 

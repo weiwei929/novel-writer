@@ -1,9 +1,10 @@
 # TASK-720: 四大生产部门流转模型与权责对齐方案
 
-> **状态**：✅ 现役 · 已完成 · 2026-08-03
+> **状态**：✅ 部分已合并 · 2026-08-03 · 最后核对 2026-08-11
+> **已并入 master**（PR #16 @ `ac9a3af`）：formed 服务端门禁、五处 HandoffConfirmModal 接线、attachedReferences、阶段完成统计修正等 Wave6 获准范围。
 > **架构师**：Claude（参谋长）
 > **操作员**：Antigravity Agent
-> **基线**：`feature/workdetail-p1`（TASK-710 战役后）
+> **基线**：`feature/workdetail-p1`（TASK-710 战役后）—— **当时**执行环境，开工以当前 `origin/master` 为准
 > **原则**：0608 立宪 · 组织层级模型 (Org-Tier Model) · **0608 §7.1 交接留痕与业绩留档规则** · **文集库仅作为静态归档库，不参与流转**
 
 ---

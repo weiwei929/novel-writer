@@ -51,11 +51,13 @@
 
 | 角色 | 工具 | 职责 | 禁止 |
 |------|------|------|------|
-| **参谋长** | Codex（限额时 Claude 替补） | 架构、任务卡、审计、会诊、审 diff | 不直接改代码、不新建 worktree |
-| **执行兵** | **Cursor IDE**（本仓库主战场） | 按 TASK 卡写码、测试、提交、push | 不自行扩 scope、不未授权开新战役 |
-| **司令官** | 用户 | 拍板授权、合并、工具切换 | — |
+| **参谋长** | Codex（限额时 Claude 替补） | 任务卡、审计、复核、审 diff | 不直接改代码、不执行 git write |
+| **执行兵** | **Cursor IDE**（本仓库主战场） | 本地修改、测试、**本地 commit** | **不 push**、不自行扩 scope、不未授权开新战役 |
+| **远端执行** | **Copilot** | 唯一 GitHub 远端通道：push、PR、获准 merge、远端 branch/tag 治理 | — |
+| **VPS 执行** | **Netcatty** | VPS 预检、重置、部署（须任务卡与授权） | 无授权不操作 |
+| **司令官** | 用户 | 授权、拍板、工具切换 | 不要求亲自执行 git 命令 |
 
-**替补规则**：Codex 限额时，Claude 只接「参谋长」角色（只读分析 + 出卡/审计），**代码执行仍由 Cursor 完成**。同一时刻只有一个工具「动仓库」。
+**替补规则**：Codex 限额时，Claude 只接「参谋长」角色（只读分析 + 出卡/审计），**代码执行仍由 Cursor 完成**。同一时刻只有一个工具「动仓库」——本地 commit 由 Cursor，远端写操作由 Copilot。
 
 ---
 
@@ -71,8 +73,8 @@ D:/workspace/content/docs/novel-writer
 
 ```text
 分支：master
-HEAD：b60eaf8
-正式基线标签：baseline-2026-08-07
+已验证产品集成点：ac9a3af（2026-08-11，PR #16）；开工以当前 origin/master 为准
+上一工程基线标签：baseline-2026-08-07 → b60eaf8
 远端：应与 origin 同步后再开新活
 ```
 
@@ -84,9 +86,9 @@ HEAD：b60eaf8
 
 | 环境 | 状态 | 依据 |
 |------|------|------|
-| **Cursor IDE 本机** | ✅ 主战场 — 唯一可 commit / push 的地方 | — |
+| **Cursor IDE 本机** | ✅ 主战场 — 本地修改与 **本地 commit** | — |
 | **Cowork（Claude 桌面版）挂载目录** | ✅ **是同一份文件系统**，可读、可改文件 | 2026-07-25 实测：HEAD、分支、`nul` 删除状态与本机 PowerShell 完全一致 |
-| **无挂载的沙箱 / 其他 VM 拷贝** | ❌ 作废 — 不要修、不要 commit、不要 push | — |
+| **无挂载的沙箱 / 其他 VM 拷贝** | ❌ 作废 — 不要修、不要 commit | — |
 
 **判定方法（Agent 开工时自行执行，不要猜）：**
 
@@ -97,7 +99,12 @@ git log --oneline -1 && git branch --show-current
 输出与司令官本机一致 → 是同一仓库，可直接读写文件。
 不一致或读不到 → 按「作废」处理，只做只读分析。
 
-**仍然成立的红线**：即使挂载是同一份文件系统，参谋长**依然不执行 git write**（commit / push / merge / stash）—— 这些由司令官在本机 PowerShell 执行。原因不是路径不通，而是**同一时刻只有一个角色动版本历史**。
+**仍然成立的红线**：
+
+- **Cursor**：主战场可做本地 commit；**不 push**。
+- **Copilot**：唯一 GitHub 远端执行方（push / PR / merge / 远端 branch·tag）。
+- **Codex / Claude 参谋长**：不执行 git write，不改业务仓库代码。
+- **Netcatty**：VPS 操作须任务卡与授权；不在 Cursor 会话里代做部署。
 
 ### 参谋长（Codex / Claude 3P）权限
 
@@ -153,9 +160,9 @@ SSOT：docs/CURRENT_BASELINE.md
 | 分支 | 原因 | SSOT |
 |------|------|------|
 | `feature/writing-editor-ui-slice-1-4` | Open Design 战役已冻结；触及写作器保存架构债 | @ `a5ff728`，stash **勿 apply** |
-| `ui/design-mode-trial` | Design Mode 视觉试验，独立 visual 分支 | 见 [design-mode-trial-2026-06-20.md](docs/design/design-mode-trial-2026-06-20.md) |
+| `ui/design-mode-trial` | Design Mode 视觉试验；远端分支已于 2026-08-11 治理删除，相关提交可从 `master` 追溯 | 见 [design-mode-trial-2026-06-20.md](docs/design/design-mode-trial-2026-06-20.md) |
 
-**主干基线**：`master@b60eaf8`（标签 `baseline-2026-08-07`；TASK-710/720 在研内容在 `task-710-720-followup`，见 CURRENT_BASELINE）。
+**主干基线**：正式分支 `master`；2026-08-11 已验证产品集成点 `ac9a3af`（PR #16）。上一工程基线标签 `baseline-2026-08-07` → `b60eaf8`。详见 [CURRENT_BASELINE.md](docs/CURRENT_BASELINE.md)。
 
 ---
 
@@ -194,7 +201,7 @@ SSOT：docs/CURRENT_BASELINE.md
 
 1. 更新 `docs/CURRENT_BASELINE.md`（若协作状态变化）
 2. 更新 `docs/INDEX.md` 及对应子目录 README（若新增/移动文档）
-3. `git push` 有意义的分支（避免只存本地）
+3. Codex 复核通过后，交 **Copilot** push / 开 PR（Cursor 不 push）
 4. 清理本次产生的空 worktree
 
 ---

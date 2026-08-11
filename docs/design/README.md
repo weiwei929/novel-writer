@@ -11,7 +11,15 @@
 | [0608-616-coordination-draft.md](./0608-616-coordination-draft.md) | 0608 五部门骨架与 616 内容链的衔接 |
 | [design-P1-entry-architecture.md](./design-P1-entry-architecture.md) | 入口架构（已收束，保留作依据） |
 | [quick-writing-entry-2026-07-07.md](./quick-writing-entry-2026-07-07.md) | 「继续写作」入口（已实施） |
-| [design-mode-trial-2026-06-20.md](./design-mode-trial-2026-06-20.md) | Design Mode 视觉试验；代码在分支 `ui/design-mode-trial` |
+
+### 冻结 / 历史（待迁移）
+
+仍在 `design/` 路径、**不可作为当前依据**：
+
+| 文件 | 用途 |
+|------|------|
+| [design-mode-trial-2026-06-20.md](./design-mode-trial-2026-06-20.md) | ⛔ 冻结历史视觉试验；远端分支 2026-08-11 已删，提交可从 `master` 追溯 |
+| [creative-v2-constitution-draft.md](./creative-v2-constitution-draft.md) | 历史 · 阶段性设计输入，不作为当前基线 |
 
 ---
 

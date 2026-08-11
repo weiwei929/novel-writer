@@ -5,7 +5,7 @@
 > **单一真相源**：协作状态、已合并战役、下一战、暂不做项，以此文件为准。
 > 项目整体方向与去向见 [ROADMAP.md](./ROADMAP.md)（含 **§八 0728 共识速查**，防漂移条款）。
 
-**最后更新**：2026-08-11（将 `feature/workdetail-p1@b60eaf8` 正式晋升为 `master` 主线；标签 `baseline-2026-08-07`；TASK-710/720 在研内容收束至分支 `task-710-720-followup`）
+**最后更新**：2026-08-11（PR #16 合并；Wave6 获准产品集成 @ `ac9a3af` 已进入 `master`）
 
 ---
 
@@ -14,13 +14,13 @@
 | 项 | 值 |
 |----|-----|
 | **主分支** | `master` |
-| **HEAD** | `b60eaf8`（2026-08-07） |
-| **基线标签** | `baseline-2026-08-07` |
+| **已验证产品集成点** | `ac9a3af`（2026-08-11，PR #16 merge commit） |
+| **上一工程基线** | `b60eaf8`（标签 `baseline-2026-08-07`） |
 | **上一实测基线** | `0e99c14`（2026-07-25 司令官本机全链路实测通过） |
 | **协作档位** | 轻量战役制 · **小卡快审 / 低风险快合** |
 | **协作模式** | 司令官拍板 → **参谋长出卡/审卡** → Cursor 侦察与实施 → 参谋长核验收 |
 
-> 2026-08-11 正式主线确认：`feature/workdetail-p1` 已快进合并为 `master`。TASK-710/720 在研内容独立收束在 `task-710-720-followup`，不在 `master` 基线内。
+> 正式开发与部署源统一为 `master`。`ac9a3af` 是 2026-08-11 已验证的产品集成提交，**不等于**永久 HEAD SSOT——开工以当前 `origin/master` 为准。远端正式分支当前仅保留 `master`。
 
 ---
 
@@ -53,8 +53,9 @@
 | ↳ 700-F | `c52d00c` **创作手记 · 后端记录层**（`WorkNote` 表 + `recordWorkNoteDiff`） |
 | ↳ 700-G | `66d7415` 创作手记 · 编审部右栏呈现层 |
 | ↳ 700-H | **已作废**——三栏与防撞车部分否决，保留部分转入 710-D（见 [TASK-710](./tasks/TASK-710-creative-seed-chain.md) §三） |
-| **TASK-710 种子链** | 创意组补断链 · 计划见 [TASK-710](./tasks/TASK-710-creative-seed-chain.md)。710-A 已完成并入主线；710-C/E/F 在 `task-710-720-followup` 继续 |
-| **TASK-720 部门对齐** | **四大生产部门流转与权责对齐** · [TASK-720](./tasks/TASK-720-four-dept-handoff-alignment.md)。方案与实现收束在 `task-710-720-followup`，尚未并入 `master` |
+| **Wave6 / PR #16** | PR [#16](https://github.com/weiwei929/novel-writer/pull/16) @ `ac9a3af` · formed 服务端门禁、五处 HandoffConfirmModal 接线、attachedReferences、阶段「已完成」统计含 released |
+| **TASK-710 种子链** | 创意组补断链 · 计划见 [TASK-710](./tasks/TASK-710-creative-seed-chain.md)。**710-A 在 PR #16 前已并入 master**；Wave6 获准范围经 PR #16 合入；710-B/C/E/F 按任务文档另行治理 |
+| **TASK-720 部门对齐** | **四大生产部门流转与权责对齐** · [TASK-720](./tasks/TASK-720-four-dept-handoff-alignment.md)。Wave6 获准范围已并入 master（PR #16）；完整方案见任务文档，剩余事项另行治理 |
 
 0608 五部门骨架、616-A 命名/梗概等见历史封版记录。
 
@@ -146,13 +147,15 @@ _settingSketch → workSetting + chapterPlanning
 
 ## 当前推荐下一战
 
-**TASK-710 种子链，卡序已按 710-S 侦察重排**（司令官 2026-07-28 拍板：先侦察后执行）。
+**战果归档 / 休整** — 616-D 与 Wave6 获准范围已收束；无授权新实现卡前不主动开战役。
+
+TASK-710/720 **未全部完成**；本次 PR #16 仅合入 Wave6 获准范围。710-B/C/E/F 等剩余事项按 [TASK-710](./tasks/TASK-710-creative-seed-chain.md) 任务文档另行治理，需司令官授权后开卡。
 
 | 序 | 卡 | 状态 |
 |---|---|---|
-| 1 | 710-A 拆暗链 + 地基 | ✅ 已完成 |
-| 2 | **[710-B](./tasks/TASK-710-B-conceiving-note.md)** 构思笔记 + 清理无消费者字段 | 📋 卡已出 · **待授权** |
-| 2 | **[710-D](./tasks/TASK-710-D-source-realign.md)** 来源归位 + 手记文案分岔 | 📋 卡已出 · **待授权** |
+| 1 | 710-A 拆暗链 + 地基 | ✅ PR #16 前已并入 master |
+| 2 | **[710-B](./tasks/TASK-710-B-conceiving-note.md)** 构思笔记 + 清理无消费者字段 | 📋 待授权 |
+| 2 | **[710-D](./tasks/TASK-710-D-source-realign.md)** 来源归位 + 手记文案分岔 | 📋 待授权 |
 | 3 | 710-C 素材明链（引用可写与跟随） | 计划中 |
 | 4 | 710-E 接收动作归企划课 | 计划中 |
 | 5 | 710-F 总览分段 | 计划中 |
